@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
-using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace CnfBattleSys
 {
@@ -362,7 +363,13 @@ namespace CnfBattleSys
             /// </summary>
             private float GetMulti_Global ()
             {
-                return 1;
+                float r = 1;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r *= owner.statusPackets[keys[i]].resistances.global;
+                }
+                return r;
             }
 
             /// <summary>
@@ -370,7 +377,13 @@ namespace CnfBattleSys
             /// </summary>
             private float GetMulti_Magic ()
             {
-                return 1;
+                float r = 1;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r *= owner.statusPackets[keys[i]].resistances.magic;
+                }
+                return r;
             }
 
             /// <summary>
@@ -378,7 +391,13 @@ namespace CnfBattleSys
             /// </summary>
             private float GetMulti_Strike ()
             {
-                return 1;
+                float r = 1;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r *= owner.statusPackets[keys[i]].resistances.strike;
+                }
+                return r;
             }
 
             /// <summary>
@@ -386,7 +405,13 @@ namespace CnfBattleSys
             /// </summary>
             private float GetMulti_Slash ()
             {
-                return 1;
+                float r = 1;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r *= owner.statusPackets[keys[i]].resistances.slash;
+                }
+                return r;
             }
 
             /// <summary>
@@ -394,7 +419,13 @@ namespace CnfBattleSys
             /// </summary>
             private float GetMulti_Thrust ()
             {
-                return 1;
+                float r = 1;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r *= owner.statusPackets[keys[i]].resistances.thrust;
+                }
+                return r;
             }
 
             /// <summary>
@@ -402,7 +433,13 @@ namespace CnfBattleSys
             /// </summary>
             private float GetMulti_Fire ()
             {
-                return 1;
+                float r = 1;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r *= owner.statusPackets[keys[i]].resistances.fire;
+                }
+                return r;
             }
 
             /// <summary>
@@ -410,7 +447,13 @@ namespace CnfBattleSys
             /// </summary>
             private float GetMulti_Earth()
             {
-                return 1;
+                float r = 1;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r *= owner.statusPackets[keys[i]].resistances.earth;
+                }
+                return r;
             }
 
             /// <summary>
@@ -418,7 +461,13 @@ namespace CnfBattleSys
             /// </summary>
             private float GetMulti_Air()
             {
-                return 1;
+                float r = 1;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r *= owner.statusPackets[keys[i]].resistances.air;
+                }
+                return r;
             }
 
             /// <summary>
@@ -426,7 +475,13 @@ namespace CnfBattleSys
             /// </summary>
             private float GetMulti_Water()
             {
-                return 1;
+                float r = 1;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r *= owner.statusPackets[keys[i]].resistances.water;
+                }
+                return r;
             }
 
             /// <summary>
@@ -434,7 +489,13 @@ namespace CnfBattleSys
             /// </summary>
             private float GetMulti_Light()
             {
-                return 1;
+                float r = 1;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r *= owner.statusPackets[keys[i]].resistances.light;
+                }
+                return r;
             }
 
             /// <summary>
@@ -442,7 +503,13 @@ namespace CnfBattleSys
             /// </summary>
             private float GetMulti_Dark()
             {
-                return 1;
+                float r = 1;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r *= owner.statusPackets[keys[i]].resistances.dark;
+                }
+                return r;
             }
 
             /// <summary>
@@ -450,7 +517,13 @@ namespace CnfBattleSys
             /// </summary>
             private float GetMulti_Bio()
             {
-                return 1;
+                float r = 1;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r *= owner.statusPackets[keys[i]].resistances.bio;
+                }
+                return r;
             }
 
             /// <summary>
@@ -458,7 +531,13 @@ namespace CnfBattleSys
             /// </summary>
             private float GetMulti_Sound()
             {
-                return 1;
+                float r = 1;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r *= owner.statusPackets[keys[i]].resistances.sound;
+                }
+                return r;
             }
 
             /// <summary>
@@ -466,7 +545,13 @@ namespace CnfBattleSys
             /// </summary>
             private float GetMulti_Psyche()
             {
-                return 1;
+                float r = 1;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r *= owner.statusPackets[keys[i]].resistances.psyche;
+                }
+                return r;
             }
 
             /// <summary>
@@ -474,7 +559,13 @@ namespace CnfBattleSys
             /// </summary>
             private float GetMulti_Reality()
             {
-                return 1;
+                float r = 1;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r *= owner.statusPackets[keys[i]].resistances.reality;
+                }
+                return r;
             }
 
             /// <summary>
@@ -482,7 +573,13 @@ namespace CnfBattleSys
             /// </summary>
             private float GetMulti_Time()
             {
-                return 1;
+                float r = 1;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r *= owner.statusPackets[keys[i]].resistances.time;
+                }
+                return r;
             }
 
             /// <summary>
@@ -490,7 +587,13 @@ namespace CnfBattleSys
             /// </summary>
             private float GetMulti_Space()
             {
-                return 1;
+                float r = 1;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r *= owner.statusPackets[keys[i]].resistances.space;
+                }
+                return r;
             }
 
             /// <summary>
@@ -498,7 +601,13 @@ namespace CnfBattleSys
             /// </summary>
             private float GetMulti_Electric()
             {
-                return 1;
+                float r = 1;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r *= owner.statusPackets[keys[i]].resistances.electric;
+                }
+                return r;
             }
 
             /// <summary>
@@ -506,7 +615,13 @@ namespace CnfBattleSys
             /// </summary>
             private float GetMulti_Ice()
             {
-                return 1;
+                float r = 1;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r *= owner.statusPackets[keys[i]].resistances.ice;
+                }
+                return r;
             }
 
             /// <summary>
@@ -514,13 +629,21 @@ namespace CnfBattleSys
             /// </summary>
             private float GetMulti_Spirit()
             {
-                return 1;
+                float r = 1;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r *= owner.statusPackets[keys[i]].resistances.spirit;
+                }
+                return r;
             }
 
         }
 
         public readonly BattlerType battlerType;
         public readonly Stats stats;
+        public readonly Dictionary<StatusType, StatusPacket> statusPackets;
+
 
         public readonly BattleStance[] stances;
         public BattleStance currentStance { get; private set; }
