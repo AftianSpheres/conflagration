@@ -22,60 +22,60 @@ namespace CnfBattleSys
         {
             private Battler owner;
             public readonly int baseHP;
-            public readonly int baseAtk;
-            public readonly int baseDef;
-            public readonly int baseMAtk;
-            public readonly int baseMDef;
+            public readonly int baseATK;
+            public readonly int baseDEF;
+            public readonly int baseMATK;
+            public readonly int baseMDEF;
             public readonly int baseSpe;
             public readonly int baseHit;
-            public readonly int baseEva;
+            public readonly int baseEVA;
             public readonly float baseMoveDist;
             public readonly float baseMoveDelay;
             public int maxHP { get { return flooredIntStat(baseHP, totalBonus_maxHP, totalMulti_maxHP); } }
-            public int Atk { get { return flooredIntStat(baseAtk, totalBonus_Atk, totalMulti_Atk); } }
-            public int Def { get { return flooredIntStat(baseDef, totalBonus_Def, totalMulti_Def); } }
-            public int MAtk { get { return flooredIntStat(baseMAtk, totalBonus_MAtk, totalMulti_MAtk); } }
-            public int MDef { get { return flooredIntStat(baseMDef, totalBonus_MDef, totalMulti_MDef); } }
+            public int ATK { get { return flooredIntStat(baseATK, totalBonus_ATK, totalMulti_ATK); } }
+            public int DEF { get { return flooredIntStat(baseDEF, totalBonus_DEF, totalMulti_DEF); } }
+            public int MATK { get { return flooredIntStat(baseMATK, totalBonus_MATK, totalMulti_MATK); } }
+            public int MDEF { get { return flooredIntStat(baseMDEF, totalBonus_MDEF, totalMulti_MDEF); } }
             public int Spe { get { return flooredIntStat(baseSpe, totalBonus_Spe, totalMulti_Spe); } }
             public int Hit { get { return flooredIntStat(baseHit, totalBonus_Hit, totalMulti_Hit); } }
-            public int Eva { get { return flooredIntStat(baseEva, totalBonus_Eva, totalMulti_Eva); } }
+            public int EVA { get { return flooredIntStat(baseEVA, totalBonus_EVA, totalMulti_EVA); } }
             public float moveDist { get { return flooredFloatStat(baseMoveDist, totalBonus_moveDist, totalMulti_moveDist); } }
             public float moveDelay { get { return flooredFloatStat(baseMoveDelay, totalBonus_moveDelay, totalMulti_moveDelay); } }
             public int totalBonus_maxHP { get { return owner.currentStance.statBonus_MaxHP + owner.metaStance.statBonus_MaxHP + GetBonus_MaxHP(); } }
-            public int totalBonus_Atk { get { return owner.currentStance.statBonus_ATK + owner.metaStance.statBonus_ATK + GetBonus_Atk(); } }
-            public int totalBonus_Def { get { return owner.currentStance.statBonus_DEF + owner.metaStance.statBonus_DEF + GetBonus_Def(); } }
-            public int totalBonus_MAtk { get { return owner.currentStance.statBonus_MATK + owner.metaStance.statBonus_MATK + GetBonus_MAtk(); } }
-            public int totalBonus_MDef { get { return owner.currentStance.statBonus_MDEF + owner.metaStance.statBonus_MDEF + GetBonus_MDef(); } }
-            public int totalBonus_Spe { get { return owner.currentStance.statBonus_SPE + owner.metaStance.statBonus_SPE + GetBonus_Spe(); } }
-            public int totalBonus_Hit { get { return owner.currentStance.statBonus_HIT + owner.metaStance.statBonus_HIT + GetBonus_Hit(); } }
-            public int totalBonus_Eva { get { return owner.currentStance.statBonus_EVA + owner.metaStance.statBonus_EVA + GetBonus_Eva(); } }
+            public int totalBonus_ATK { get { return owner.currentStance.statBonus_ATK + owner.metaStance.statBonus_ATK + GetBonus_ATK(); } }
+            public int totalBonus_DEF { get { return owner.currentStance.statBonus_DEF + owner.metaStance.statBonus_DEF + GetBonus_DEF(); } }
+            public int totalBonus_MATK { get { return owner.currentStance.statBonus_MATK + owner.metaStance.statBonus_MATK + GetBonus_MATK(); } }
+            public int totalBonus_MDEF { get { return owner.currentStance.statBonus_MDEF + owner.metaStance.statBonus_MDEF + GetBonus_MDEF(); } }
+            public int totalBonus_Spe { get { return owner.currentStance.statBonus_SPE + owner.metaStance.statBonus_SPE + GetBonus_SPE(); } }
+            public int totalBonus_Hit { get { return owner.currentStance.statBonus_HIT + owner.metaStance.statBonus_HIT + GetBonus_HIT(); } }
+            public int totalBonus_EVA { get { return owner.currentStance.statBonus_EVA + owner.metaStance.statBonus_EVA + GetBonus_EVA(); } }
             public float totalBonus_moveDist { get { return owner.currentStance.moveDistBonus + owner.metaStance.moveDistBonus + GetBonus_MoveDist(); } }
             public float totalBonus_moveDelay { get { return owner.currentStance.moveDelayBonus + owner.metaStance.moveDelayBonus + GetBonus_MoveDelay(); } }
             public float totalMulti_maxHP { get { return owner.currentStance.statMultiplier_MaxHP * owner.metaStance.statMultiplier_MaxHP * GetMultiplier_MaxHP(); } }
-            public float totalMulti_Atk { get { return owner.currentStance.statMultiplier_ATK * owner.metaStance.statMultiplier_ATK * GetMultiplier_Atk(); } }
-            public float totalMulti_Def { get { return owner.currentStance.statMultiplier_DEF * owner.metaStance.statMultiplier_DEF * GetMultiplier_Def(); } }
-            public float totalMulti_MAtk { get { return owner.currentStance.statMultiplier_MATK * owner.metaStance.statMultiplier_MATK * GetMultiplier_MAtk(); } }
-            public float totalMulti_MDef { get { return owner.currentStance.statMultiplier_MDEF * owner.metaStance.statMultiplier_MDEF * GetMultiplier_MDef(); } }
-            public float totalMulti_Spe { get { return owner.currentStance.statMultiplier_SPE * owner.metaStance.statMultiplier_SPE * GetMultiplier_Spe(); } }
-            public float totalMulti_Hit { get { return owner.currentStance.statMultiplier_HIT * owner.metaStance.statMultiplier_HIT * GetMultiplier_Hit(); } }
-            public float totalMulti_Eva { get { return owner.currentStance.statMultiplier_EVA * owner.metaStance.statMultiplier_EVA * GetMultiplier_Eva(); } }
+            public float totalMulti_ATK { get { return owner.currentStance.statMultiplier_ATK * owner.metaStance.statMultiplier_ATK * GetMultiplier_ATK(); } }
+            public float totalMulti_DEF { get { return owner.currentStance.statMultiplier_DEF * owner.metaStance.statMultiplier_DEF * GetMultiplier_DEF(); } }
+            public float totalMulti_MATK { get { return owner.currentStance.statMultiplier_MATK * owner.metaStance.statMultiplier_MATK * GetMultiplier_MATK(); } }
+            public float totalMulti_MDEF { get { return owner.currentStance.statMultiplier_MDEF * owner.metaStance.statMultiplier_MDEF * GetMultiplier_MDEF(); } }
+            public float totalMulti_Spe { get { return owner.currentStance.statMultiplier_SPE * owner.metaStance.statMultiplier_SPE * GetMultiplier_SPE(); } }
+            public float totalMulti_Hit { get { return owner.currentStance.statMultiplier_HIT * owner.metaStance.statMultiplier_HIT * GetMultiplier_HIT(); } }
+            public float totalMulti_EVA { get { return owner.currentStance.statMultiplier_EVA * owner.metaStance.statMultiplier_EVA * GetMultiplier_EVA(); } }
             public float totalMulti_moveDist { get { return owner.currentStance.moveDistMultiplier * owner.metaStance.moveDistMultiplier * GetMultiplier_MoveDist(); } }
             public float totalMulti_moveDelay { get { return owner.currentStance.moveDelayMultiplier * owner.metaStance.moveDelayMultiplier * GetMultiplier_MoveDelay(); } }
 
             /// <summary>
             /// Constructor for Stats. Should never be called by anything but Battler.
             /// </summary>
-            public Stats (Battler _owner, int _baseHP, int _baseAtk, int _baseDef, int _baseMAtk, int _baseMDef, int _baseSpe, int _baseHit, int _baseEva, float _baseMoveDist, float _baseMoveDelay)
+            public Stats (Battler _owner, int _baseHP, int _baseATK, int _baseDEF, int _baseMATK, int _baseMDEF, int _baseSpe, int _baseHit, int _baseEVA, float _baseMoveDist, float _baseMoveDelay)
             {
                 owner = _owner;
                 baseHP = _baseHP;
-                baseAtk = _baseAtk;
-                baseDef = _baseDef;
-                baseMAtk = _baseMAtk;
-                baseMDef = _baseMDef;
+                baseATK = _baseATK;
+                baseDEF = _baseDEF;
+                baseMATK = _baseMATK;
+                baseMDEF = _baseMDEF;
                 baseSpe = _baseSpe;
                 baseHit = _baseHit;
-                baseEva = _baseEva;
+                baseEVA = _baseEVA;
                 baseMoveDist = _baseMoveDist;
                 baseMoveDelay = _baseMoveDelay;
             }
@@ -102,67 +102,114 @@ namespace CnfBattleSys
 
             /// <summary>
             /// Sums the positive/negative bonus points in max HP for all StatusPackets attached to this Battler.
-            /// Except StatusPackets don't exist yet, so lol.
             /// </summary>
             public int GetBonus_MaxHP()
             {
-                return 0;
+                int r = 0;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r += owner.statusPackets[keys[i]].statBonus_MaxHP;
+                }
+                return r;
             }
 
             /// <summary>
             /// Sums positive/negative StatusPacket bonus points for Attack.
             /// </summary>
-            public int GetBonus_Atk()
+            public int GetBonus_ATK()
             {
-                return 0;
+                int r = 0;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r += owner.statusPackets[keys[i]].statBonus_ATK;
+                }
+                return r;
             }
 
             /// <summary>
             /// Sums positive/negative StatusPacket bonus points for Defense.
             /// </summary>
-            public int GetBonus_Def()
+            public int GetBonus_DEF()
             {
-                return 0;
+                int r = 0;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r += owner.statusPackets[keys[i]].statBonus_DEF;
+                }
+                return r;
             }
 
             /// <summary>
             /// Sums positive/negative StatusPacket bonus points for MAttack.
             /// </summary>
-            public int GetBonus_MAtk()
+            public int GetBonus_MATK()
             {
-                return 0;
+                int r = 0;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r += owner.statusPackets[keys[i]].statBonus_MATK;
+                }
+                return r;
             }
 
             /// <summary>
             /// Sums positive/negative StatusPacket bonus points for MDefense.
             /// </summary>
-            public int GetBonus_MDef()
+            public int GetBonus_MDEF()
             {
-                return 0;
+                int r = 0;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r += owner.statusPackets[keys[i]].statBonus_MDEF;
+                }
+                return r;
             }
 
             /// <summary>
             /// Sums positive/negative StatusPacket bonus points for Speed.
             /// </summary>
-            public int GetBonus_Spe()
+            public int GetBonus_SPE()
             {
-                return 0;
+                int r = 0;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r += owner.statusPackets[keys[i]].statBonus_SPE;
+                }
+                return r;
             }
 
             /// <summary>
             /// Sums positive/negative StatusPacket bonus points for Hit.
             /// </summary>
-            public int GetBonus_Hit()
+            public int GetBonus_HIT()
             {
-                return 0;
+                int r = 0;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r += owner.statusPackets[keys[i]].statBonus_HIT;
+                }
+                return r;
             }
 
             /// <summary>
-            /// Sums positive/negative StatusPacket bonus points for Evade.
+            /// Sums positive/negative StatusPacket bonus points for EVAde.
             /// </summary>
-            public int GetBonus_Eva()
+            public int GetBonus_EVA()
             {
-                return 0;
+                int r = 0;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r += owner.statusPackets[keys[i]].statBonus_EVA;
+                }
+                return r;
             }
 
             /// <summary>
@@ -170,7 +217,13 @@ namespace CnfBattleSys
             /// </summary>
             public float GetBonus_MoveDist()
             {
-                return 0;
+                float r = 0;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r += owner.statusPackets[keys[i]].statBonus_MoveDist;
+                }
+                return r;
             }
 
             /// <summary>
@@ -179,7 +232,13 @@ namespace CnfBattleSys
             /// <returns></returns>
             public float GetBonus_MoveDelay()
             {
-                return 0;
+                float r = 0;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r += owner.statusPackets[keys[i]].statBonus_MoveDelay;
+                }
+                return r;
             }
 
             /// <summary>
@@ -187,64 +246,112 @@ namespace CnfBattleSys
             /// </summary>
             public float GetMultiplier_MaxHP()
             {
-                return 1;
+                float r = 1;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r *= owner.statusPackets[keys[i]].statMulti_MaxHP;
+                }
+                return r;
             }
 
             /// <summary>
             /// Sums positive/negative StatusPacket multipliers for Attack.
             /// </summary>
-            public float GetMultiplier_Atk()
+            public float GetMultiplier_ATK()
             {
-                return 1;
+                float r = 1;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r *= owner.statusPackets[keys[i]].statMulti_ATK;
+                }
+                return r;
             }
 
             /// <summary>
             /// Sums positive/negative StatusPacket multipliers for Defense.
             /// </summary>
-            public float GetMultiplier_Def()
+            public float GetMultiplier_DEF()
             {
-                return 1;
+                float r = 1;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r *= owner.statusPackets[keys[i]].statMulti_DEF;
+                }
+                return r;
             }
 
             /// <summary>
             /// Sums positive/negative StatusPacket multipliers for MAttack
             /// </summary>
-            public float GetMultiplier_MAtk()
+            public float GetMultiplier_MATK()
             {
-                return 1;
+                float r = 1;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r *= owner.statusPackets[keys[i]].statMulti_MATK;
+                }
+                return r;
             }
 
             /// <summary>
             /// Sums positive/negative StatusPacket multipliers for MDefense
             /// </summary>
-            public float GetMultiplier_MDef()
+            public float GetMultiplier_MDEF()
             {
-                return 1;
+                float r = 1;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r *= owner.statusPackets[keys[i]].statMulti_MDEF;
+                }
+                return r;
             }
 
             /// <summary>
             /// Sums positive/negative StatusPacket multipliers for Speed
             /// </summary>
-            public float GetMultiplier_Spe()
+            public float GetMultiplier_SPE()
             {
-                return 1;
+                float r = 1;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r *= owner.statusPackets[keys[i]].statMulti_SPE;
+                }
+                return r;
             }
 
 
             /// <summary>
             /// Sums positive/negative StatusPacket multipliers for Hit
             /// </summary>
-            public float GetMultiplier_Hit()
+            public float GetMultiplier_HIT()
             {
-                return 1;
+                float r = 1;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r *= owner.statusPackets[keys[i]].statMulti_HIT;
+                }
+                return r;
             }
 
             /// <summary>
-            /// Sums positive/negative StatusPacket multipliers for Evade
+            /// Sums positive/negative StatusPacket multipliers for EVAde
             /// </summary>
-            public float GetMultiplier_Eva()
+            public float GetMultiplier_EVA()
             {
-                return 1;
+                float r = 1;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r *= owner.statusPackets[keys[i]].statMulti_EVA;
+                }
+                return r;
             }
 
             /// <summary>
@@ -252,7 +359,13 @@ namespace CnfBattleSys
             /// </summary>
             public float GetMultiplier_MoveDist()
             {
-                return 1;
+                float r = 1;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r *= owner.statusPackets[keys[i]].statMulti_MoveDist;
+                }
+                return r;
             }
 
             /// <summary>
@@ -260,7 +373,13 @@ namespace CnfBattleSys
             /// </summary>
             public float GetMultiplier_MoveDelay()
             {
-                return 1;
+                float r = 1;
+                StatusType[] keys = owner.statusPackets.Keys.ToArray();
+                for (int i = 0; i < owner.statusPackets.Count; i++)
+                {
+                    r *= owner.statusPackets[keys[i]].statMulti_MoveDelay;
+                }
+                return r;
             }
         }
 

@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<unit>
+  <statsType>fixed</statsType>
+  <script>TestAI</script>
+  <level>12</level>
+  <size>1</size>
+  <yOffset>2.4</yOffset>
+  <model>
+    <base>TestModelSimple</base>
+    <variant>0</variant>
+  </model>
+  <stances>
+    <stance>TestStance</stance>
+  </stances>
+  <metaStance>None</metaStance>
+  <baseStats>
+    <MaxHP>2000</MaxHP>
+    <ATK>200</ATK>
+    <DEF>200</DEF>
+    <MATK>200</MATK>
+    <MDEF>200</MDEF>
+    <SPE>200</SPE>
+    <HIT>200</HIT>
+    <EVA>200</EVA>
+  </baseStats>
+  <resistances>
+    <global>1.5</global>
+    <bio>0.0</bio>
+  </resistances>
+</unit>
