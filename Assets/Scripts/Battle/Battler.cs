@@ -770,6 +770,7 @@ namespace CnfBattleSys
         public BattlerSideFlags side { get; private set; } // This is a bitflag, but it should never do bitflaggy things here because that'd be weird.
         public Vector3 logicalPosition { get; private set; } // This is what we use for determining targeting ranges, etc. When we get a move action, we set logicalPosition immediately, and the puppet moves there. z-axis doesn't matter - battlefield is 2D.
 
+        public float footprintRadius { get; private set; }
         public float currentDelay { get; private set; }
         public int currentHP { get; private set; }
         public int currentSP { get; private set; }

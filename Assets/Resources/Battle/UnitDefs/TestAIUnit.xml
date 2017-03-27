@@ -1,14 +1,13 @@
 <?xml version="1.0"?>
 <unit>
   <statsType>fixed</statsType>
-  <script>TestAI</script>
+  <aiType>TestAI</aiType>
+  <aiFlags>None</aiFlags>
   <level>12</level>
   <size>1</size>
+  <stepTime>0.25</stepTime>
   <yOffset>2.4</yOffset>
-  <model>
-    <base>TestModelSimple</base>
-    <variant>0</variant>
-  </model>
+  <model>TestModelSimple</model>
   <stances>
     <stance>TestStance</stance>
   </stances>

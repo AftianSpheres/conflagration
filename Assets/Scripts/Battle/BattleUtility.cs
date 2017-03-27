@@ -2,9 +2,6 @@
 {
     public static class BattleUtility
     {
-        public const int numberOfActionEntries = 5;
-        public const int numberOfStanceEntries = 1;
-
         public static TargetSideFlags GetRelativeSidesFor (BattlerSideFlags checker, BattlerSideFlags target)
         {
             switch (checker)
