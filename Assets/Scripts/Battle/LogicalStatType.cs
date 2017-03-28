@@ -4,7 +4,7 @@
     /// Enum specifying the various stats (including "virtual stats" produced by finding the average of various primary stats)
     /// that are plugged into the various in-battle formulas for damage calculation, evasion, hit rates, etc.
     /// </summary>
-    public enum LogicalStatType
+    public enum LogicalStatType : byte
     {
         None,
         Stat_ATK,

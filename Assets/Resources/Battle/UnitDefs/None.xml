@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<unit>
+  <statsType>fixed</statsType>
+  <aiType>None</aiType>
+  <aiFlags>None</aiFlags>
+  <level>0</level>
+  <size>0</size>
+  <stepTime>0</stepTime>
+  <yOffset>0</yOffset>
+  <model>None</model>
+  <stances>
+  </stances>
+  <metaStance>None</metaStance>
+  <baseStats>
+    <MaxHP>0</MaxHP>
+    <ATK>0</ATK>
+    <DEF>0</DEF>
+    <MATK>0</MATK>
+    <MDEF>0</MDEF>
+    <SPE>0</SPE>
+    <HIT>0</HIT>
+    <EVA>0</EVA>
+  </baseStats>
+  <resistances>
+  </resistances>
+</unit>

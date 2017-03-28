@@ -27,7 +27,7 @@
                 public readonly float baseSuccessRate; // if this >= 1.0 we should just skip the succeed/fail checks entirely!!!
                 public readonly float fxLength_Float; // depending on the effect you're applying, length/strength may need to be represented as either float or int, and float-to-int casting is nasty
                 public readonly float fxStrength_Float;
-                public readonly int fxLength_Int;
+                public readonly byte fxLength_Byte;
                 public readonly int fxStrength_Int;
                 /// <summary>
                 /// Must be lower than the FXPackage's index in the Subaction.fx array. 
@@ -38,7 +38,7 @@
                 /// NOTE FOR SELF: don't forget - you need to keep an index-matched array of passes/fails around
                 /// for each target in the current Subaction!
                 /// </summary>
-                public readonly int thisFXSuccessTiedToFXAtIndex;
+                public readonly sbyte thisFXSuccessTiedToFXAtIndex;
 
                 /// <summary>
                 /// FXPackage constructor.
@@ -46,7 +46,7 @@
                 /// </summary>
                 public FXPackage(SubactionFXType _fxType, LogicalStatType _fxHitStat, LogicalStatType _fxEvadeStat,
                                  bool _applyEvenIfSubactionMisses, float _baseSuccessRate, float _fxLength_Float, float _fxStrength_Float,
-                                 int _fxLength_Int, int _fxStrength_Int, int _thisFXSuccessTiedToFXAtIndex)
+                                 byte _fxLength_Byte, int _fxStrength_Int, sbyte _thisFXSuccessTiedToFXAtIndex)
                 {
                     fxType = _fxType;
                     fxHitStat = _fxHitStat;
@@ -55,7 +55,7 @@
                     baseSuccessRate = _baseSuccessRate;
                     fxLength_Float = _fxLength_Float;
                     fxStrength_Float = _fxStrength_Float;
-                    fxLength_Int = _fxLength_Int;
+                    fxLength_Byte = _fxLength_Byte;
                     fxStrength_Int = _fxStrength_Int;
                     thisFXSuccessTiedToFXAtIndex = _thisFXSuccessTiedToFXAtIndex;
                 }
@@ -81,13 +81,13 @@
             /// If greater than -1, we skip damage calculation and just use the per-target
             /// final damage figures of the Subaction at the specified index.
             /// </summary>
-            public readonly int thisSubactionDamageTiedToSubactionAtIndex;
+            public readonly sbyte thisSubactionDamageTiedToSubactionAtIndex;
             /// <summary>
             /// Must be lower than the Subaction's index in the BattleAction.Subactions array.
             /// If greater than -1, we skip damage calculation and just use the per-target
             /// success values of the Subaction at the specified index.
             /// </summary>
-            public readonly int thisSubactionSuccessTiedToSubactionAtIndex;
+            public readonly sbyte thisSubactionSuccessTiedToSubactionAtIndex;
             public readonly FXPackage[] fx;
 
             /// <summary>
@@ -97,7 +97,7 @@
             public Subaction(int _baseDamage, float _baseAccuracy,
                              AnimEventType _onSubactionHitTargetAnim, AnimEventType _onSubactionExecuteUserAnim,
                              LogicalStatType _atkStat, LogicalStatType _defStat, LogicalStatType _hitStat, LogicalStatType _evadeStat,
-                             int _thisSubactionDamageTiedToSubactionAtIndex, int _thisSubactionSuccessTiedToSubactionAtIndex,
+                             sbyte _thisSubactionDamageTiedToSubactionAtIndex, sbyte _thisSubactionSuccessTiedToSubactionAtIndex,
                              FXPackage[] _fx, DamageTypeFlags _damageTypes)
             {
                 baseDamage = _baseDamage;
@@ -121,7 +121,7 @@
         public readonly float baseFollowthroughStanceChangeDelay;
         public readonly float baseMinimumTargetingDistance;
         public readonly float baseTargetingRange;
-        public readonly int baseSPCost;
+        public readonly byte baseSPCost;
         public readonly TargetSideFlags targetingSideFlags;
         public readonly ActionTargetType targetingType;
         public readonly AnimEventType animSkipTargetHitAnim;
@@ -136,7 +136,7 @@
         /// This should never be called outside of ActionDataset.LoadData()!
         /// </summary>
         public BattleAction(ActionType _actionID, float _baseAOERadius, float _baseDelay, float _baseFollowthroughStanceChangeDelay, float _baseMinimumTargetingDistance, float _basetargetingRange,
-            int _baseSPCost, TargetSideFlags _targetingSideFlags, ActionTargetType _targetingType, AnimEventType _animSkipTargetHitAnim,
+            byte _baseSPCost, TargetSideFlags _targetingSideFlags, ActionTargetType _targetingType, AnimEventType _animSkipTargetHitAnim,
             AnimEventType _onActionEndTargetAnim, AnimEventType _onActionEndUserAnim, AnimEventType _OnActionUseTargetAnim, AnimEventType _OnActionUseUserAnim,
             Subaction[] _Subactions)
         {
@@ -157,27 +157,5 @@
             onActionUseUserAnim = _OnActionUseUserAnim;
             Subactions = _Subactions;
         }
-
-        public static ActionType ParseToActionID (string s)
-        {
-            switch (s)
-            {
-                case "None":
-                    return ActionType.None;
-                case "TestMeleeAtk":
-                    return ActionType.TestMeleeAtk;
-                case "TestRangedAOEAtk":
-                    return ActionType.TestRangedAOEAtk;
-                case "TestBuff":
-                    return ActionType.TestBuff;
-                case "TestHeal":
-                    return ActionType.TestHeal;
-                case "TestCounter":
-                    return ActionType.TestCounter;
-                default:
-                    throw new System.Exception(s + " either isn't a valid ActionType, or hasn't been added to the parser");
-            }
-        }
-
     }
 }

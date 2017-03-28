@@ -58,6 +58,7 @@ namespace Universe
                 {
                     GameObject go = new GameObject("Universe");
                     go.AddComponent<Universe>();
+                    go.AddComponent<UniverseStage_DataLoader>();
                 }
             }
         }

@@ -29,14 +29,14 @@
         public readonly float statMultiplier_HIT;
         public readonly float statMultiplier_EVA;
         public readonly int statBonus_MaxHP;
-        public readonly int statBonus_ATK;
-        public readonly int statBonus_DEF;
-        public readonly int statBonus_MATK;
-        public readonly int statBonus_MDEF;
-        public readonly int statBonus_SPE;
-        public readonly int statBonus_HIT;
-        public readonly int statBonus_EVA;
-        public readonly int maxSP; // this is almost always 100 but I might wanna fudge it for enemies or something? idk
+        public readonly short statBonus_ATK;
+        public readonly short statBonus_DEF;
+        public readonly short statBonus_MATK;
+        public readonly short statBonus_MDEF;
+        public readonly short statBonus_SPE;
+        public readonly short statBonus_HIT;
+        public readonly short statBonus_EVA;
+        public readonly byte maxSP; // this is almost always 100 but I might wanna fudge it for enemies or something? idk
 
         /// <summary>
         /// Constructor. Shouldn't be called by anything outside of Datasets.LoadStances().
@@ -44,8 +44,8 @@
         public BattleStance (StanceType _stanceID, AnimEventType _animEvent_Idle, AnimEventType _animEvent_Move, AnimEventType _animEvent_Hit, AnimEventType _animEvent_Break, AnimEventType _animEvent_Dodge,
             BattleAction[] _actionSet, BattleAction _counterattackAction, float _moveDelayBonus, float _moveDelayMultiplier, float _moveDistBonus, float _moveDistMultiplier, float _stanceChangeDelayBonus, 
             float _stanceChangeDelayMultiplier, float _statMultiplier_MaxHP, float _statMultiplier_ATK, float _statMultiplier_DEF, float _statMultiplier_MATK, float _statMultiplier_MDEF, float _statMultiplier_SPE,
-            float _statMultiplier_HIT, float _statMultiplier_EVA, int _statBonus_MaxHP, int _statBonus_ATK, int _statBonus_DEF, int _statBonus_MATK, int _statBonus_MDEF, int _statBonus_SPE, int _statBonus_HIT, 
-            int _statBonus_EVA, int _maxSP, Battler.Resistances_Raw _resistances)
+            float _statMultiplier_HIT, float _statMultiplier_EVA, int _statBonus_MaxHP, short _statBonus_ATK, short _statBonus_DEF, short _statBonus_MATK, short _statBonus_MDEF, short _statBonus_SPE, short _statBonus_HIT, 
+            short _statBonus_EVA, byte _maxSP, Battler.Resistances_Raw _resistances)
         {
             stanceID = _stanceID;
             animEvent_Idle = _animEvent_Idle;

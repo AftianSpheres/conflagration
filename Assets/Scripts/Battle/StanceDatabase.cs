@@ -10,14 +10,14 @@ namespace CnfBattleSys
     public static class StanceDatabase
     {
         private static BattleStance[] _stances;
-        private static readonly BattleStance defaultStance = new BattleStance(StanceType.InvalidStance, AnimEventType.None, AnimEventType.None, AnimEventType.None, AnimEventType.None, AnimEventType.None, new BattleAction[0], ActionDatabase.defaultBattleAction,
+        public static readonly BattleStance defaultStance = new BattleStance(StanceType.InvalidStance, AnimEventType.None, AnimEventType.None, AnimEventType.None, AnimEventType.None, AnimEventType.None, new BattleAction[0], ActionDatabase.defaultBattleAction,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, new Battler.Resistances_Raw(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
 
         /// <summary>
         /// Loads in and parses all the xml files for the stance dataset.
         /// This should only ever run once.
         /// </summary>
-        private static void LoadStances ()
+        public static void Load ()
         {
             XmlDocument doc = new XmlDocument();
             XmlNode workingNode = doc.DocumentElement;
@@ -61,10 +61,10 @@ namespace CnfBattleSys
             BattleAction[] actionSet = new BattleAction[actionNodes.Count];
             for (int i = 0; i < actionNodes.Count; i++)
             {
-                actionSet[i] = ActionDatabase.Get(BattleAction.ParseToActionID(actionNodes[i].InnerText));
+                actionSet[i] = ActionDatabase.Get(DBTools.ParseActionType(actionNodes[i].InnerText));
             }
             actOnNode("counterattackAction");
-            BattleAction counterattackAction = ActionDatabase.Get(BattleAction.ParseToActionID(workingNode.InnerText));
+            BattleAction counterattackAction = ActionDatabase.Get(DBTools.ParseActionType(workingNode.InnerText));
             actOnNode("moveDelayBonus");
             float moveDelayBonus = float.Parse(workingNode.InnerText);
             actOnNode("moveDelayMultiplier");
@@ -96,21 +96,21 @@ namespace CnfBattleSys
             actOnNode("statBonus/MaxHP");
             int statBonus_MaxHP = int.Parse(workingNode.InnerText);
             actOnNode("statBonus/ATK");
-            int statBonus_ATK = int.Parse(workingNode.InnerText);
+            short statBonus_ATK = short.Parse(workingNode.InnerText);
             actOnNode("statBonus/DEF");
-            int statBonus_DEF = int.Parse(workingNode.InnerText);
+            short statBonus_DEF = short.Parse(workingNode.InnerText);
             actOnNode("statBonus/MATK");
-            int statBonus_MATK = int.Parse(workingNode.InnerText);
+            short statBonus_MATK = short.Parse(workingNode.InnerText);
             actOnNode("statBonus/MDEF");
-            int statBonus_MDEF = int.Parse(workingNode.InnerText);
+            short statBonus_MDEF = short.Parse(workingNode.InnerText);
             actOnNode("statBonus/SPE");
-            int statBonus_SPE = int.Parse(workingNode.InnerText);
+            short statBonus_SPE = short.Parse(workingNode.InnerText);
             actOnNode("statBonus/HIT");
-            int statBonus_HIT = int.Parse(workingNode.InnerText);
+            short statBonus_HIT = short.Parse(workingNode.InnerText);
             actOnNode("statBonus/EVA");
-            int statBonus_EVA = int.Parse(workingNode.InnerText);
+            short statBonus_EVA = short.Parse(workingNode.InnerText);
             actOnNode("maxSP");
-            int maxSP = int.Parse(workingNode.InnerText);
+            byte maxSP = byte.Parse(workingNode.InnerText);
             Battler.Resistances_Raw resistances = DBTools.GetResistancesFromXML(resNode, workingNode);
             Resources.UnloadAsset(unreadFileBuffer);
             return new BattleStance(stanceID, animEvent_Idle, animEvent_Move, animEvent_Hit, animEvent_Break, animEvent_Dodge, actionSet, counterattackAction, moveDelayBonus, moveDelayMultiplier, moveDistBonus, moveDistMultiplier,
@@ -124,7 +124,6 @@ namespace CnfBattleSys
         /// </summary>
         public static BattleStance Get (StanceType stanceID)
         {
-            if (_stances == null) LoadStances();
             return _stances[(int)stanceID];
         }
     }

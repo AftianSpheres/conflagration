@@ -11,19 +11,20 @@ namespace CnfBattleSys
     public static class BattlerDatabase
     {
         private static BattlerData[] _battlerData;
-        private static readonly BattlerData defaultBattler;
+        private static readonly BattlerData defaultBattler = new BattlerData(true, BattlerAIType.None, BattlerAIFlags.None, 0, 0, 1, 0, BattlerModelType.None, new BattleStance[0], StanceDatabase.defaultStance, 
+            10, 1, 1, 1, 1, 1, 1, 1, new Battler.Resistances_Raw(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1));
 
         /// <summary>
         /// Loads in and parses all the xml files, parses the unit dataset.
         /// This should only ever run once.
         /// </summary>
-        private static void Load ()
+        public static void Load ()
         {
             XmlDocument doc = new XmlDocument();
             XmlNode workingNode = doc.DocumentElement;
             int c = Enum.GetValues(typeof(BattlerType)).Length - 1;
             _battlerData = new BattlerData[c];
-            //for (int a = 0; a < c; a++) _actions[a] = ImportActionDefWithID((ActionType)a, doc, workingNode);
+            for (int b = 0; b < c; b++) _battlerData[b] = ImportUnitDefWithID((BattlerType)b, doc, workingNode);
         }
 
         /// <summary>
@@ -52,7 +53,53 @@ namespace CnfBattleSys
             else throw new Exception(workingNode.InnerText + " isn't a valid statsType option");
             actOnNode("aiType");
             BattlerAIType aiType = DBTools.ParseBattlerAIType(workingNode.InnerText);
-            throw new Exception("not done yet lol");
+            actOnNode("aiFlags");
+            BattlerAIFlags aiFlags = DBTools.ParseBattlerAIFlags(workingNode.InnerText.Split(' '));
+            actOnNode("level");
+            byte level = byte.Parse(workingNode.InnerText);
+            actOnNode("size");
+            float size = float.Parse(workingNode.InnerText);
+            actOnNode("stepTime");
+            float stepTime = float.Parse(workingNode.InnerText);
+            actOnNode("yOffset");
+            float yOffset = float.Parse(workingNode.InnerText);
+            actOnNode("model");
+            BattlerModelType modelType = DBTools.ParseBattlerModelType(workingNode.InnerText);
+            actOnNode("stances");
+            XmlNodeList stanceNodes = workingNode.SelectNodes("stance");
+            BattleStance[] stances = new BattleStance[stanceNodes.Count];
+            for (int i = 0; i < stances.Length; i++) stances[i] = StanceDatabase.Get(DBTools.ParseStanceType(stanceNodes[i].InnerText));
+            actOnNode("metaStance");
+            BattleStance metaStance = StanceDatabase.Get(DBTools.ParseStanceType(workingNode.InnerText));
+            actOnNode("baseStats/MaxHP");
+            int baseHP = int.Parse(workingNode.InnerText);
+            actOnNode("baseStats/ATK");
+            ushort baseATK = ushort.Parse(workingNode.InnerText);
+            actOnNode("baseStats/DEF");
+            ushort baseDEF = ushort.Parse(workingNode.InnerText);
+            actOnNode("baseStats/MATK");
+            ushort baseMATK = ushort.Parse(workingNode.InnerText);
+            actOnNode("baseStats/MDEF");
+            ushort baseMDEF = ushort.Parse(workingNode.InnerText);
+            actOnNode("baseStats/SPE");
+            ushort baseSPE = ushort.Parse(workingNode.InnerText);
+            actOnNode("baseStats/EVA");
+            ushort baseEVA = ushort.Parse(workingNode.InnerText);
+            actOnNode("baseStats/HIT");
+            ushort baseHIT = ushort.Parse(workingNode.InnerText);
+            XmlNode resNode = rootNode.SelectSingleNode("resistances");
+            Battler.Resistances_Raw resistances = DBTools.GetResistancesFromXML(resNode, workingNode);
+            Resources.UnloadAsset(unreadFileBuffer);
+            return new BattlerData(isFixedStats, aiType, aiFlags, level, size, stepTime, yOffset, modelType, stances, metaStance,
+                baseHP, baseATK, baseDEF, baseMATK, baseMDEF, baseSPE, baseHIT, baseEVA, resistances);
+        }
+
+        /// <summary>
+        /// Gets battler data for battlerType
+        /// </summary>
+        public static BattlerData Get (BattlerType battlerType)
+        {
+            return _battlerData[(int)battlerType];
         }
     }
 

@@ -79,6 +79,45 @@ namespace CnfBattleSys
         }
 
         /// <summary>
+        /// Parses array of strings into BattlerAIFlags bitflags
+        /// </summary>
+        public static BattlerAIFlags ParseBattlerAIFlags(string[] s)
+        {
+            BattlerAIFlags result = BattlerAIFlags.None;
+            for (int i = 0; i < s.Length; i++)
+            {
+                BattlerAIFlags bAiFlag = (BattlerAIFlags)Enum.Parse(typeof(BattlerAIFlags), s[i]);
+                if (bAiFlag == BattlerAIFlags.None) return BattlerAIFlags.None;
+                else result |= bAiFlag;
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Parse BattlerModelType from string
+        /// </summary>
+        public static BattlerModelType ParseBattlerModelType (string s)
+        {
+            return (BattlerModelType)Enum.Parse(typeof(BattlerModelType), s);
+        }
+
+        /// <summary>
+        /// Parses StanceType from string
+        /// </summary>
+        public static StanceType ParseStanceType (string s)
+        {
+            return (StanceType)Enum.Parse(typeof(StanceType), s);
+        }
+
+        /// <summary>
+        /// Parse for action ID
+        /// </summary>
+        public static ActionType ParseActionType(string s)
+        {
+            return (ActionType)Enum.Parse(typeof(ActionType), s);
+        }
+
+        /// <summary>
         /// Gets resistance info out of resistances node's children.
         /// </summary>
         public static Battler.Resistances_Raw GetResistancesFromXML(XmlNode resNode, XmlNode workingNode)

@@ -15,7 +15,7 @@ namespace CnfBattleSys
         /// Loads in and parses all of the xml files, populates the action dataset.
         /// This should only ever run once.
         /// </summary>
-        private static void LoadActions()
+        public static void Load()
         {
             XmlDocument doc = new XmlDocument();
             XmlNode workingNode = doc.DocumentElement;
@@ -62,7 +62,7 @@ namespace CnfBattleSys
             actOnNode("//baseTargetingRange");
             float baseTargetingRange = float.Parse(workingNode.InnerText);
             actOnNode("//baseSPCost");
-            int baseSPCost = int.Parse(workingNode.InnerText);
+            byte baseSPCost = byte.Parse(workingNode.InnerText);
             actOnNode("//targetingSideFlags");
             TargetSideFlags targetingSideFlags = DBTools.ParseTargetSideFlags(workingNode.InnerText.Split(' '));
             actOnNode("//targetingType");
@@ -96,8 +96,8 @@ namespace CnfBattleSys
             };
             XmlNodeList fxList = SubactionNode.SelectNodes("//fxPackage");
             BattleAction.Subaction.FXPackage[] fx = new BattleAction.Subaction.FXPackage[fxList.Count];
-            int thisSubactionDamageTiedToSubactionAtIndex = -1;
-            int thisSubactionSuccessTiedToSubactionAtIndex = -1;
+            sbyte thisSubactionDamageTiedToSubactionAtIndex = -1;
+            sbyte thisSubactionSuccessTiedToSubactionAtIndex = -1;
             if (fx != null)
             {
                 for (int f = 0; f < fx.Length; f++)
@@ -128,14 +128,14 @@ namespace CnfBattleSys
             workingNode = SubactionNode.SelectSingleNode("//thisSubactionDamageTiedToSubactionAtIndex");
             if (workingNode != null)
             {
-                thisSubactionDamageTiedToSubactionAtIndex = int.Parse(workingNode.InnerText);
+                thisSubactionDamageTiedToSubactionAtIndex = sbyte.Parse(workingNode.InnerText);
                 if (thisSubactionDamageTiedToSubactionAtIndex < 0) throw new Exception(exceptionSubactionIDStr() + " tries to tie itself to an invalid Subaction index!");
                 else if (thisSubactionDamageTiedToSubactionAtIndex >= index) throw new Exception(exceptionSubactionIDStr() + " tries to tie itself to a Subaction index that doesn't precede it!");
             }
             workingNode = SubactionNode.SelectSingleNode("//thisSubactionSuccessTiedToSubactionAtIndex");
             if (workingNode != null)
             {
-                thisSubactionSuccessTiedToSubactionAtIndex = int.Parse(workingNode.InnerText);
+                thisSubactionSuccessTiedToSubactionAtIndex = sbyte.Parse(workingNode.InnerText);
                 if (thisSubactionSuccessTiedToSubactionAtIndex < 0) throw new Exception(exceptionSubactionIDStr() + " tries to tie itself to an invalid Subaction index!");
                 else if (thisSubactionSuccessTiedToSubactionAtIndex >= index) throw new Exception(exceptionSubactionIDStr() + " tries to tie itself to a Subaction index that doesn't precede it!");
             }
@@ -151,8 +151,8 @@ namespace CnfBattleSys
             float fxStrengthFloat = float.NaN;
             float fxLengthFloat = float.NaN;
             int fxStrengthInt = 0;
-            int fxLengthInt = 0;
-            int thisFXSuccessTiedToFXAtIndex = -1;
+            byte fxLengthByte = 0;
+            sbyte thisFXSuccessTiedToFXAtIndex = -1;
             Action<string> actOnNode = (node) =>
             {
                 workingNode = fxNode.SelectSingleNode(node);
@@ -176,7 +176,7 @@ namespace CnfBattleSys
             else
             {
                 actOnNode("//fxLength_Int");
-                fxLengthInt = int.Parse(workingNode.InnerText);
+                fxLengthByte = byte.Parse(workingNode.InnerText);
             }
             workingNode = fxNode.SelectSingleNode("//fxStrength_Float");
             if (workingNode != null) fxStrengthFloat = float.Parse(workingNode.InnerText);
@@ -188,11 +188,11 @@ namespace CnfBattleSys
             workingNode = fxNode.SelectSingleNode("//thisFXSuccessTiedToFXAtIndex");
             if (workingNode != null)
             {
-                thisFXSuccessTiedToFXAtIndex = int.Parse(workingNode.InnerText);
+                thisFXSuccessTiedToFXAtIndex = sbyte.Parse(workingNode.InnerText);
                 if (thisFXSuccessTiedToFXAtIndex < 0) throw new Exception(exceptionFXPackageIDStr() + " tries to tie itself to an invalid FX index!");
                 else if (thisFXSuccessTiedToFXAtIndex >= index) throw new Exception(exceptionFXPackageIDStr() + " tries to tie itself to an FX index that doesn't precede it!");
             }
-            return new BattleAction.Subaction.FXPackage(fxType, fxHitStat, fxEvadeStat, applyEvenIfSubactionMisses, baseSuccessRate, fxLengthFloat, fxStrengthFloat, fxLengthInt, fxStrengthInt, thisFXSuccessTiedToFXAtIndex);
+            return new BattleAction.Subaction.FXPackage(fxType, fxHitStat, fxEvadeStat, applyEvenIfSubactionMisses, baseSuccessRate, fxLengthFloat, fxStrengthFloat, fxLengthByte, fxStrengthInt, thisFXSuccessTiedToFXAtIndex);
         }
 
         /// <summary>
@@ -200,7 +200,6 @@ namespace CnfBattleSys
         /// </summary>
         public static BattleAction Get(ActionType actionID)
         {
-            if (_actions == null) LoadActions();
             return _actions[(int)actionID];
         }
     }
