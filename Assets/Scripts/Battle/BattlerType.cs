@@ -4,7 +4,7 @@
     /// Enum specifying the allowed battle unit IDs.
     /// There'll be a _lot_ of these things...
     /// </summary>
-    public enum BattlerType
+    public enum BattlerType : short
     {
         InvalidUnit = -1,
         None,

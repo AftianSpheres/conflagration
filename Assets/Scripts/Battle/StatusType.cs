@@ -7,7 +7,7 @@
     /// collisions between different versions of the "same" status.
     /// The advantage of doing things this way is that it makes it very easy for us to stack effects.
     /// </summary>
-    public enum StatusType
+    public enum StatusType : short
     {
         None,
         TestBuff,

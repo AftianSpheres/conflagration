@@ -1,6 +1,6 @@
 ﻿namespace CnfBattleSys
 {
-    public enum StanceType
+    public enum StanceType : short
     {
         InvalidStance = -1,
         None,

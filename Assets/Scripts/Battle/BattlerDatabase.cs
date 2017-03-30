@@ -54,7 +54,7 @@ namespace CnfBattleSys
             actOnNode("aiType");
             BattlerAIType aiType = DBTools.ParseBattlerAIType(workingNode.InnerText);
             actOnNode("aiFlags");
-            BattlerAIFlags aiFlags = DBTools.ParseBattlerAIFlags(workingNode.InnerText.Split(' '));
+            BattlerAIFlags aiFlags = DBTools.ParseBattlerAIFlags(workingNode.InnerText);
             actOnNode("level");
             byte level = byte.Parse(workingNode.InnerText);
             actOnNode("size");

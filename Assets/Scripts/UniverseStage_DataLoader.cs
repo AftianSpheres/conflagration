@@ -15,9 +15,7 @@ public class UniverseStage_DataLoader : MonoBehaviour
     {
         if (!_runOnce)
         {
-            ActionDatabase.Load();
-            StanceDatabase.Load(); // stances reference actions
-            BattlerDatabase.Load(); // battlers reference stances
+            BattleOverseer.FirstRunSetup();
             _runOnce = true;
         }
         else

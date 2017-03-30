@@ -1,4 +1,5 @@
-﻿using System;
+﻿using UnityEngine;
+using System;
 using System.Xml;
 
 namespace CnfBattleSys
@@ -41,33 +42,27 @@ namespace CnfBattleSys
         }
 
         /// <summary>
-        /// Takes an array of strings, spits out target side bitflags.
+        /// Takes a CSV string, spits out target side bitflags.
         /// </summary>
-        public static TargetSideFlags ParseTargetSideFlags(string[] s)
+        public static TargetSideFlags ParseTargetSideFlags(string s)
         {
-            TargetSideFlags result = TargetSideFlags.None;
-            for (int i = 0; i < s.Length; i++)
-            {
-                TargetSideFlags tSFlag = (TargetSideFlags)Enum.Parse(typeof(TargetSideFlags), s[i]);
-                if (tSFlag == TargetSideFlags.None) return TargetSideFlags.None;
-                else result |= tSFlag;
-            }
-            return result;
+            return (TargetSideFlags)Enum.Parse(typeof(TargetSideFlags), s);
         }
 
         /// <summary>
-        /// Takes an array of strings, spits out damage type bitflags.
+        /// Takes a CSV string, spits out damage type bitflags.
         /// </summary>
-        public static DamageTypeFlags ParseDamageTypeFlags(string[] s)
+        public static DamageTypeFlags ParseDamageTypeFlags(string s)
         {
-            DamageTypeFlags result = DamageTypeFlags.None;
-            for (int i = 0; i < s.Length; i++)
-            {
-                DamageTypeFlags dTFlag = (DamageTypeFlags)Enum.Parse(typeof(DamageTypeFlags), s[i]);
-                if (dTFlag == DamageTypeFlags.None) return DamageTypeFlags.None;
-                else result |= dTFlag;
-            }
-            return result;
+            return (DamageTypeFlags)Enum.Parse(typeof(DamageTypeFlags), s);
+        }
+
+        /// <summary>
+        /// Parses a BattlerType.
+        /// </summary>
+        public static BattlerType ParseBattlerType(string s)
+        {
+            return (BattlerType)Enum.Parse(typeof(BattlerType), s);
         }
 
         /// <summary>
@@ -79,18 +74,19 @@ namespace CnfBattleSys
         }
 
         /// <summary>
-        /// Parses array of strings into BattlerAIFlags bitflags
+        /// Parses CSV string into BattlerAIFlags bitflags
         /// </summary>
-        public static BattlerAIFlags ParseBattlerAIFlags(string[] s)
+        public static BattlerAIFlags ParseBattlerAIFlags (string s)
         {
-            BattlerAIFlags result = BattlerAIFlags.None;
-            for (int i = 0; i < s.Length; i++)
-            {
-                BattlerAIFlags bAiFlag = (BattlerAIFlags)Enum.Parse(typeof(BattlerAIFlags), s[i]);
-                if (bAiFlag == BattlerAIFlags.None) return BattlerAIFlags.None;
-                else result |= bAiFlag;
-            }
-            return result;
+            return (BattlerAIFlags)Enum.Parse(typeof(BattlerAIFlags), s);
+        }
+
+        /// <summary>
+        /// Parses CSV string into BattlerSideFlags bitflags
+        /// </summary>
+        public static BattlerSideFlags ParseBattlerSideFlags(string s)
+        {
+            return (BattlerSideFlags)Enum.Parse(typeof(BattlerSideFlags), s);
         }
 
         /// <summary>
@@ -115,6 +111,40 @@ namespace CnfBattleSys
         public static ActionType ParseActionType(string s)
         {
             return (ActionType)Enum.Parse(typeof(ActionType), s);
+        }
+
+        /// <summary>
+        /// Parse for venue type.
+        /// </summary>
+        public static VenueType ParseVenueType (string s)
+        {
+            return (VenueType)Enum.Parse(typeof(VenueType), s);
+        }
+
+        /// <summary>
+        /// Parse for BGM track type.
+        /// </summary>
+        public static BGMTrackType ParseBGMTrackType (string s)
+        {
+            return (BGMTrackType)Enum.Parse(typeof(BGMTrackType), s);
+        }
+
+        /// <summary>
+        /// CSV string => battle formation bitflags
+        /// </summary>
+        public static BattleFormationFlags ParseBattleFormationFlags (string s)
+        {
+            return (BattleFormationFlags)Enum.Parse(typeof(BattleFormationFlags), s);
+        }
+
+        /// <summary>
+        /// Turns a string of format (float), (float) into a vector2.
+        /// </summary>
+        public static Vector2 ParseVector2 (string s)
+        {
+            string[] substrings = s.Split(',');
+            if (substrings.Length > 2) throw new Exception("Unrecognized vector2-as-string encoding: " + s);
+            return new Vector2(float.Parse(substrings[0]), float.Parse(substrings[1]));
         }
 
         /// <summary>

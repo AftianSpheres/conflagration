@@ -64,7 +64,7 @@ namespace CnfBattleSys
             actOnNode("//baseSPCost");
             byte baseSPCost = byte.Parse(workingNode.InnerText);
             actOnNode("//targetingSideFlags");
-            TargetSideFlags targetingSideFlags = DBTools.ParseTargetSideFlags(workingNode.InnerText.Split(' '));
+            TargetSideFlags targetingSideFlags = DBTools.ParseTargetSideFlags(workingNode.InnerText);
             actOnNode("//targetingType");
             ActionTargetType targetingType = DBTools.ParseActionTargetType(workingNode.InnerText);
             actOnNode("//animSkipTargetHitAnim");
@@ -124,7 +124,7 @@ namespace CnfBattleSys
             actOnNode("//evadeStat");
             LogicalStatType evadeStat = DBTools.ParseLogicalStatType(workingNode.InnerText);
             actOnNode("//damageTypes");
-            DamageTypeFlags damageTypes = DBTools.ParseDamageTypeFlags(workingNode.InnerText.Split(' '));
+            DamageTypeFlags damageTypes = DBTools.ParseDamageTypeFlags(workingNode.InnerText);
             workingNode = SubactionNode.SelectSingleNode("//thisSubactionDamageTiedToSubactionAtIndex");
             if (workingNode != null)
             {

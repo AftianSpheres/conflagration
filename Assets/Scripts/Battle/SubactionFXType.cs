@@ -5,7 +5,7 @@
     /// Subactions can have as many FXPackages associated with them as they want, so
     /// simple and granular is ideal here. An FXType is One Thing.
     /// </summary>
-    public enum SubactionFXType
+    public enum SubactionFXType : short
     {
         None,
         PushTargetBackward,

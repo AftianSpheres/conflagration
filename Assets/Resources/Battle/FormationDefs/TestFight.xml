@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<formation>
+  <venue>TestVenue</venue>
+  <bgm>TestBGM</bgm>
+  <flags>None</flags
+  <fieldSize>20, 20</fieldSize>
+  <battlers>
+    <GenericEnemySide>
+      <unit>
+        <battlerType>TestAIUnit</battlerType>
+        <position>3, -9</position>
+        <startStance>TestStance</startStance>
+      </unit>
+      <unit>
+        <battlerType>TestAIUnit</battlerType>
+        <position>0, 0</position>
+        <startStance>TestStance</startStance>
+      </unit>
+    </GenericEnemySide>
+  </battlers>
+</formation>

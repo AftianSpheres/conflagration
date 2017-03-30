@@ -1,6 +1,6 @@
 ﻿namespace CnfBattleSys
 {
-    public enum BattlerStatType
+    public enum BattlerStatType : byte
     {
         None,
         Stat_ATK,
