@@ -8,6 +8,37 @@
     /// </summary>
     public class BattlerData
     {
+        /// <summary>
+        /// Struct that stores growths for a specific BattlerData instance.
+        /// </summary>
+        public struct Growths
+        {
+            public readonly float HP;
+            public readonly float ATK;
+            public readonly float DEF;
+            public readonly float MATK;
+            public readonly float MDEF;
+            public readonly float SPE;
+            public readonly float EVA;
+            public readonly float HIT;
+
+            /// <summary>
+            /// Constructor. Only called by BattlerDatabase.
+            /// </summary>
+            public Growths (float _hp, float _atk, float _def, float _matk, float _mdef, float _spe, float _eva, float _hit)
+            {
+                HP = _hp;
+                ATK = _atk;
+                DEF = _def;
+                MATK = _matk;
+                MDEF = _mdef;
+                SPE = _spe;
+                EVA = _eva;
+                HIT = _hit;
+            }
+        }
+
+        public readonly BattlerType battlerType;
         public readonly bool isFixedStats; // if this is true, we use our base stats directly and level doesn't matter; if false, we calculate our stats based on those values.
         public readonly BattlerAIType aiType;
         public readonly BattlerAIFlags aiFlags;
@@ -26,15 +57,19 @@
         public readonly ushort baseSPE;
         public readonly ushort baseHIT;
         public readonly ushort baseEVA;
+        public readonly float baseMoveDist;
+        public readonly float baseMoveDelay;
+        public readonly Growths growths;
         public readonly Battler.Resistances_Raw resistances;
 
         /// <summary>
         /// Constructor. Should only ever be called by BattlerDatabase.ImportUnitDefWithID()
         /// </summary>
-        public BattlerData (bool _isFixedStats, BattlerAIType _aiType, BattlerAIFlags _aiFlags, byte _level, float _size, float _stepTime, float _yOffset, BattlerModelType _modelType, 
+        public BattlerData (BattlerType _battlerType, bool _isFixedStats, BattlerAIType _aiType, BattlerAIFlags _aiFlags, byte _level, float _size, float _stepTime, float _yOffset, BattlerModelType _modelType, 
             BattleStance[] _stances, BattleStance _metaStance, int _baseHP, ushort _baseATK, ushort _baseDEF, ushort _baseMATK, ushort _baseMDEF, ushort _baseSPE, ushort _baseHIT, ushort _baseEVA, 
-            Battler.Resistances_Raw _resistances)
+            float _baseMoveDist, float _baseMoveDelay, Growths _growths, Battler.Resistances_Raw _resistances)
         {
+            battlerType = _battlerType;
             isFixedStats = _isFixedStats;
             aiType = _aiType;
             aiFlags = _aiFlags;
@@ -53,6 +88,9 @@
             baseSPE = _baseSPE;
             baseHIT = _baseHIT;
             baseEVA = _baseEVA;
+            baseMoveDist = _baseMoveDist;
+            baseMoveDelay = _baseMoveDelay;
+            growths = _growths;
             resistances = _resistances;
         }
     }

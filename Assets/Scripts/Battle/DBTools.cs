@@ -148,6 +148,35 @@ namespace CnfBattleSys
         }
 
         /// <summary>
+        /// Gets growths info out of growth node's children.
+        /// </summary>
+        public static BattlerData.Growths GetGrowthsFromXML (XmlNode growthsNode, XmlNode workingNode)
+        {
+            Action<string> actOnNode = (node) =>
+            {
+                workingNode = growthsNode.SelectSingleNode(node);
+                if (workingNode == null) throw new Exception("Malformed growths set in xml file - missing node  " + node);
+            };
+            actOnNode("HP");
+            float HP = float.Parse(workingNode.InnerText);
+            actOnNode("ATK");
+            float ATK = float.Parse(workingNode.InnerText);
+            actOnNode("DEF");
+            float DEF = float.Parse(workingNode.InnerText);
+            actOnNode("MATK");
+            float MATK = float.Parse(workingNode.InnerText);
+            actOnNode("MDEF");
+            float MDEF = float.Parse(workingNode.InnerText);
+            actOnNode("SPE");
+            float SPE = float.Parse(workingNode.InnerText);
+            actOnNode("HIT");
+            float HIT = float.Parse(workingNode.InnerText);
+            actOnNode("EVA");
+            float EVA = float.Parse(workingNode.InnerText);
+            return new BattlerData.Growths(HP, ATK, DEF, MATK, MDEF, SPE, EVA, HIT);
+        }
+ 
+        /// <summary>
         /// Gets resistance info out of resistances node's children.
         /// </summary>
         public static Battler.Resistances_Raw GetResistancesFromXML(XmlNode resNode, XmlNode workingNode)

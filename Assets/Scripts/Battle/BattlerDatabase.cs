@@ -11,7 +11,7 @@ namespace CnfBattleSys
     public static class BattlerDatabase
     {
         private static BattlerData[] _battlerData;
-        private static readonly BattlerData defaultBattler = new BattlerData(true, BattlerAIType.None, BattlerAIFlags.None, 0, 0, 1, 0, BattlerModelType.None, new BattleStance[0], StanceDatabase.defaultStance, 
+        private static readonly BattlerData defaultBattler = new BattlerData(BattlerType.InvalidUnit, true, BattlerAIType.None, BattlerAIFlags.None, 0, 0, 1, 0, BattlerModelType.None, new BattleStance[0], StanceDatabase.defaultStance, 
             10, 1, 1, 1, 1, 1, 1, 1, new Battler.Resistances_Raw(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1));
 
         /// <summary>
@@ -87,11 +87,18 @@ namespace CnfBattleSys
             ushort baseEVA = ushort.Parse(workingNode.InnerText);
             actOnNode("baseStats/HIT");
             ushort baseHIT = ushort.Parse(workingNode.InnerText);
-            XmlNode resNode = rootNode.SelectSingleNode("resistances");
-            Battler.Resistances_Raw resistances = DBTools.GetResistancesFromXML(resNode, workingNode);
+            actOnNode("baseMoveDist");
+            float baseMoveDist = float.Parse(workingNode.InnerText);
+            actOnNode("baseMoveDelay");
+            float baseMoveDelay = float.Parse(workingNode.InnerText);
+            XmlNode secondaryNode = rootNode.SelectSingleNode("resistances");
+            Battler.Resistances_Raw resistances = DBTools.GetResistancesFromXML(secondaryNode, workingNode);
+            secondaryNode = rootNode.SelectSingleNode("growths");
+            BattlerData.Growths growths = DBTools.GetGrowthsFromXML(secondaryNode, workingNode);
+
             Resources.UnloadAsset(unreadFileBuffer);
-            return new BattlerData(isFixedStats, aiType, aiFlags, level, size, stepTime, yOffset, modelType, stances, metaStance,
-                baseHP, baseATK, baseDEF, baseMATK, baseMDEF, baseSPE, baseHIT, baseEVA, resistances);
+            return new BattlerData(battlerType, isFixedStats, aiType, aiFlags, level, size, stepTime, yOffset, modelType, stances, metaStance,
+                baseHP, baseATK, baseDEF, baseMATK, baseMDEF, baseSPE, baseHIT, baseEVA, growths, resistances);
         }
 
         /// <summary>

@@ -2,6 +2,9 @@
 {
     public static class BattleUtility
     {
+        /// <summary>
+        /// "Yo, are these guys allies or enemies or what?"
+        /// </summary>
         public static TargetSideFlags GetRelativeSidesFor (BattlerSideFlags checker, BattlerSideFlags target)
         {
             switch (checker)
@@ -38,6 +41,25 @@
                 default:
                     return TargetSideFlags.None;
             }
+        }
+
+        /// <summary>
+        /// Makes sure BattlerSideFlags doesn't have more than one bit set,
+        /// because unless we're _trying_ to use it for bitflaggy things
+        /// that would be bad.
+        /// </summary>
+        public static bool IsSingleSide (BattlerSideFlags side)
+        {
+            switch (side)
+            {
+                case BattlerSideFlags.None:
+                case BattlerSideFlags.PlayerSide:
+                case BattlerSideFlags.GenericNeutralSide:
+                case BattlerSideFlags.GenericEnemySide:
+                case BattlerSideFlags.GenericAlliedSide:
+                    return true;
+            }
+            return false; // and I'll never find my allies again, oh nooooooooooooooooooooo
         }
     }
 }

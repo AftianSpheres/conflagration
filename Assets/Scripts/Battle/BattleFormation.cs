@@ -14,7 +14,7 @@ namespace CnfBattleSys
         /// </summary>
         public struct FormationMember
         {
-            public readonly BattlerData battler;
+            public readonly BattlerData battlerData;
             public readonly Vector2 fieldPosition;
             public readonly BattleStance startStance;
             public readonly BattlerSideFlags side;
@@ -24,10 +24,11 @@ namespace CnfBattleSys
             /// </summary>
             public FormationMember(BattlerData _battler, Vector2 _fieldPosition, BattleStance _startStance, BattlerSideFlags _side)
             {
-                battler = _battler;
+                battlerData = _battler;
                 fieldPosition = _fieldPosition;
                 startStance = _startStance;
                 side = _side;
+                if (!BattleUtility.IsSingleSide(side)) throw new System.Exception("Created a FormationMember with multiple sides. Fix that!");
             }
         }
 

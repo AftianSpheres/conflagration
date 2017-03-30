@@ -759,23 +759,69 @@ namespace CnfBattleSys
 
         }
 
+        // Things derived from the battler data table
         public readonly BattlerType battlerType;
+        public int level { get; private set; }
         public readonly Stats stats;
-        public readonly Dictionary<StatusType, StatusPacket> statusPackets;
-
-
         public readonly BattleStance[] stances;
-        public BattleStance currentStance { get; private set; }
         public BattleStance metaStance { get; private set; } // a second stance that goes "on top" of the main one adding actions/bonus/multis
-        public BattlerSideFlags side { get; private set; } // This is a bitflag, but it should never do bitflaggy things here because that'd be weird.
-        public Vector3 logicalPosition { get; private set; } // This is what we use for determining targeting ranges, etc. When we get a move action, we set logicalPosition immediately, and the puppet moves there. z-axis doesn't matter - battlefield is 2D.
-
         public float footprintRadius { get; private set; }
+
+        // Things derived from a specific formation instance
+        public BattlerSideFlags side { get; private set; } // This is a bitflag, but it should never do bitflaggy things here because that'd be weird.
+
+        // Transients
+        public bool isDead { get; private set; }
+        public BattleStance currentStance { get; private set; }
         public float currentDelay { get; private set; }
         public int currentHP { get; private set; }
         public int currentSP { get; private set; }
-        public int level { get; private set; }
+        public Vector3 logicalPosition { get; private set; } // This is what we use for determining targeting ranges, etc. When we get a move action, we set logicalPosition immediately, and the puppet moves there. z-axis doesn't matter - battlefield is 2D.
+        public readonly Dictionary<StatusType, StatusPacket> statusPackets;
 
+        // Magic
+        public float speedFactor { get { return stats.Spe / BattleOverseer.normalizedSpeed; } }
+
+        public Battler (BattleFormation.FormationMember fm)
+        {
+            // Load in everything from the battler data table first
+            battlerType = fm.battlerData.battlerType;
+            level = fm.battlerData.level;
+            int baseHP = fm.battlerData.baseHP;
+            int baseATK = fm.battlerData.baseATK;
+            int baseDEF = fm.battlerData.baseDEF;
+            int baseMATK = fm.battlerData.baseMATK;
+            int baseMDEF = fm.battlerData.baseMDEF;
+            int baseSPE = fm.battlerData.baseSPE;
+            int baseEVA = fm.battlerData.baseEVA;
+            int baseHIT = fm.battlerData.baseHIT;
+            if (!fm.battlerData.isFixedStats)
+            {
+                baseHP = CalculateStat(baseHP, fm.battlerData.level, fm.battlerData.growths.HP);
+                baseATK = CalculateStat(baseATK, fm.battlerData.level, fm.battlerData.growths.ATK);
+                baseDEF = CalculateStat(baseDEF, fm.battlerData.level, fm.battlerData.growths.DEF);
+                baseMATK = CalculateStat(baseMATK, fm.battlerData.level, fm.battlerData.growths.MATK);
+                baseMDEF = CalculateStat(baseMDEF, fm.battlerData.level, fm.battlerData.growths.MDEF);
+                baseSPE = CalculateStat(baseSPE, fm.battlerData.level, fm.battlerData.growths.SPE);
+                baseEVA = CalculateStat(baseEVA, fm.battlerData.level, fm.battlerData.growths.EVA);
+                baseHIT = CalculateStat(baseHIT, fm.battlerData.level, fm.battlerData.growths.HIT);
+            }
+            stats = new Stats(this, baseHP, baseATK, baseDEF, baseMATK, baseMDEF, baseSPE, baseHIT, baseEVA, fm.battlerData.baseMoveDist, fm.battlerData.baseMoveDelay);
+            stances = fm.battlerData.stances;
+            metaStance = fm.battlerData.metaStance;
+            footprintRadius = fm.battlerData.size;
+
+            // Now: conform the Battler to the details in the FormationMember
+            currentStance = fm.startStance;
+            logicalPosition = fm.fieldPosition;
+            side = fm.side;
+
+            // Initialize transients
+            isDead = false;
+            currentDelay = 0;
+            currentHP = stats.maxHP;
+            currentSP = currentStance.maxSP;
+        }
 
         /// <summary>
         /// Given base stat, level, and growth bias, calculates stat at level.
@@ -784,11 +830,24 @@ namespace CnfBattleSys
         /// <param name="level">I ain't gonna spell this out for you.</param>
         /// <param name="growth">Growth factor. Normally less than 1. Applies a multiplier equal to growth at level 1 and 1 at level 120. 
         /// Lower values cause steeper slopes, as more of the stat gains are loaded into the later levels.</param>
-        public static int CalculateStat (int baseStat, int level, float growth)
+        public static int CalculateStat(int baseStat, int level, float growth)
         {
             const float mlv = maxLevel; // implicit divide-as-float
             const int adjustment = 30;
             return Mathf.RoundToInt(baseStat * ((level + adjustment) / mlv) * (growth + ((level / mlv) * (1 - growth))));
+        }
+
+        /// <summary>
+        /// Updates Battler to reflect the amount of time that's elapsed.
+        /// </summary>
+        public void ElapsedTime (float time)
+        {
+            if (!isDead)
+            {
+                currentDelay -= time;
+                if (currentDelay < 0) currentDelay = 0;
+                if (currentDelay == 0) BattleOverseer.RequestTurn(this);
+            }
         }
 
     }
