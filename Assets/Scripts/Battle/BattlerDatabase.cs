@@ -12,7 +12,7 @@ namespace CnfBattleSys
     {
         private static BattlerData[] _battlerData;
         private static readonly BattlerData defaultBattler = new BattlerData(BattlerType.InvalidUnit, true, BattlerAIType.None, BattlerAIFlags.None, 0, 0, 1, 0, BattlerModelType.None, new BattleStance[0], StanceDatabase.defaultStance, 
-            10, 1, 1, 1, 1, 1, 1, 1, new Battler.Resistances_Raw(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1));
+            10, 1, 1, 1, 1, 1, 1, 1, 0, 0, new BattlerData.Growths(1, 1, 1, 1, 1, 1, 1, 1), new Battler.Resistances_Raw(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1));
 
         /// <summary>
         /// Loads in and parses all the xml files, parses the unit dataset.
@@ -98,7 +98,7 @@ namespace CnfBattleSys
 
             Resources.UnloadAsset(unreadFileBuffer);
             return new BattlerData(battlerType, isFixedStats, aiType, aiFlags, level, size, stepTime, yOffset, modelType, stances, metaStance,
-                baseHP, baseATK, baseDEF, baseMATK, baseMDEF, baseSPE, baseHIT, baseEVA, growths, resistances);
+                baseHP, baseATK, baseDEF, baseMATK, baseMDEF, baseSPE, baseHIT, baseEVA, baseMoveDist, baseMoveDelay, growths, resistances);
         }
 
         /// <summary>

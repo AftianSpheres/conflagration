@@ -10,6 +10,21 @@ namespace CnfBattleSys
     /// </summary>
     public static class BattleOverseer
     {
+        /// <summary>
+        /// Battle overseer state values.
+        /// </summary>
+        public enum OverseerState 
+        {
+            Offline,
+            TimeAdvancing,
+            WaitingForInput,
+            ExecutingAction,
+            ExecutingMovement, // not actually doing this atm
+            Paused,
+            BattleWon,
+            BattleLost
+        }
+
         public const float battleTickLength = 1 / 60;
         /// <summary>
         /// Speed stats determine the delay units acquire after acting.
@@ -32,6 +47,9 @@ namespace CnfBattleSys
 
         public static List<Battler> allBattlers { get; private set; }
         public static Dictionary<BattlerSideFlags, List<Battler>> battlersBySide { get; private set; } // xzibit.jpg
+
+        private static BattleAction actionInExecution;
+        private static int subactionExecutionIndex;
 
         /// <summary>
         /// Battlers to give turns when that next becomes possible. Normally there should only actually be one Battler here at a time... but ties are a thing,
