@@ -13,7 +13,8 @@ namespace CnfBattleSys
     {
         private static BattleFormation[] _formations;
         public static readonly BattleFormation defaultFormation = new BattleFormation(FormationType.InvalidFormation, VenueType.None, BGMTrackType.None, BattleFormationFlags.None, Vector2.zero, new BattleFormation.FormationMember[0]);
-        private static string[] sideNodes = { "GenericEnemySide", "GenericAlliedSide", "GenericNeutralSide" };
+        private static string[] sideNames = { "GenericEnemySide", "GenericAlliedSide", "GenericNeutralSide" };
+        private static string[] sideNodes = { "//GenericEnemySide", "//GenericAlliedSide", "//GenericNeutralSide" };
         private static List<BattleFormation.FormationMember> listBuffer;
 
         /// <summary>
@@ -37,7 +38,7 @@ namespace CnfBattleSys
             const string formationDefsResourcePath = "Battle/FormationDefs";
             if (listBuffer == null) listBuffer = new List<BattleFormation.FormationMember>();
             else listBuffer.Clear();
-
+            Debug.Log("Loading battler def from XML file: " + formationDefsResourcePath + formationType.ToString()); // unconditional logging is OK because this is going to move to pre-build before I'd need to strip it anyhow
             TextAsset unreadFileBuffer = Resources.Load<TextAsset>(formationDefsResourcePath + formationType.ToString());
             if (unreadFileBuffer != null) doc.LoadXml(unreadFileBuffer.text);
             else
@@ -51,15 +52,15 @@ namespace CnfBattleSys
                 workingNode = rootNode.SelectSingleNode(node);
                 if (workingNode == null) throw new Exception(formationType.ToString() + " has no node " + node);
             };
-            actOnNode("venue");
+            actOnNode("//venue");
             VenueType venue = DBTools.ParseVenueType(workingNode.InnerText);
-            actOnNode("bgm");
+            actOnNode("//bgm");
             BGMTrackType bgmTrack = DBTools.ParseBGMTrackType(workingNode.InnerText);
-            actOnNode("flags");
+            actOnNode("//flags");
             BattleFormationFlags flags = DBTools.ParseBattleFormationFlags(workingNode.InnerText);
-            actOnNode("fieldSize");
+            actOnNode("//fieldSize");
             Vector2 fieldSize = DBTools.ParseVector2(workingNode.InnerText);
-            actOnNode("battlers");
+            actOnNode("//battlers");
             XmlNode sideNode = doc.DocumentElement;
             Func<string, bool> actONSideNode = (node) =>
             {
@@ -71,13 +72,13 @@ namespace CnfBattleSys
             {
                 if (actONSideNode(sideNodes[i]))
                 {
-                    BattlerSideFlags side = DBTools.ParseBattlerSideFlags(sideNodes[i]);
-                    XmlNodeList battlers = sideNode.SelectNodes("battler");
+                    BattlerSideFlags side = DBTools.ParseBattlerSideFlags(sideNames[i]);
+                    XmlNodeList battlers = sideNode.SelectNodes("//battler");
                     for (int b = 0; b < battlers.Count; b++)
                     {
-                        BattlerData battler = BattlerDatabase.Get(DBTools.ParseBattlerType(battlers[i].SelectSingleNode("battlerType").InnerText));
-                        Vector2 pos = DBTools.ParseVector2(battlers[i].SelectSingleNode("position").InnerText);
-                        BattleStance startStance = StanceDatabase.Get(DBTools.ParseStanceType(battlers[i].SelectSingleNode("startStance").InnerText));
+                        BattlerData battler = BattlerDatabase.Get(DBTools.ParseBattlerType(battlers[i].SelectSingleNode("//battlerType").InnerText));
+                        Vector2 pos = DBTools.ParseVector2(battlers[i].SelectSingleNode("//position").InnerText);
+                        BattleStance startStance = StanceDatabase.Get(DBTools.ParseStanceType(battlers[i].SelectSingleNode("//startStance").InnerText));
                         listBuffer.Add(new BattleFormation.FormationMember(battler, pos, startStance, side));
                     }
                 }

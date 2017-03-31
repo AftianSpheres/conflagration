@@ -7,8 +7,8 @@ namespace CnfBattleSys
     public class ActionDatabase
     {
         private static BattleAction[] _actions;
-        private static readonly BattleAction.Subaction[] defaultSubactionArray = { new BattleAction.Subaction(0, 0, AnimEventType.None, AnimEventType.None, LogicalStatType.None, LogicalStatType.None, LogicalStatType.None, LogicalStatType.None, -1, -1, new BattleAction.Subaction.FXPackage[0], DamageTypeFlags.None) };
-        public static readonly BattleAction defaultBattleAction = new BattleAction(ActionType.InvalidAction, 0, 0, 0, 0, 0, 0, TargetSideFlags.None, ActionTargetType.None, AnimEventType.None, AnimEventType.None, AnimEventType.None, AnimEventType.None, AnimEventType.None,
+        private static readonly BattleAction.Subaction[] defaultSubactionArray = { new BattleAction.Subaction(0, 0, false, AnimEventType.None, AnimEventType.None, LogicalStatType.None, LogicalStatType.None, LogicalStatType.None, LogicalStatType.None, -1, -1, new BattleAction.Subaction.FXPackage[0], DamageTypeFlags.None) };
+        public static readonly BattleAction defaultBattleAction = new BattleAction(ActionType.InvalidAction, 0, 0, 0, 0, 0, 0, TargetSideFlags.None, TargetSideFlags.None, ActionTargetType.None, ActionTargetType.None, AnimEventType.None, AnimEventType.None, AnimEventType.None, AnimEventType.None, AnimEventType.None,
                                                        defaultSubactionArray);
 
         /// <summary>
@@ -30,6 +30,7 @@ namespace CnfBattleSys
         private static BattleAction ImportActionDefWithID(ActionType actionID, XmlDocument doc, XmlNode workingNode)
         {
             const string actionDefsResourcePath = "Battle/ActionDefs/";
+            Debug.Log("Loading action def from XML file: " + actionDefsResourcePath + actionID.ToString()); // unconditional logging is OK because this is going to move to pre-build before I'd need to strip it anyhow
             TextAsset unreadFileBuffer = Resources.Load<TextAsset>(actionDefsResourcePath + actionID.ToString());
             if (unreadFileBuffer != null) doc.LoadXml(unreadFileBuffer.text);
             else
@@ -43,14 +44,6 @@ namespace CnfBattleSys
                 workingNode = rootNode.SelectSingleNode(node);
                 if (workingNode == null) throw new Exception(actionID.ToString() + " has no node " + node);
             };
-            XmlNodeList SubactionsList = rootNode.SelectNodes("//subaction");
-            if (SubactionsList.Count < 1) throw new Exception("Battle action " + actionID.ToString() + " has no defined Subactions!");
-            BattleAction.Subaction[] Subactions = new BattleAction.Subaction[SubactionsList.Count];
-            for (int s = 0; s < Subactions.Length; s++)
-            {
-                XmlNode SubactionNode = SubactionsList[s];
-                Subactions[s] = XmlNodeToSubaction(SubactionNode, workingNode, s, actionID);
-            }
             actOnNode("//baseAOERadius");
             float baseAOERadius = float.Parse(workingNode.InnerText);
             actOnNode("//baseDelay");
@@ -67,6 +60,35 @@ namespace CnfBattleSys
             TargetSideFlags targetingSideFlags = DBTools.ParseTargetSideFlags(workingNode.InnerText);
             actOnNode("//targetingType");
             ActionTargetType targetingType = DBTools.ParseActionTargetType(workingNode.InnerText);
+            TargetSideFlags alternateTargetingSideFlags = TargetSideFlags.None;
+            ActionTargetType alternateTargetType = ActionTargetType.None;
+            workingNode = rootNode.SelectSingleNode("//alternateTargets");
+            if (workingNode != null)
+            {
+                XmlNode subNode = workingNode.SelectSingleNode("//targetingType");
+                if (subNode == null) throw new Exception("Malformed action def: has alternate targets, but no alternate targeting type.");
+                alternateTargetType = DBTools.ParseActionTargetType(subNode.InnerText);
+                subNode = workingNode.SelectSingleNode("//targetingSideFlags");
+                if (subNode == null) throw new Exception("Malformed action def: has alternate targets, but no alternate targeting side flags.");
+                alternateTargetingSideFlags = DBTools.ParseTargetSideFlags(subNode.InnerText);
+            }
+            XmlNodeList SubactionsList = rootNode.SelectNodes("//subaction");
+            if (SubactionsList.Count < 1) throw new Exception("Battle action " + actionID.ToString() + " has no defined Subactions!");
+            BattleAction.Subaction[] Subactions = new BattleAction.Subaction[SubactionsList.Count];
+            for (int s = 0; s < Subactions.Length; s++)
+            {
+                XmlNode SubactionNode = SubactionsList[s];
+                Subactions[s] = XmlNodeToSubaction(SubactionNode, workingNode, s, actionID);
+                if (Subactions[s].thisSubactionSuccessTiedToSubactionAtIndex > -1)
+                {
+                    if (Subactions[s].useAlternateTargetSet != Subactions[Subactions[s].thisSubactionSuccessTiedToSubactionAtIndex].useAlternateTargetSet)
+                    {
+                        if (alternateTargetType != ActionTargetType.Self && targetingType != ActionTargetType.Self) // we have a special case for tying multiple action successes to one on yourself or vice verse
+                            throw new Exception("Illegal subaction config: tried to tie subaction " + s + " to subaction " + Subactions[s].thisSubactionSuccessTiedToSubactionAtIndex + ", but their target sets are mismatched.");
+                            // but if that's not true this will break horribly, so we crash to keep that from happening
+                    }
+                }
+            }
             actOnNode("//animSkipTargetHitAnim");
             AnimEventType animSkipTargetHitAnim = DBTools.ParseAnimEventType(workingNode.InnerText);
             actOnNode("//onActionEndTargetAnim");
@@ -78,8 +100,8 @@ namespace CnfBattleSys
             actOnNode("//onActionUseUserAnim");
             AnimEventType onActionUseUserAnim = DBTools.ParseAnimEventType(workingNode.InnerText);
             Resources.UnloadAsset(unreadFileBuffer);
-            return new BattleAction(actionID, baseAOERadius, baseDelay, baseFollowthroughStanceChangeDelay, baseMinimumTargetingDistance, baseTargetingRange, baseSPCost, targetingSideFlags, targetingType,
-                                animSkipTargetHitAnim, onActionEndTargetAnim, onActionEndUserAnim, onActionUseTargetAnim, onActionUseUserAnim, Subactions);
+            return new BattleAction(actionID, baseAOERadius, baseDelay, baseFollowthroughStanceChangeDelay, baseMinimumTargetingDistance, baseTargetingRange, baseSPCost, alternateTargetingSideFlags, targetingSideFlags,
+                alternateTargetType, targetingType, animSkipTargetHitAnim, onActionEndTargetAnim, onActionEndUserAnim, onActionUseTargetAnim, onActionUseUserAnim, Subactions);
 
         }
 
@@ -111,6 +133,8 @@ namespace CnfBattleSys
             int baseDamage = int.Parse(workingNode.InnerText);
             actOnNode("//baseAccuracy");
             float baseAccuracy = float.Parse(workingNode.InnerText);
+            actOnNode("//useAlternateTargetSet");
+            bool useAlternateTargetSet = bool.Parse(workingNode.InnerText);
             actOnNode("//onSubactionHitTargetAnim");
             AnimEventType onSubactionHitTargetAnim = DBTools.ParseAnimEventType(workingNode.InnerText);
             actOnNode("//onSubactionExecuteUserAnim");
@@ -139,7 +163,7 @@ namespace CnfBattleSys
                 if (thisSubactionSuccessTiedToSubactionAtIndex < 0) throw new Exception(exceptionSubactionIDStr() + " tries to tie itself to an invalid Subaction index!");
                 else if (thisSubactionSuccessTiedToSubactionAtIndex >= index) throw new Exception(exceptionSubactionIDStr() + " tries to tie itself to a Subaction index that doesn't precede it!");
             }
-            return new BattleAction.Subaction(baseDamage, baseAccuracy, onSubactionHitTargetAnim, onSubactionExecuteUserAnim, atkStat, defStat, hitStat, evadeStat,
+            return new BattleAction.Subaction(baseDamage, baseAccuracy, useAlternateTargetSet, onSubactionHitTargetAnim, onSubactionExecuteUserAnim, atkStat, defStat, hitStat, evadeStat,
                 thisSubactionDamageTiedToSubactionAtIndex, thisSubactionSuccessTiedToSubactionAtIndex, fx, damageTypes);
         }
 

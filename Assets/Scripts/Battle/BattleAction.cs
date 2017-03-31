@@ -68,6 +68,7 @@
             /// </summary>
             public readonly int baseDamage;
             public readonly float baseAccuracy;
+            public readonly bool useAlternateTargetSet;
             public readonly AnimEventType onSubactionHitTargetAnim;
             public readonly AnimEventType onSubactionExecuteUserAnim;
             public readonly LogicalStatType atkStat;
@@ -94,7 +95,7 @@
             /// Subaction constructor.
             /// This should never be called outside of ActionDataset.LoadData()!
             /// </summary>
-            public Subaction(int _baseDamage, float _baseAccuracy,
+            public Subaction(int _baseDamage, float _baseAccuracy, bool _useAlternateTargetSet,
                              AnimEventType _onSubactionHitTargetAnim, AnimEventType _onSubactionExecuteUserAnim,
                              LogicalStatType _atkStat, LogicalStatType _defStat, LogicalStatType _hitStat, LogicalStatType _evadeStat,
                              sbyte _thisSubactionDamageTiedToSubactionAtIndex, sbyte _thisSubactionSuccessTiedToSubactionAtIndex,
@@ -102,6 +103,7 @@
             {
                 baseDamage = _baseDamage;
                 baseAccuracy = _baseAccuracy;
+                useAlternateTargetSet = _useAlternateTargetSet;
                 onSubactionHitTargetAnim = _onSubactionHitTargetAnim;
                 onSubactionExecuteUserAnim = _onSubactionExecuteUserAnim;
                 atkStat = _atkStat;
@@ -122,7 +124,15 @@
         public readonly float baseMinimumTargetingDistance;
         public readonly float baseTargetingRange;
         public readonly byte baseSPCost;
+        /// <summary>
+        /// A second TargetSideFlags. Subactions that act on the alternate target set will act on targets selected from these units.
+        /// </summary>
+        public readonly TargetSideFlags alternateTargetSideFlags;
         public readonly TargetSideFlags targetingSideFlags;
+        /// <summary>
+        /// A second ActionTargetType. Subactions that act on the alternate target set will act on units acquired this way.
+        /// </summary>
+        public readonly ActionTargetType alternateTargetType;
         public readonly ActionTargetType targetingType;
         public readonly AnimEventType animSkipTargetHitAnim;
         public readonly AnimEventType onActionEndTargetAnim;
@@ -132,11 +142,11 @@
         public readonly Subaction[] Subactions;
 
         /// <summary>
-        /// Constructs an ACtion struct, given, uh, the entire contents of the Action struct.
-        /// This should never be called outside of ActionDataset.LoadData()!
+        /// Constructs a BattleAction struct, given, uh, the entire contents of the BattleAction struct.
+        /// This should never be called outside of ActionDatabase.Load()!
         /// </summary>
         public BattleAction(ActionType _actionID, float _baseAOERadius, float _baseDelay, float _baseFollowthroughStanceChangeDelay, float _baseMinimumTargetingDistance, float _basetargetingRange,
-            byte _baseSPCost, TargetSideFlags _targetingSideFlags, ActionTargetType _targetingType, AnimEventType _animSkipTargetHitAnim,
+            byte _baseSPCost, TargetSideFlags _alternateTargetSideFlags, TargetSideFlags _targetingSideFlags, ActionTargetType _alternateTargetType, ActionTargetType _targetingType, AnimEventType _animSkipTargetHitAnim,
             AnimEventType _onActionEndTargetAnim, AnimEventType _onActionEndUserAnim, AnimEventType _OnActionUseTargetAnim, AnimEventType _OnActionUseUserAnim,
             Subaction[] _Subactions)
         {

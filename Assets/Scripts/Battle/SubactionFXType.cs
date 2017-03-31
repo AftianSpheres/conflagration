@@ -8,7 +8,7 @@
     public enum SubactionFXType : short
     {
         None,
-        PushTargetBackward,
-        Buff_STR
+        Test_PushTargetBackward,
+        Test_Buff_STR
     }
 }

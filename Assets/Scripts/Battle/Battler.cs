@@ -410,6 +410,14 @@ namespace CnfBattleSys
             public readonly float spirit;
 
             /// <summary>
+            ///  Establishes a Resistances_Raw all resists equal to v
+            /// </summary>
+            public Resistances_Raw (float v)
+            {
+                global = magic = strike = slash = thrust = fire = earth = air = water = light = dark = bio = sound = psyche = reality = time = space = electric = ice = spirit = v;
+            }
+
+            /// <summary>
             /// This can be called by Battler and StanceDatasets. 
             /// Should never be called anywhere else.
             /// </summary>
@@ -838,6 +846,25 @@ namespace CnfBattleSys
         }
 
         /// <summary>
+        /// Applies transformations to battler state based on specified FXPackage.
+        /// </summary>
+        public void ApplyFXPackage (BattleAction.Subaction.FXPackage fxPackage)
+        {
+            switch (fxPackage.fxType)
+            {
+                case SubactionFXType.Test_PushTargetBackward:
+                    Debug.Log("If unit movement existed, we would be pushed backward now");
+                    break;
+                case SubactionFXType.Test_Buff_STR:
+                    statusPackets.Add(StatusType.TestBuff, new StatusPacket(statusPackets, StatusType.TestBuff, StatusPacket_CancelationCondition.CancelWhenDurationZero, 0, fxPackage.fxLength_Byte, new Resistances_Raw(1), 0, DamageTypeFlags.None,
+                        MiscStatusEffectFlags.None, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, fxPackage.fxStrength_Float, 1, 1, 1, 1, 1, 1, 1, 1));
+                    break;
+                default:
+                    throw new System.Exception("Unregognized FXtype: " + fxPackage.fxType);
+            }
+        }
+
+        /// <summary>
         /// Updates Battler to reflect the amount of time that's elapsed.
         /// </summary>
         public void ElapsedTime (float time)
@@ -847,6 +874,59 @@ namespace CnfBattleSys
                 currentDelay -= time;
                 if (currentDelay < 0) currentDelay = 0;
                 if (currentDelay == 0) BattleOverseer.RequestTurn(this);
+            }
+        }
+        
+        /// <summary>
+        /// Gets the value corresponding to a given LogicalStatType, doing
+        /// any necessary math to return the appropriate value.
+        /// </summary>
+        public int GetLogicalStatValue (LogicalStatType logicalStatType)
+        {
+            switch (logicalStatType)
+            {
+                case LogicalStatType.Stat_MaxHP:
+                    return stats.maxHP;
+                case LogicalStatType.Stat_CurrentSP:
+                    return currentSP;
+                case LogicalStatType.Stat_ATK:
+                    return stats.ATK;
+                case LogicalStatType.Stat_DEF:
+                    return stats.DEF;
+                case LogicalStatType.Stat_MATK:
+                    return stats.MATK;
+                case LogicalStatType.Stat_MDEF:
+                    return stats.MDEF;
+                case LogicalStatType.Stat_SPE:
+                    return stats.Spe;
+                case LogicalStatType.Stat_EVA:
+                    return stats.EVA;
+                case LogicalStatType.Stat_HIT:
+                    return stats.Hit;
+                case LogicalStatType.Stats_ATKDEF:
+                    return Util.Mean(new int[] { stats.ATK, stats.DEF });
+                case LogicalStatType.Stats_ATKHIT:
+                    return Util.Mean(new int[] { stats.ATK, stats.Hit });
+                case LogicalStatType.Stats_ATKMATK:
+                    return Util.Mean(new int[] { stats.ATK, stats.MATK });
+                case LogicalStatType.Stats_ATKSPE:
+                    return Util.Mean(new int[] { stats.ATK, stats.Spe });
+                case LogicalStatType.Stats_DEFEVA:
+                    return Util.Mean(new int[] { stats.DEF, stats.EVA });
+                case LogicalStatType.Stats_DEFMDEF:
+                    return Util.Mean(new int[] { stats.DEF, stats.MDEF });
+                case LogicalStatType.Stats_MATKHIT:
+                    return Util.Mean(new int[] { stats.MATK, stats.Hit });
+                case LogicalStatType.Stats_MATKMDEF:
+                    return Util.Mean(new int[] { stats.MATK, stats.MDEF });
+                case LogicalStatType.Stats_MATKSPE:
+                    return Util.Mean(new int[] { stats.MATK, stats.Spe });
+                case LogicalStatType.Stats_MDEFEVA:
+                    return Util.Mean(new int[] { stats.MDEF, stats.EVA });
+                case LogicalStatType.Stats_All:
+                    return Util.Mean(new int[] { stats.ATK, stats.DEF, stats.MATK, stats.MDEF, stats.Spe, stats.EVA, stats.Hit });
+                default:
+                    throw new System.Exception("Can't return value logical stat value for LogicalStatType value of " + logicalStatType.ToString());
             }
         }
 

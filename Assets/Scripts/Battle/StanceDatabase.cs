@@ -32,6 +32,7 @@ namespace CnfBattleSys
         private static BattleStance ImportStanceDefWithID (StanceType stanceID, XmlDocument doc, XmlNode workingNode)
         {
             const string stanceDefsResourcePath = "Battle/StanceDefs/";
+            Debug.Log("Loading stance def from XML file: " + stanceDefsResourcePath + stanceID.ToString()); // unconditional logging is OK because this is going to move to pre-build before I'd need to strip it anyhow
             TextAsset unreadFileBuffer = Resources.Load<TextAsset>(stanceDefsResourcePath + stanceID.ToString());
             if (unreadFileBuffer != null) doc.LoadXml(unreadFileBuffer.text);
             else
@@ -40,76 +41,76 @@ namespace CnfBattleSys
                 return defaultStance;
             }
             XmlNode rootNode = doc.DocumentElement;
-            XmlNode resNode = rootNode.SelectSingleNode("resistances");
+            XmlNode resNode = rootNode.SelectSingleNode("//resistances");
             Action<string> actOnNode = (node) =>
             {
                 workingNode = rootNode.SelectSingleNode(node);
                 if (workingNode == null) throw new Exception(stanceID.ToString() + " has no node " + node);
             };
-            actOnNode("animEvent_Idle");
+            actOnNode("//animEvent_Idle");
             AnimEventType animEvent_Idle = DBTools.ParseAnimEventType(workingNode.InnerText);
-            actOnNode("animEvent_Move");
+            actOnNode("//animEvent_Move");
             AnimEventType animEvent_Move = DBTools.ParseAnimEventType(workingNode.InnerText);
-            actOnNode("animEvent_Hit");
+            actOnNode("//animEvent_Hit");
             AnimEventType animEvent_Hit = DBTools.ParseAnimEventType(workingNode.InnerText);
-            actOnNode("animEvent_Break");
+            actOnNode("//animEvent_Break");
             AnimEventType animEvent_Break = DBTools.ParseAnimEventType(workingNode.InnerText);
-            actOnNode("animEvent_Dodge");
+            actOnNode("//animEvent_Dodge");
             AnimEventType animEvent_Dodge = DBTools.ParseAnimEventType(workingNode.InnerText);
-            actOnNode("actions");
-            XmlNodeList actionNodes = workingNode.SelectNodes("action");
+            actOnNode("//actions");
+            XmlNodeList actionNodes = workingNode.SelectNodes("//action");
             BattleAction[] actionSet = new BattleAction[actionNodes.Count];
             for (int i = 0; i < actionNodes.Count; i++)
             {
                 actionSet[i] = ActionDatabase.Get(DBTools.ParseActionType(actionNodes[i].InnerText));
             }
-            actOnNode("counterattackAction");
+            actOnNode("//counterattackAction");
             BattleAction counterattackAction = ActionDatabase.Get(DBTools.ParseActionType(workingNode.InnerText));
-            actOnNode("moveDelayBonus");
+            actOnNode("//moveDelayBonus");
             float moveDelayBonus = float.Parse(workingNode.InnerText);
-            actOnNode("moveDelayMultiplier");
+            actOnNode("//moveDelayMultiplier");
             float moveDelayMultiplier = float.Parse(workingNode.InnerText);
-            actOnNode("moveDistBonus");
+            actOnNode("//moveDistBonus");
             float moveDistBonus = float.Parse(workingNode.InnerText);
-            actOnNode("moveDistMultiplier");
+            actOnNode("//moveDistMultiplier");
             float moveDistMultiplier = float.Parse(workingNode.InnerText);
-            actOnNode("stanceChangeDelayBonus");
+            actOnNode("//stanceChangeDelayBonus");
             float stanceChangeDelayBonus = float.Parse(workingNode.InnerText);
-            actOnNode("stanceChangeDelayMultiplier");
+            actOnNode("//stanceChangeDelayMultiplier");
             float stanceChangeDelayMultiplier = float.Parse(workingNode.InnerText);
-            actOnNode("statMultis/MaxHP");
+            actOnNode("//statMultis/MaxHP");
             float statMultiplier_MaxHP = float.Parse(workingNode.InnerText);
-            actOnNode("statMultis/ATK");
+            actOnNode("//statMultis/ATK");
             float statMultiplier_ATK = float.Parse(workingNode.InnerText);
-            actOnNode("statMultis/DEF");
+            actOnNode("//statMultis/DEF");
             float statMultiplier_DEF = float.Parse(workingNode.InnerText);
-            actOnNode("statMultis/MATK");
+            actOnNode("//statMultis/MATK");
             float statMultiplier_MATK = float.Parse(workingNode.InnerText);
-            actOnNode("statMultis/MDEF");
+            actOnNode("//statMultis/MDEF");
             float statMultiplier_MDEF = float.Parse(workingNode.InnerText);
-            actOnNode("statMultis/SPE");
+            actOnNode("//statMultis/SPE");
             float statMultiplier_SPE = float.Parse(workingNode.InnerText);
-            actOnNode("statMultis/HIT");
+            actOnNode("//statMultis/HIT");
             float statMultiplier_HIT = float.Parse(workingNode.InnerText);
-            actOnNode("statMultis/EVA");
+            actOnNode("//statMultis/EVA");
             float statMultiplier_EVA = float.Parse(workingNode.InnerText);
-            actOnNode("statBonus/MaxHP");
+            actOnNode("//statBonus/MaxHP");
             int statBonus_MaxHP = int.Parse(workingNode.InnerText);
-            actOnNode("statBonus/ATK");
+            actOnNode("//statBonus/ATK");
             short statBonus_ATK = short.Parse(workingNode.InnerText);
-            actOnNode("statBonus/DEF");
+            actOnNode("//statBonus/DEF");
             short statBonus_DEF = short.Parse(workingNode.InnerText);
-            actOnNode("statBonus/MATK");
+            actOnNode("//statBonus/MATK");
             short statBonus_MATK = short.Parse(workingNode.InnerText);
-            actOnNode("statBonus/MDEF");
+            actOnNode("//statBonus/MDEF");
             short statBonus_MDEF = short.Parse(workingNode.InnerText);
-            actOnNode("statBonus/SPE");
+            actOnNode("//statBonus/SPE");
             short statBonus_SPE = short.Parse(workingNode.InnerText);
-            actOnNode("statBonus/HIT");
+            actOnNode("//statBonus/HIT");
             short statBonus_HIT = short.Parse(workingNode.InnerText);
-            actOnNode("statBonus/EVA");
+            actOnNode("//statBonus/EVA");
             short statBonus_EVA = short.Parse(workingNode.InnerText);
-            actOnNode("maxSP");
+            actOnNode("//maxSP");
             byte maxSP = byte.Parse(workingNode.InnerText);
             Battler.Resistances_Raw resistances = DBTools.GetResistancesFromXML(resNode, workingNode);
             Resources.UnloadAsset(unreadFileBuffer);

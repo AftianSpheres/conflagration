@@ -25,6 +25,179 @@ namespace CnfBattleSys
             BattleLost
         }
 
+        /// <summary>
+        /// Battle overseer subsystem processing that handles the action we're currently executing.
+        /// </summary>
+        private static class CurrentActionExecutionSubsystem
+        {
+            private static Battler currentActingBattler;
+            private static BattleAction actionInExecution;
+            /// <summary>
+            /// Where are we in the current action's subactions?
+            /// </summary>
+            private static int subactionExecutionIndex;
+            /// <summary>
+            /// Where are we in the current subaction's FX packages?
+            /// </summary>
+            private static int subactionFXExecutionIndex;
+            private static List<Battler> targets;
+            private static List<Battler> alternateTargets;
+            private static List<int[]> currentSubactionExecutionDamageValues;
+            private static List<bool[]> currentSubactionExecutionHits;
+            private static List<bool[]> currentSubactionFXExecutionHits;
+
+            /// <summary>
+            /// First run setup for CurrentActionExecutionSubsystem.
+            /// </summary>
+            internal static void FirstRunSetup ()
+            {
+                subactionExecutionIndex = 0;
+                targets = new List<Battler>();
+                alternateTargets = new List<Battler>();
+                currentSubactionFXExecutionHits = new List<bool[]>();
+                currentSubactionExecutionHits = new List<bool[]>();
+                currentSubactionFXExecutionHits = new List<bool[]>();
+            }
+
+            /// <summary>
+            /// Handles cleanup for CurrentActionExecutionSubsystem.
+            /// </summary>
+            internal static void Cleanup ()
+            {
+                targets.Clear();
+                alternateTargets.Clear();
+                currentSubactionExecutionHits.Clear();
+                currentSubactionFXExecutionHits.Clear();
+            }
+
+            /// <summary>
+            /// Handles the specified fx package.
+            /// Since fx packages can apply effects even in the event that the subaction failed to inflict/heal damage,
+            /// we have to iterate over all targets and check them individually, instead of doing that within the subaction success/fail check
+            /// loop.
+            /// </summary>
+            private static bool HandleFXPackage(BattleAction.Subaction.FXPackage fxPackage, List<Battler> t)
+            {
+                bool atLeastOneSuccess = false;
+                currentSubactionFXExecutionHits.Add(new bool[t.Count]);
+                for (int targetIndex = 0; targetIndex < t.Count; targetIndex++)
+                {
+                    currentSubactionFXExecutionHits[subactionExecutionIndex][targetIndex] = HandleFXPackage_ForTargetIndex(fxPackage, targetIndex, t);
+                    if (currentSubactionFXExecutionHits[subactionExecutionIndex][targetIndex]) atLeastOneSuccess = true;
+                }
+                return atLeastOneSuccess;
+            }
+
+            /// <summary>
+            /// Checks to see if the fx package should be applied to target at the given index, and does that if so.
+            /// Returns true if this succeeds, false otherwise.
+            /// </summary>
+            private static bool HandleFXPackage_ForTargetIndex(BattleAction.Subaction.FXPackage fxPackage, int targetIndex, List<Battler> t)
+            {
+                bool executionSuccess = true;
+                if (fxPackage.thisFXSuccessTiedToFXAtIndex > -1) executionSuccess = (currentSubactionFXExecutionHits[fxPackage.thisFXSuccessTiedToFXAtIndex][targetIndex] == true);
+                else if (!fxPackage.applyEvenIfSubactionMisses && currentSubactionExecutionHits[subactionExecutionIndex][targetIndex] == false) executionSuccess = false;
+                else if (fxPackage.baseSuccessRate < 1.0f)
+                {
+                    int evadeStat = -1;
+                    if (fxPackage.fxEvadeStat != LogicalStatType.None) evadeStat = t[targetIndex].GetLogicalStatValue(fxPackage.fxEvadeStat);
+                    int hitStat = -1;
+                    if (fxPackage.fxHitStat != LogicalStatType.None) hitStat = currentActingBattler.GetLogicalStatValue(fxPackage.fxHitStat);
+                    float adjustedSuccessRate = fxPackage.baseSuccessRate;
+                    if (evadeStat != -1 && hitStat != -1) // this is contested, so let's work out the contest
+                    {
+                        adjustedSuccessRate *= (hitStat / (float)evadeStat);
+                    }
+                    // It should also be possible for uncontested hit/evade stats to provide hit/evade bonuses on FX packages, but that requires me to have some idea of what the numbers look like
+                    if (Random.Range(0, 1) > adjustedSuccessRate) executionSuccess = false;
+                }
+                if (executionSuccess) t[targetIndex].ApplyFXPackage(fxPackage);
+                return executionSuccess;
+            }
+
+            /// <summary>
+            /// Handles a single subaction.
+            /// Doesn't do any of the logic to track where we are in the current action's subaction set.
+            /// Since the entire point of the subaction system is that we can chain them together either simultaneously or
+            /// at different points in e.g. attack animations, normally you'll call StepSubactions() or FinishSubactions() and those will
+            /// find the subactions that this method should be given.
+            /// </summary>
+            private static void HandleSubaction(BattleAction.Subaction subaction)
+            {
+                currentSubactionFXExecutionHits.Clear(); // this needs to be empty before we can start running fxpackages
+                List<Battler> t;
+                if (subaction.useAlternateTargetSet) t = alternateTargets;
+                else t = targets;
+                currentSubactionExecutionDamageValues.Add(new int[t.Count]);
+                currentSubactionExecutionHits.Add(new bool[t.Count]);
+                for (int targetIndex = 0; targetIndex < targets.Count; targetIndex++)
+                {
+                    // do subaction things
+                    
+                }
+                for (subactionFXExecutionIndex = 0; subactionFXExecutionIndex < subaction.fx.Length; subactionFXExecutionIndex++)
+                {
+                    HandleFXPackage(subaction.fx[subactionFXExecutionIndex], t);
+                }
+            }
+
+            /// <summary>
+            /// Checks to see if the subaction should succeed on specified target, and tells target to apply subaction if true.
+            /// Returns subaction success/fail value.
+            /// </summary>
+            private static bool HandleSubaction_ForTargetIndex (BattleAction.Subaction subaction, int targetIndex, List<Battler> t)
+            {
+                bool executionSuccess;
+                if (subaction.thisSubactionSuccessTiedToSubactionAtIndex > -1)
+                {
+                    if (subaction.useAlternateTargetSet && actionInExecution.alternateTargetType == ActionTargetType.Self || !subaction.useAlternateTargetSet && actionInExecution.targetingType == ActionTargetType.Self)
+                    {
+                        executionSuccess = false;
+                        for (int i = 0; i < currentSubactionExecutionHits[subaction.thisSubactionSuccessTiedToSubactionAtIndex].Length; i++)
+                        {
+                            if (currentSubactionExecutionHits[subaction.thisSubactionSuccessTiedToSubactionAtIndex][i] == true)
+                            {
+                                executionSuccess = true; // if the current subaction is acting on ourself and the subaction we're yoked to acts on a larger set of targets, we can go ahead with acting on ourself if _any_ of those hits landed
+                                break;
+                            }
+                        }
+                    }
+                    else if (actionInExecution.Subactions[subaction.thisSubactionSuccessTiedToSubactionAtIndex].useAlternateTargetSet && actionInExecution.alternateTargetType == ActionTargetType.Self ||
+                        !actionInExecution.Subactions[subaction.thisSubactionSuccessTiedToSubactionAtIndex].useAlternateTargetSet && actionInExecution.targetingType == ActionTargetType.Self)
+                    {
+                        executionSuccess = currentSubactionExecutionHits[subaction.thisSubactionSuccessTiedToSubactionAtIndex][0]; // if we're _tied_ to a self-targeting subaction, that's always index 0
+                        // and so we can generalize that to a larger set of targets!
+                        // (if we get a target type mismatch on tied subactions and one side or the other isn't self-targeting, the parser will throw a shit fit, so we don't have to worry about that case on this side of things)
+                    }
+                    else executionSuccess = currentSubactionExecutionHits[subactionExecutionIndex][targetIndex];
+                }
+                else
+                {
+                    int evadeStat = -1;
+                    int hitStat = -1;
+                    if (subaction.evadeStat != LogicalStatType.None) evadeStat = t[targetIndex].GetLogicalStatValue(subaction.evadeStat);
+                    if (subaction.hitStat != LogicalStatType.None) hitStat = currentActingBattler.GetLogicalStatValue(subaction.hitStat);
+                    float modifiedAccuracy = subaction.baseAccuracy;
+                    if (evadeStat != -1 && hitStat != -1)
+                    {
+                        modifiedAccuracy *= (hitStat / (float)evadeStat);
+                    }
+                    // like with fx packages: there should also be non-contested hit/evade bonuses if the subaction says "yo I got a hit stat but no evade stat" or vice versa, but I don't know what the math looks like yet
+                    executionSuccess = (modifiedAccuracy > Random.Range(0f, 1f));
+                }
+                if (executionSuccess)
+                {
+                    int dmg = 0;
+                    if (subaction.baseDamage != 0)
+                    {
+                        // do damage
+                    }
+                    currentSubactionExecutionDamageValues[subactionExecutionIndex][targetIndex] = dmg;
+                }
+                return executionSuccess;
+            }
+        }
+
         public const float battleTickLength = 1 / 60;
         /// <summary>
         /// Speed stats determine the delay units acquire after acting.
@@ -47,9 +220,6 @@ namespace CnfBattleSys
 
         public static List<Battler> allBattlers { get; private set; }
         public static Dictionary<BattlerSideFlags, List<Battler>> battlersBySide { get; private set; } // xzibit.jpg
-
-        private static BattleAction actionInExecution;
-        private static int subactionExecutionIndex;
 
         /// <summary>
         /// Battlers to give turns when that next becomes possible. Normally there should only actually be one Battler here at a time... but ties are a thing,
@@ -100,7 +270,7 @@ namespace CnfBattleSys
             battlersBySide[BattlerSideFlags.GenericNeutralSide] = new List<Battler>();
             battlersReadyToTakeTurns = new List<Battler>();
             battlerTiebreakerStack = new Stack<Battler>();
-            
+            CurrentActionExecutionSubsystem.FirstRunSetup();
         }
 
         /// <summary>
@@ -129,6 +299,8 @@ namespace CnfBattleSys
             battlersBySide[BattlerSideFlags.GenericNeutralSide].Clear();
             battlersReadyToTakeTurns.Clear();
             battlerTiebreakerStack.Clear();
+            CurrentActionExecutionSubsystem.Cleanup();
+
         }
 
         // Bits and pieces for use within the battle loop
@@ -175,7 +347,7 @@ namespace CnfBattleSys
         /// If there's a battler ready to take a turn, returns any time remaining, since we
         /// can't step any further until all turns are taken; otherwise, returns 0.
         /// </summary>
-        private static float ElapsedTime (float time)
+        private static float ElapsedTime(float time)
         {
             float remainingTime = 0;
             while (time - battleTickLength > 0) // If you're calling this at very infrequent intervals it's gonna be kinda slow each time. This should run every frame when the simulation is running, though...

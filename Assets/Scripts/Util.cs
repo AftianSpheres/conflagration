@@ -8,6 +8,24 @@ public static class Util
     private readonly static char[] vowelsArray = { 'a', 'e', 'i', 'o', 'u', 'A', 'E', 'I', 'O', 'U' };
 
     /// <summary>
+    /// Determines if a character is a vowel.
+    /// Currently kinda dumb.
+    /// </summary>
+    public static bool CharIsVowel(char c)
+    {
+        bool r = false;
+        for (int i = 0; i < vowelsArray.Length; i++)
+        {
+            if (c == vowelsArray[i])
+            {
+                r = true;
+                break;
+            }
+        }
+        return r;
+    }
+
+    /// <summary>
     /// Splits TextAsset by lines, ignores newlines after lnCount.
     /// </summary>
     public static string[] GetLinesFrom(TextAsset a, int lnCount)
@@ -24,20 +42,26 @@ public static class Util
     }
 
     /// <summary>
-    /// Determines if a character is a vowel.
-    /// Currently kinda dumb.
+    /// Returns arithmetic mean of values.
     /// </summary>
-    public static bool isVowel(char c)
+    public static float Mean (float[] vals)
     {
-        bool r = false;
-        for (int i = 0; i < vowelsArray.Length; i++)
-        {
-            if (c == vowelsArray[i])
-            {
-                r = true;
-                break;
-            }
-        }
+        if (vals.Length == 0) throw new System.Exception("Can't get the mean of a zero-length array of values!");
+        float r = 0;
+        for (int i = 0; i < vals.Length; i++) r += vals[i];
+        r /= vals.Length;
+        return r;
+    }
+
+    /// <summary>
+    /// Returns arithmetic mean of values.
+    /// </summary>
+    public static int Mean (int[] vals)
+    {
+        if (vals.Length == 0) throw new System.Exception("Can't get the mean of a zero-length array of values!");
+        int r = 0;
+        for (int i = 0; i < vals.Length; i++) r += vals[i];
+        r /= vals.Length;
         return r;
     }
 }
