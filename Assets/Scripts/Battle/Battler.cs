@@ -865,6 +865,29 @@ namespace CnfBattleSys
         }
 
         /// <summary>
+        /// Deals/heals damage.
+        /// </summary>
+        public void DealOrHealDamage (int dmg)
+        {
+            currentHP += dmg;
+            if (currentHP > stats.maxHP) currentHP = stats.maxHP;
+            if (currentHP <= 0) Die();
+        }
+
+        /// <summary>
+        /// Causes the battler to die.
+        /// </summary>
+        public void Die ()
+        {
+            currentHP = 0;
+            currentSP = 0;
+            currentStance = StanceDatabase.Get(StanceType.None);
+            currentDelay = float.PositiveInfinity;
+            statusPackets.Clear();
+            isDead = true;
+        }
+
+        /// <summary>
         /// Updates Battler to reflect the amount of time that's elapsed.
         /// </summary>
         public void ElapsedTime (float time)

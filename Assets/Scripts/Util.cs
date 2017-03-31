@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using CnfBattleSys;
 
 /// <summary>
 /// Misc. helper functions.
@@ -23,6 +24,19 @@ public static class Util
             }
         }
         return r;
+    }
+
+    /// <summary>
+    /// Calculate damage given attacker level, attack stat, defense stat, base damage, and deviation.
+    /// Deviation is the amount of randomness permitted in the calculation, and generally should be between 0 and 1.
+    /// More deviation = more random.
+    /// </summary>
+    public static int DamageCalc (int attackerLevel, int atkStat, int defStat, int baseDamage, float deviation)
+    {
+        float randomElement = 1 + Random.Range(-deviation, deviation);
+        float lvMod = (attackerLevel / 20f) + 1;
+        float statMod = atkStat / (float)defStat;
+        return Mathf.RoundToInt(baseDamage * statMod * lvMod * randomElement);
     }
 
     /// <summary>

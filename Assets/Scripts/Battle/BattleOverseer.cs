@@ -10,6 +10,8 @@ namespace CnfBattleSys
     /// </summary>
     public static class BattleOverseer
     {
+        const float deviation = 0.15f; // this is fiddly and will almost certainly get the shit tuned out of it
+
         /// <summary>
         /// Battle overseer state values.
         /// </summary>
@@ -190,7 +192,16 @@ namespace CnfBattleSys
                     int dmg = 0;
                     if (subaction.baseDamage != 0)
                     {
-                        // do damage
+                        int atkStat = -1;
+                        int defStat = -1;
+                        if (subaction.atkStat != LogicalStatType.None) atkStat = currentActingBattler.GetLogicalStatValue(subaction.atkStat);
+                        if (subaction.defStat != LogicalStatType.None) defStat = currentActingBattler.GetLogicalStatValue(subaction.defStat);
+                        int modifiedBaseDamage = subaction.baseDamage;
+                        if (subaction.baseDamage < 0) modifiedBaseDamage *= -1; // this should be positive for damage calculations as a rule; we re-flip the damage figure later if we're healing, but this gives more flexibility if I wanna change the damage formula down the line
+                        if (atkStat != -1 && defStat != -1) dmg = Util.DamageCalc(currentActingBattler.level, atkStat, defStat, subaction.baseDamage, deviation);
+                        else dmg = modifiedBaseDamage; // like with hit/misses: it should be possible for atk/def to do something unopposed but I dunno what that looks like.
+                        if (subaction.baseDamage < 0) dmg *= -1; // re-flip
+                        t[targetIndex].DealOrHealDamage(dmg);
                     }
                     currentSubactionExecutionDamageValues[subactionExecutionIndex][targetIndex] = dmg;
                 }
