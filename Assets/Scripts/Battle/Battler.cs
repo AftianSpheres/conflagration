@@ -885,6 +885,7 @@ namespace CnfBattleSys
             currentDelay = float.PositiveInfinity;
             statusPackets.Clear();
             isDead = true;
+            BattleOverseer.BattlerIsDead(this);
         }
 
         /// <summary>

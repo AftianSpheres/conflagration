@@ -33,8 +33,9 @@ public static class Util
     /// </summary>
     public static int DamageCalc (int attackerLevel, int atkStat, int defStat, int baseDamage, float deviation)
     {
+        const float magic = (Battler.maxLevel / 6f);
         float randomElement = 1 + Random.Range(-deviation, deviation);
-        float lvMod = (attackerLevel / 20f) + 1;
+        float lvMod = (attackerLevel / magic) + 1;
         float statMod = atkStat / (float)defStat;
         return Mathf.RoundToInt(baseDamage * statMod * lvMod * randomElement);
     }

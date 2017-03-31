@@ -29,10 +29,17 @@ namespace CnfBattleSys
 
         /// <summary>
         /// Battle overseer subsystem processing that handles the action we're currently executing.
+        /// This is sort of fiddly, so I've taken the liberty of docstringing the hell out of it.
         /// </summary>
-        private static class CurrentActionExecutionSubsystem
+        private static class ActionExecutionSubsystem
         {
+            /// <summary>
+            /// The Battler that's using the action we're executing.
+            /// </summary>
             private static Battler currentActingBattler;
+            /// <summary>
+            /// The action that we're executing.
+            /// </summary>
             private static BattleAction actionInExecution;
             /// <summary>
             /// Where are we in the current action's subactions?
@@ -42,11 +49,36 @@ namespace CnfBattleSys
             /// Where are we in the current subaction's FX packages?
             /// </summary>
             private static int subactionFXExecutionIndex;
+            /// <summary>
+            /// List of primary-type targets.
+            /// Subactions will apply to these Battlers if they aren't using alternate targets.
+            /// </summary>
             private static List<Battler> targets;
+            /// <summary>
+            /// List of alternate-type targets.
+            /// If subactions apply to alternate targets, these are those.
+            /// </summary>
             private static List<Battler> alternateTargets;
-            private static List<int[]> currentSubactionExecutionDamageValues;
-            private static List<bool[]> currentSubactionExecutionHits;
-            private static List<bool[]> currentSubactionFXExecutionHits;
+            /// <summary>
+            /// List of integer arrays. Indices within this list correspond to the current action's subactions array.
+            /// The sub-arrays store the damage figures of the individual subactions, per target index.
+            /// </summary>
+            private static List<int[]> subactions_FinalDamageFigures;
+            /// <summary>
+            /// List of boolean arrays. Indices within this list correspond to the current action's subactions array.
+            /// The sub-arrays store the success/failure values of the individual subactions, per target index.
+            /// </summary>
+            private static List<bool[]> subactions_TargetHitArrays;
+            /// <summary>
+            /// List of booleans. Indices correspond to current subaction's fx array.
+            /// True for each fx package that at least did _something._
+            /// </summary>
+            private static List<bool> currentSubaction_FX_NonFailures;
+            /// <summary>
+            /// List of boolean arrays. Indices within this list correspond to the current subaction's fx array.
+            /// The sub-arrays store the success/failure values of the individual fx packages, per target index.
+            /// </summary>
+            private static List<bool[]> currentSubaction_FX_SuccessArrays;
 
             /// <summary>
             /// First run setup for CurrentActionExecutionSubsystem.
@@ -56,9 +88,10 @@ namespace CnfBattleSys
                 subactionExecutionIndex = 0;
                 targets = new List<Battler>();
                 alternateTargets = new List<Battler>();
-                currentSubactionFXExecutionHits = new List<bool[]>();
-                currentSubactionExecutionHits = new List<bool[]>();
-                currentSubactionFXExecutionHits = new List<bool[]>();
+                subactions_FinalDamageFigures = new List<int[]>();
+                subactions_TargetHitArrays = new List<bool[]>();
+                currentSubaction_FX_SuccessArrays = new List<bool[]>();
+                currentSubaction_FX_NonFailures = new List<bool>();
             }
 
             /// <summary>
@@ -66,10 +99,34 @@ namespace CnfBattleSys
             /// </summary>
             internal static void Cleanup ()
             {
+                currentActingBattler = null;
+                actionInExecution = ActionDatabase.Get(ActionType.None);
+                subactionExecutionIndex = subactionFXExecutionIndex = 0;
                 targets.Clear();
                 alternateTargets.Clear();
-                currentSubactionExecutionHits.Clear();
-                currentSubactionFXExecutionHits.Clear();
+                subactions_FinalDamageFigures.Clear();
+                subactions_TargetHitArrays.Clear();
+                currentSubaction_FX_SuccessArrays.Clear();
+                currentSubaction_FX_NonFailures.Clear();
+            }
+
+            /// <summary>
+            /// Sets the action execution subsystem up to execute the given action.
+            /// </summary>
+            private static void BeginProcessingAction (BattleAction action, Battler user, Battler[] _targets, Battler[] _alternateTargets)
+            {
+                actionInExecution = action;
+                currentActingBattler = user;
+                targets.Clear();
+                alternateTargets.Clear();
+                subactions_FinalDamageFigures.Clear();
+                subactions_TargetHitArrays.Clear();
+                subactionExecutionIndex = subactionFXExecutionIndex = 0;
+                for (int i = 0; i < _targets.Length && i < _alternateTargets.Length; i++)
+                {
+                    if (i < _targets.Length) targets.Add(_targets[i]);
+                    if (i < _alternateTargets.Length) alternateTargets.Add(_targets[i]);
+                }
             }
 
             /// <summary>
@@ -81,11 +138,11 @@ namespace CnfBattleSys
             private static bool HandleFXPackage(BattleAction.Subaction.FXPackage fxPackage, List<Battler> t)
             {
                 bool atLeastOneSuccess = false;
-                currentSubactionFXExecutionHits.Add(new bool[t.Count]);
+                currentSubaction_FX_SuccessArrays.Add(new bool[t.Count]);
                 for (int targetIndex = 0; targetIndex < t.Count; targetIndex++)
                 {
-                    currentSubactionFXExecutionHits[subactionExecutionIndex][targetIndex] = HandleFXPackage_ForTargetIndex(fxPackage, targetIndex, t);
-                    if (currentSubactionFXExecutionHits[subactionExecutionIndex][targetIndex]) atLeastOneSuccess = true;
+                    currentSubaction_FX_SuccessArrays[subactionExecutionIndex][targetIndex] = HandleFXPackage_ForTargetIndex(fxPackage, targetIndex, t);
+                    if (currentSubaction_FX_SuccessArrays[subactionExecutionIndex][targetIndex]) atLeastOneSuccess = true;
                 }
                 return atLeastOneSuccess;
             }
@@ -97,8 +154,8 @@ namespace CnfBattleSys
             private static bool HandleFXPackage_ForTargetIndex(BattleAction.Subaction.FXPackage fxPackage, int targetIndex, List<Battler> t)
             {
                 bool executionSuccess = true;
-                if (fxPackage.thisFXSuccessTiedToFXAtIndex > -1) executionSuccess = (currentSubactionFXExecutionHits[fxPackage.thisFXSuccessTiedToFXAtIndex][targetIndex] == true);
-                else if (!fxPackage.applyEvenIfSubactionMisses && currentSubactionExecutionHits[subactionExecutionIndex][targetIndex] == false) executionSuccess = false;
+                if (fxPackage.thisFXSuccessTiedToFXAtIndex > -1) executionSuccess = (currentSubaction_FX_SuccessArrays[fxPackage.thisFXSuccessTiedToFXAtIndex][targetIndex] == true);
+                else if (!fxPackage.applyEvenIfSubactionMisses && subactions_TargetHitArrays[subactionExecutionIndex][targetIndex] == false) executionSuccess = false;
                 else if (fxPackage.baseSuccessRate < 1.0f)
                 {
                     int evadeStat = -1;
@@ -121,26 +178,30 @@ namespace CnfBattleSys
             /// Handles a single subaction.
             /// Doesn't do any of the logic to track where we are in the current action's subaction set.
             /// Since the entire point of the subaction system is that we can chain them together either simultaneously or
-            /// at different points in e.g. attack animations, normally you'll call StepSubactions() or FinishSubactions() and those will
+            /// at different points in e.g. attack animations, normally you'll call StepSubactions() or FinishCurrentAction() and those will
             /// find the subactions that this method should be given.
             /// </summary>
-            private static void HandleSubaction(BattleAction.Subaction subaction)
+            private static bool HandleSubaction(BattleAction.Subaction subaction)
             {
-                currentSubactionFXExecutionHits.Clear(); // this needs to be empty before we can start running fxpackages
+                bool atLeastOneSuccess = false;
+                currentSubaction_FX_SuccessArrays.Clear(); // this needs to be empty before we can start running fxpackages
+                currentSubaction_FX_NonFailures.Clear();
                 List<Battler> t;
                 if (subaction.useAlternateTargetSet) t = alternateTargets;
                 else t = targets;
-                currentSubactionExecutionDamageValues.Add(new int[t.Count]);
-                currentSubactionExecutionHits.Add(new bool[t.Count]);
+                subactions_FinalDamageFigures.Add(new int[t.Count]);
+                subactions_TargetHitArrays.Add(new bool[t.Count]);
                 for (int targetIndex = 0; targetIndex < targets.Count; targetIndex++)
                 {
-                    // do subaction things
-                    
+                    subactions_TargetHitArrays[subactionExecutionIndex][targetIndex] = HandleSubaction_ForTargetIndex(subaction, targetIndex, t);
+                    if (subactions_TargetHitArrays[subactionExecutionIndex][targetIndex] == true) atLeastOneSuccess = true;
                 }
                 for (subactionFXExecutionIndex = 0; subactionFXExecutionIndex < subaction.fx.Length; subactionFXExecutionIndex++)
                 {
-                    HandleFXPackage(subaction.fx[subactionFXExecutionIndex], t);
+                    currentSubaction_FX_NonFailures.Add(HandleFXPackage(subaction.fx[subactionFXExecutionIndex], t));
+                    if (currentSubaction_FX_NonFailures[subactionExecutionIndex] == true) atLeastOneSuccess = true;
                 }
+                return atLeastOneSuccess;
             }
 
             /// <summary>
@@ -155,9 +216,9 @@ namespace CnfBattleSys
                     if (subaction.useAlternateTargetSet && actionInExecution.alternateTargetType == ActionTargetType.Self || !subaction.useAlternateTargetSet && actionInExecution.targetingType == ActionTargetType.Self)
                     {
                         executionSuccess = false;
-                        for (int i = 0; i < currentSubactionExecutionHits[subaction.thisSubactionSuccessTiedToSubactionAtIndex].Length; i++)
+                        for (int i = 0; i < subactions_TargetHitArrays[subaction.thisSubactionSuccessTiedToSubactionAtIndex].Length; i++)
                         {
-                            if (currentSubactionExecutionHits[subaction.thisSubactionSuccessTiedToSubactionAtIndex][i] == true)
+                            if (subactions_TargetHitArrays[subaction.thisSubactionSuccessTiedToSubactionAtIndex][i] == true)
                             {
                                 executionSuccess = true; // if the current subaction is acting on ourself and the subaction we're yoked to acts on a larger set of targets, we can go ahead with acting on ourself if _any_ of those hits landed
                                 break;
@@ -167,11 +228,11 @@ namespace CnfBattleSys
                     else if (actionInExecution.Subactions[subaction.thisSubactionSuccessTiedToSubactionAtIndex].useAlternateTargetSet && actionInExecution.alternateTargetType == ActionTargetType.Self ||
                         !actionInExecution.Subactions[subaction.thisSubactionSuccessTiedToSubactionAtIndex].useAlternateTargetSet && actionInExecution.targetingType == ActionTargetType.Self)
                     {
-                        executionSuccess = currentSubactionExecutionHits[subaction.thisSubactionSuccessTiedToSubactionAtIndex][0]; // if we're _tied_ to a self-targeting subaction, that's always index 0
+                        executionSuccess = subactions_TargetHitArrays[subaction.thisSubactionSuccessTiedToSubactionAtIndex][0]; // if we're _tied_ to a self-targeting subaction, that's always index 0
                         // and so we can generalize that to a larger set of targets!
                         // (if we get a target type mismatch on tied subactions and one side or the other isn't self-targeting, the parser will throw a shit fit, so we don't have to worry about that case on this side of things)
                     }
-                    else executionSuccess = currentSubactionExecutionHits[subactionExecutionIndex][targetIndex];
+                    else executionSuccess = subactions_TargetHitArrays[subactionExecutionIndex][targetIndex];
                 }
                 else
                 {
@@ -203,9 +264,55 @@ namespace CnfBattleSys
                         if (subaction.baseDamage < 0) dmg *= -1; // re-flip
                         t[targetIndex].DealOrHealDamage(dmg);
                     }
-                    currentSubactionExecutionDamageValues[subactionExecutionIndex][targetIndex] = dmg;
+                    subactions_FinalDamageFigures[subactionExecutionIndex][targetIndex] = dmg;
                 }
                 return executionSuccess;
+            }
+
+            /// <summary>
+            /// Executes steps subactions from the current action's subaction set, or however many are left.
+            /// Returns true if any of the subactions we step through do anything at all.
+            /// </summary>
+            internal static bool StepSubactions (int steps)
+            {
+                bool atLeastOneSuccess = false;
+                for (int i = 0; i < steps & subactionExecutionIndex < actionInExecution.Subactions.Length; i++)
+                {
+                    if (HandleSubaction(actionInExecution.Subactions[subactionExecutionIndex])) atLeastOneSuccess = true;
+                    subactionExecutionIndex++;
+                }
+                return atLeastOneSuccess;
+            }
+
+            /// <summary>
+            /// Does exactly what it says on the tin.
+            /// </summary>
+            internal static void StopExecutingAction ()
+            {
+                Cleanup(); // this is just a passthrough to cleanup atm, but it should acquire functionality as the system grows so it's nice to have the call in place
+            }
+
+            /// <summary>
+            /// The specified battler is dead, so if we're running an action, we
+            /// need to remove it from any target lists it might be on.
+            /// If it's _using_ an action, we need to stop that entirely.
+            /// </summary>
+            internal static void BattlerIsDead (Battler b)
+            {
+                targets.Remove(b);
+                alternateTargets.Remove(b);
+                if (currentActingBattler == b) StopExecutingAction();
+            }
+
+            /// <summary>
+            /// Handles all remaining subactions, then stops executing the current action.
+            /// Returns true if any subaction does anything.
+            /// </summary>
+            internal static bool FinishCurrentAction ()
+            {
+                bool r = StepSubactions(int.MaxValue); // we just call StepSubactions with a very big int - because StepSubactions keeps you from stepping past the end of the array, giving it int.MaxValue causes it to just step until it can't step any further
+                StopExecutingAction();
+                return r;
             }
         }
 
@@ -247,10 +354,31 @@ namespace CnfBattleSys
         // Communication between the battle system and "not the battle system"
 
         /// <summary>
+        /// Passthrough to CurrentActionExecutionSubsystem.BattlerIsDead; keeps from exposing BattleOverseer internal structure.
+        /// The specified battler is dead, so if we're running an action, we
+        /// need to remove it from any target lists it might be on.
+        /// If it's _using_ an action, we need to stop that entirely.
+        /// </summary>
+        public static void BattlerIsDead (Battler b)
+        {
+            ActionExecutionSubsystem.BattlerIsDead(b);
+        }
+
+        /// <summary>
+        /// Passthrough to CurrentActionExecutionSubsystem.FinishCurrentAction; keeps from exposing BattleOverseer internal structure.
+        /// Handles all remaining subactions, then stops executing the current action.
+        /// Returns true if any subaction does anything.
+        /// </summary>
+        public static bool FinishCurrentAction ()
+        {
+            return ActionExecutionSubsystem.FinishCurrentAction();
+        }
+
+        /// <summary>
         /// Sets up battle based on given formation and starts
         /// executing Battle Shit.
         /// </summary>
-        public static void StartBattle(BattleFormation formation)
+        public static void StartBattle (BattleFormation formation)
         {
             activeFormation = formation;
             for (int b = 0; b < activeFormation.battlers.Length; b++)
@@ -259,6 +387,16 @@ namespace CnfBattleSys
                 allBattlers.Add(bat);
                 battlersBySide[bat.side].Add(bat);
             }
+        }
+
+        /// <summary>
+        /// Passthrough to CurrentActionExecutionSubsystem.StepSubactions; keeps from exposing BattleOverseer internal structure.
+        /// Executes steps subactions from the current action's subaction set, or however many are left.
+        /// Returns true if any of the subactions we step through do anything at all.
+        /// </summary>
+        public static bool StepSubactions (int steps = 1)
+        {
+            return ActionExecutionSubsystem.StepSubactions(steps);
         }
 
         // BattleOverseer state management
@@ -281,7 +419,7 @@ namespace CnfBattleSys
             battlersBySide[BattlerSideFlags.GenericNeutralSide] = new List<Battler>();
             battlersReadyToTakeTurns = new List<Battler>();
             battlerTiebreakerStack = new Stack<Battler>();
-            CurrentActionExecutionSubsystem.FirstRunSetup();
+            ActionExecutionSubsystem.FirstRunSetup();
         }
 
         /// <summary>
@@ -310,7 +448,7 @@ namespace CnfBattleSys
             battlersBySide[BattlerSideFlags.GenericNeutralSide].Clear();
             battlersReadyToTakeTurns.Clear();
             battlerTiebreakerStack.Clear();
-            CurrentActionExecutionSubsystem.Cleanup();
+            ActionExecutionSubsystem.Cleanup();
 
         }
 
