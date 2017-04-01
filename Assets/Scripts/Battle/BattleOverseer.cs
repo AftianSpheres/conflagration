@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using MovementEffects;
 
 namespace CnfBattleSys
 {
@@ -33,6 +34,7 @@ namespace CnfBattleSys
         /// </summary>
         private static class ActionExecutionSubsystem
         {
+            internal static bool isRunning { get { return currentActingBattler != null; } }
             /// <summary>
             /// The Battler that's using the action we're executing.
             /// </summary>
@@ -113,7 +115,7 @@ namespace CnfBattleSys
             /// <summary>
             /// Sets the action execution subsystem up to execute the given action.
             /// </summary>
-            private static void BeginProcessingAction (BattleAction action, Battler user, Battler[] _targets, Battler[] _alternateTargets)
+            internal static void BeginProcessingAction (BattleAction action, Battler user, Battler[] _targets, Battler[] _alternateTargets)
             {
                 actionInExecution = action;
                 currentActingBattler = user;
@@ -316,6 +318,110 @@ namespace CnfBattleSys
             }
         }
 
+        /// <summary>
+        /// Turn progression:
+        /// - If battlersReadyToTakeTurns.Count > 0, we can take a turn!
+        /// - Get the first battler that's ready to go fromt he list
+        /// - Call into that Battler's GetAction() to get targets/secondaryTargets/action
+        /// - Start executing the action
+        /// - When the action has finished executing, turn is over
+        /// </summary>
+        private static class TurnManagementSubsystem
+        {
+            /// <summary>
+            /// Battler that's currently taking a turn.
+            /// </summary>
+            private static Battler currentTurnBattler;
+            /// <summary>
+            /// Battlers to give turns when that next becomes possible. Normally there should only actually be one Battler here at a time... but ties are a thing,
+            /// and having multiple members in this list gives us an easy way to say "these guys need a tiebreaker."
+            /// </summary>
+            private static List<Battler> battlersReadyToTakeTurns;
+
+            /// <summary>
+            /// First-run setup for turn management subsystem.
+            /// </summary>
+            internal static void FirstRunSetup ()
+            {
+                battlersReadyToTakeTurns = new List<Battler>();
+            }
+
+            /// <summary>
+            /// Cleanup for turn management subsystem.
+            /// </summary>
+            internal static void Cleanup ()
+            {
+                battlersReadyToTakeTurns.Clear();
+            }
+
+            /// <summary>
+            /// So long as something's taking a turn right now, gives that battler a second turn immediately after this one.
+            /// </summary>
+            internal static void ExtendCurrentTurn ()
+            {
+                if (currentTurnBattler == null) throw new System.Exception("Can't extend current turn because there _isn't_ a current turn.");
+                battlersReadyToTakeTurns.Insert(0, currentTurnBattler);
+            }
+
+            /// <summary>
+            /// Checks to see if a) we have battlers waiting on their turn and b) we aren't currently taking a turn.
+            /// </summary>
+            /// <returns></returns>
+            internal static bool ReadyToTakeATurn()
+            {
+                return (battlersReadyToTakeTurns.Count > 0 && currentTurnBattler == null);
+            }
+
+            /// <summary>
+            /// Battler b needs to take a turn as soon as it can be allowed to do so.
+            /// </summary>
+            internal static void RequestTurn(Battler b)
+            {
+                battlersReadyToTakeTurns.Add(b);
+            }
+
+            /// <summary>
+            /// Coroutine: calls b.GetAction, then sit on our ass until b gives us the action we want.
+            /// (This lets us pause the battle simulation indefinitely for eg. player input. Or _really_
+            /// messy AI, hypothetically, I guess.)
+            /// </summary>
+            private static IEnumerator<float> _WaitUntilBattlerReadyToAct (Battler b)
+            {
+                b.GetAction();
+                while (b.turnActions.action == ActionDatabase.defaultBattleAction) yield return 0; // wait until b decides what to do
+                ActionExecutionSubsystem.BeginProcessingAction(b.turnActions.action, b, b.turnActions.targets, b.turnActions.alternateTargets);
+            }
+
+            /// <summary>
+            /// Coroutine: waits until action execution completes, then ends turn.
+            /// </summary>
+            private static IEnumerator<float> _EndTurnOnceActionExecutionCompleted ()
+            {
+                while (ActionExecutionSubsystem.isRunning) yield return 0;
+                EndTurn();
+            }
+
+            /// <summary>
+            /// Starts taking a turn.
+            /// </summary>
+            internal static void StartTurn ()
+            {
+                currentTurnBattler = battlersReadyToTakeTurns[0];
+                battlersReadyToTakeTurns.Remove(currentTurnBattler);
+                Timing.RunCoroutine(_WaitUntilBattlerReadyToAct(currentTurnBattler));
+            }
+
+            /// <summary>
+            /// Finishes taking a turn.
+            /// </summary>
+            internal static void EndTurn()
+            {
+                ActionExecutionSubsystem.FinishCurrentAction();
+                currentTurnBattler = null;
+                DeriveNormalizedSpeed();
+            }
+        }
+
         public const float battleTickLength = 1 / 60;
         /// <summary>
         /// Speed stats determine the delay units acquire after acting.
@@ -340,11 +446,6 @@ namespace CnfBattleSys
         public static Dictionary<BattlerSideFlags, List<Battler>> battlersBySide { get; private set; } // xzibit.jpg
 
         /// <summary>
-        /// Battlers to give turns when that next becomes possible. Normally there should only actually be one Battler here at a time... but ties are a thing,
-        /// and having multiple members in this list gives us an easy way to say "these guys need a tiebreaker."
-        /// </summary>
-        private static List<Battler> battlersReadyToTakeTurns;
-        /// <summary>
         /// Turn order tiebreakers work as follows: every battler is a part of this stack in a random order. When multiple battlers are trying to take their turn at the same time, 
         /// or "tied" in some other sense, we just pop Battlers off the top of battlerTiebreakerStack until we get one of the ones that's trying to act, then rerandomize it.
         /// </summary>
@@ -352,27 +453,6 @@ namespace CnfBattleSys
 
 
         // Communication between the battle system and "not the battle system"
-
-        /// <summary>
-        /// Passthrough to CurrentActionExecutionSubsystem.BattlerIsDead; keeps from exposing BattleOverseer internal structure.
-        /// The specified battler is dead, so if we're running an action, we
-        /// need to remove it from any target lists it might be on.
-        /// If it's _using_ an action, we need to stop that entirely.
-        /// </summary>
-        public static void BattlerIsDead (Battler b)
-        {
-            ActionExecutionSubsystem.BattlerIsDead(b);
-        }
-
-        /// <summary>
-        /// Passthrough to CurrentActionExecutionSubsystem.FinishCurrentAction; keeps from exposing BattleOverseer internal structure.
-        /// Handles all remaining subactions, then stops executing the current action.
-        /// Returns true if any subaction does anything.
-        /// </summary>
-        public static bool FinishCurrentAction ()
-        {
-            return ActionExecutionSubsystem.FinishCurrentAction();
-        }
 
         /// <summary>
         /// Sets up battle based on given formation and starts
@@ -417,9 +497,9 @@ namespace CnfBattleSys
             battlersBySide[BattlerSideFlags.GenericAlliedSide] = new List<Battler>();
             battlersBySide[BattlerSideFlags.GenericEnemySide] = new List<Battler>();
             battlersBySide[BattlerSideFlags.GenericNeutralSide] = new List<Battler>();
-            battlersReadyToTakeTurns = new List<Battler>();
             battlerTiebreakerStack = new Stack<Battler>();
             ActionExecutionSubsystem.FirstRunSetup();
+            TurnManagementSubsystem.FirstRunSetup();
         }
 
         /// <summary>
@@ -446,9 +526,9 @@ namespace CnfBattleSys
             battlersBySide[BattlerSideFlags.GenericAlliedSide].Clear();
             battlersBySide[BattlerSideFlags.GenericEnemySide].Clear();
             battlersBySide[BattlerSideFlags.GenericNeutralSide].Clear();
-            battlersReadyToTakeTurns.Clear();
             battlerTiebreakerStack.Clear();
             ActionExecutionSubsystem.Cleanup();
+            TurnManagementSubsystem.Cleanup();
 
         }
 
@@ -506,7 +586,7 @@ namespace CnfBattleSys
                 {
                     allBattlers[i].ElapsedTime(battleTickLength);
                 }
-                if (battlersReadyToTakeTurns.Count > 0)
+                if (TurnManagementSubsystem.ReadyToTakeATurn())
                 {
                     remainingTime = time; // hold onto the remainder and add it next time you call remainingTime
                     break;
@@ -528,12 +608,45 @@ namespace CnfBattleSys
             }
         }
 
+        // Interfaces to subsystem functionality
+
         /// <summary>
+        /// Passthrough to CurrentActionExecutionSubsystem.BattlerIsDead; keeps from exposing BattleOverseer internal structure.
+        /// The specified battler is dead, so if we're running an action, we
+        /// need to remove it from any target lists it might be on.
+        /// If it's _using_ an action, we need to stop that entirely.
+        /// </summary>
+        public static void BattlerIsDead(Battler b)
+        {
+            ActionExecutionSubsystem.BattlerIsDead(b);
+        }
+
+        /// <summary>
+        /// Passthrough to TurnManagementSubsystem.ExtendCurrentTurn.
+        /// So long as something's taking a turn right now, gives that battler a second turn immediately after this one.
+        /// </summary>
+        internal static void ExtendCurrentTurn()
+        {
+            TurnManagementSubsystem.ExtendCurrentTurn();
+        }
+
+        /// <summary>
+        /// Passthrough to CurrentActionExecutionSubsystem.FinishCurrentAction; keeps from exposing BattleOverseer internal structure.
+        /// Handles all remaining subactions, then stops executing the current action.
+        /// Returns true if any subaction does anything.
+        /// </summary>
+        public static bool FinishCurrentAction()
+        {
+            return ActionExecutionSubsystem.FinishCurrentAction();
+        }
+
+        /// <summary>
+        /// Passthrough to TurnManagementSubsystem.RequestTurn.
         /// Battler b needs to take a turn as soon as it can be allowed to do so.
         /// </summary>
-        public static void RequestTurn (Battler b)
+        public static void RequestTurn(Battler b)
         {
-            battlersReadyToTakeTurns.Add(b);
+            TurnManagementSubsystem.RequestTurn(b);
         }
     }
 }

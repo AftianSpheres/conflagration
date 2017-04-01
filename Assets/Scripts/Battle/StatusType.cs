@@ -11,6 +11,8 @@
     {
         None,
         TestBuff,
-        TestDebuff
+        TestDebuff,
+        StanceBroken_Voluntary, // break your own stance and eat some penalties you can plan around
+        StanceBroken_Forced // this is "that, but worse"
     }
 }

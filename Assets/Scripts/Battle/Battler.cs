@@ -13,6 +13,7 @@ namespace CnfBattleSys
     public class Battler
     {
         public const int maxLevel = 120; // you could actually have things over maxLevel but we use this for scaling stats w/ level...
+        public static TurnActions defaultTurnActions = new TurnActions(false, -1, new Battler[0], new Battler[0], ActionDatabase.defaultBattleAction);
 
         /// <summary>
         /// Data structure for Battler stats.
@@ -767,8 +768,51 @@ namespace CnfBattleSys
 
         }
 
+        /// <summary>
+        /// Data structure containing everything a Battler wants to do for its turn - move (moves aren't a thing yet, this is reserved),
+        /// targets/alt targets, action, etc.
+        /// </summary>
+        public struct TurnActions
+        {
+            /// <summary>
+            /// True if we changed stances before selecting our action. False otherwise.
+            /// </summary>
+            public readonly bool stanceChanged;
+            /// <summary>
+            /// (DUMMY) Distance what we gonna move.
+            /// </summary>
+            public readonly float moveDist;
+            /// <summary>
+            /// Primary target set array
+            /// </summary>
+            public readonly Battler[] targets;
+            /// <summary>
+            /// Alternate target set array
+            /// </summary>
+            public readonly Battler[] alternateTargets;
+            /// <summary>
+            /// Action what we're doing.
+            /// </summary>
+            public readonly BattleAction action;
+
+            /// <summary>
+            /// Constructor. TurnActions is a structure for passing data on what we're doing this turn to the battle overseer, so
+            /// you should only really be generating these at its behest.
+            /// </summary>
+            internal TurnActions (bool _stanceChanged, float _moveDist, Battler[] _targets, Battler[] _alternateTargets, BattleAction _action)
+            {
+                stanceChanged = _stanceChanged;
+                moveDist = _moveDist;
+                targets = _targets;
+                alternateTargets = _alternateTargets;
+                action = _action;
+            }
+        }
+
         // Things derived from the battler data table
         public readonly BattlerType battlerType;
+        public readonly BattlerAIType aiType;
+        public readonly BattlerAIFlags aiFlags;
         public int level { get; private set; }
         public readonly Stats stats;
         public readonly BattleStance[] stances;
@@ -786,6 +830,9 @@ namespace CnfBattleSys
         public int currentSP { get; private set; }
         public Vector3 logicalPosition { get; private set; } // This is what we use for determining targeting ranges, etc. When we get a move action, we set logicalPosition immediately, and the puppet moves there. z-axis doesn't matter - battlefield is 2D.
         public readonly Dictionary<StatusType, StatusPacket> statusPackets;
+        public TurnActions turnActions { get; private set; }
+        public BattleAction lastActionExecuted { get; private set; }
+        public BattleStance previousStance { get; private set; }
 
         // Magic
         public float speedFactor { get { return stats.Spe / BattleOverseer.normalizedSpeed; } }
@@ -795,6 +842,8 @@ namespace CnfBattleSys
             // Load in everything from the battler data table first
             battlerType = fm.battlerData.battlerType;
             level = fm.battlerData.level;
+            aiType = fm.battlerData.aiType;
+            aiFlags = fm.battlerData.aiFlags;
             int baseHP = fm.battlerData.baseHP;
             int baseATK = fm.battlerData.baseATK;
             int baseDEF = fm.battlerData.baseDEF;
@@ -829,6 +878,7 @@ namespace CnfBattleSys
             currentDelay = 0;
             currentHP = stats.maxHP;
             currentSP = currentStance.maxSP;
+            turnActions = defaultTurnActions;
         }
 
         /// <summary>
@@ -843,6 +893,16 @@ namespace CnfBattleSys
             const float mlv = maxLevel; // implicit divide-as-float
             const int adjustment = 30;
             return Mathf.RoundToInt(baseStat * ((level + adjustment) / mlv) * (growth + ((level / mlv) * (1 - growth))));
+        }
+
+        /// <summary>
+        /// Applies speed factor and adds given float to current delay.
+        /// Doesn't allow delay to go below zero.
+        /// </summary>
+        public void ApplyDelay (float delay)
+        {
+            currentDelay += (delay / speedFactor);
+            if (currentDelay < 0) currentDelay = 0;
         }
 
         /// <summary>
@@ -862,6 +922,31 @@ namespace CnfBattleSys
                 default:
                     throw new System.Exception("Unregognized FXtype: " + fxPackage.fxType);
             }
+        }
+
+        /// <summary>
+        /// Sets battler stance and removes the stance break debuffs.
+        /// </summary>
+        public void ChangeStanceTo (BattleStance stance)
+        {
+            previousStance = currentStance;
+            currentStance = stance;
+            statusPackets.Remove(StatusType.StanceBroken_Voluntary);
+            statusPackets.Remove(StatusType.StanceBroken_Forced);
+        }
+
+        /// <summary>
+        /// Applies transformations to battler state based on chosen action,
+        /// then unsets chosen action.
+        /// </summary>
+        public void CommitCurrentChosenActions ()
+        {
+            ApplyDelay(turnActions.moveDist * stats.moveDelay);
+            // stance break is a special case - it doesn't have its own base delay value; the delay incurred by breaking your own stance is determined by the followthrough stance change delay of the last action you used
+            if (turnActions.action.actionID == ActionType.INTERNAL_BreakOwnStance) ApplyDelay(turnActions.action.baseFollowthroughStanceChangeDelay);
+            else ApplyDelay(turnActions.action.baseDelay);
+            lastActionExecuted = turnActions.action;
+            turnActions = defaultTurnActions;
         }
 
         /// <summary>
@@ -901,6 +986,21 @@ namespace CnfBattleSys
             }
         }
         
+        /// <summary>
+        /// Call this to make the Battler start figuring out what action to take.
+        /// This doesn't return anything. What it _does_ do is cause the Battler
+        /// to update its TurnActions with the parameters the battle system
+        /// needs to execute an action. The BattleOverseer tells the Battler
+        /// to put its order in that box, and it needs to _watch_ that box
+        /// once it puts in the request.
+        /// </summary>
+        public void GetAction ()
+        {
+            bool changeStances = false;
+            if (statusPackets.ContainsKey(StatusType.StanceBroken_Forced) || statusPackets.ContainsKey(StatusType.StanceBroken_Voluntary)) changeStances = true;
+            BattlerAISystem.StartThinking(this, changeStances);
+        }
+
         /// <summary>
         /// Gets the value corresponding to a given LogicalStatType, doing
         /// any necessary math to return the appropriate value.
@@ -952,6 +1052,24 @@ namespace CnfBattleSys
                 default:
                     throw new System.Exception("Can't return value logical stat value for LogicalStatType value of " + logicalStatType.ToString());
             }
+        }
+
+        /// <summary>
+        /// Takes a TurnActions struct and stores it as our turnActions.
+        /// Also takes a set of BattlerAIMessageFlags, which can
+        /// be used to communicate things like eg. "extend your turn"
+        /// or "you can't move next turn."
+        /// (Both of those flags are of course used to allow player
+        /// units to move before selecting an action.)
+        /// </summary>
+        /// <param name="turnActions"></param>
+        public void ReceiveAThought (TurnActions _turnActions, BattlerAIMessageFlags messageFlags)
+        {
+            turnActions = _turnActions;
+            if ((messageFlags & BattlerAIMessageFlags.ExtendTurn) == BattlerAIMessageFlags.ExtendTurn)
+                BattleOverseer.ExtendCurrentTurn();
+            if ((messageFlags & BattlerAIMessageFlags.ForbidMovementOnNextTurn) == BattlerAIMessageFlags.ForbidMovementOnNextTurn)
+                Debug.Log("What even is movement, mannnn");
         }
 
     }
