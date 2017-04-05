@@ -15,6 +15,7 @@ namespace CnfBattleSys.AI
         {
             if (changeStances) throw new NotImplementedException();
             BattleAction action = b.currentStance.actionSet[UnityEngine.Random.Range(0, b.currentStance.actionSet.Length)];
+            Battler[][] allowedTargets = BattlerAISystem.FindLegalTargetsForAction(b, action);
             throw new NotImplementedException(); // need to do target acquisition tools!
         }
     }

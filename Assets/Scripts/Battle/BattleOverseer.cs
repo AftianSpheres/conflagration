@@ -451,6 +451,12 @@ namespace CnfBattleSys
         /// </summary>
         private static Stack<Battler> battlerTiebreakerStack;
 
+        /// <summary>
+        /// Use this to avoid instantiating new battler list instances when you just want it for a single function.
+        /// Assume this needs to be cleared if you're going to use it, and that it could basically contain any random grouping of battlers.
+        /// </summary>
+        private static List<Battler> tmpBattlersListBuffer;
+
 
         // Communication between the battle system and "not the battle system"
 
@@ -498,8 +504,10 @@ namespace CnfBattleSys
             battlersBySide[BattlerSideFlags.GenericEnemySide] = new List<Battler>();
             battlersBySide[BattlerSideFlags.GenericNeutralSide] = new List<Battler>();
             battlerTiebreakerStack = new Stack<Battler>();
+            tmpBattlersListBuffer = new List<Battler>();
             ActionExecutionSubsystem.FirstRunSetup();
             TurnManagementSubsystem.FirstRunSetup();
+            BattlerAISystem.FirstRunSetup();
         }
 
         /// <summary>
@@ -527,6 +535,7 @@ namespace CnfBattleSys
             battlersBySide[BattlerSideFlags.GenericEnemySide].Clear();
             battlersBySide[BattlerSideFlags.GenericNeutralSide].Clear();
             battlerTiebreakerStack.Clear();
+            tmpBattlersListBuffer.Clear();
             ActionExecutionSubsystem.Cleanup();
             TurnManagementSubsystem.Cleanup();
 
@@ -647,6 +656,120 @@ namespace CnfBattleSys
         public static void RequestTurn(Battler b)
         {
             TurnManagementSubsystem.RequestTurn(b);
+        }
+
+        /// <summary>
+        /// Gets all Battlers that are considered allies of a battler of side side.
+        /// This includes those of the battler's own side - call GetBattlersAlliedTo_Strict
+        /// if you want, specifically, allies of a _different_ side.
+        /// </summary>
+        public static void GetBattlersAlliedTo (BattlerSideFlags side, ref List<Battler> outputList)
+        {
+            tmpBattlersListBuffer.Clear(); // make sure this is empty before trying to use it
+            switch (side)
+            {
+                case BattlerSideFlags.PlayerSide:
+                case BattlerSideFlags.GenericAlliedSide:
+                    tmpBattlersListBuffer.AddRange(battlersBySide[BattlerSideFlags.PlayerSide]);
+                    tmpBattlersListBuffer.AddRange(battlersBySide[BattlerSideFlags.GenericAlliedSide]);
+                    break;
+                case BattlerSideFlags.GenericEnemySide:
+                    tmpBattlersListBuffer.AddRange(battlersBySide[BattlerSideFlags.GenericEnemySide]);
+                    break;
+                case BattlerSideFlags.GenericNeutralSide:
+                    tmpBattlersListBuffer.AddRange(battlersBySide[BattlerSideFlags.GenericNeutralSide]);
+                    break;
+                default:
+                    throw new System.Exception("Tried to find allies of side " + side + ", but it wasn't in the table.");
+            }
+            for (int i = 0; i < tmpBattlersListBuffer.Count; i++) if (!outputList.Contains(tmpBattlersListBuffer[i])) outputList.Add(tmpBattlersListBuffer[i]);
+        }
+
+        /// <summary>
+        /// Gets all Battlers that are considered allies of a battler of side side.
+        /// This excludes those of the battler's own side.
+        /// </summary>
+        public static void GetBattlersAlliedTo_Strict(BattlerSideFlags side, ref List<Battler> outputList)
+        {
+            tmpBattlersListBuffer.Clear(); // make sure this is empty before trying to use it
+            switch (side)
+            {
+                case BattlerSideFlags.PlayerSide:
+                    tmpBattlersListBuffer.AddRange(battlersBySide[BattlerSideFlags.GenericAlliedSide]);
+                    break;
+                case BattlerSideFlags.GenericAlliedSide:
+                    tmpBattlersListBuffer.AddRange(battlersBySide[BattlerSideFlags.PlayerSide]);
+                    break;
+                case BattlerSideFlags.GenericEnemySide:
+                    tmpBattlersListBuffer.AddRange(battlersBySide[BattlerSideFlags.GenericEnemySide]);
+                    break;
+                case BattlerSideFlags.GenericNeutralSide:
+                    tmpBattlersListBuffer.AddRange(battlersBySide[BattlerSideFlags.GenericNeutralSide]);
+                    break;
+                default:
+                    throw new System.Exception("Tried to find allies of side " + side + ", but it wasn't in the table.");
+            }
+            for (int i = 0; i < tmpBattlersListBuffer.Count; i++) if (!outputList.Contains(tmpBattlersListBuffer[i])) outputList.Add(tmpBattlersListBuffer[i]);
+        }
+
+        /// <summary>
+        /// Gets all Battlers that are considered enemies of a battler of side side.
+        /// </summary>
+        public static void GetBattlersEnemiesTo(BattlerSideFlags side, ref List<Battler> outputList)
+        {
+            tmpBattlersListBuffer.Clear();
+            switch (side)
+            {
+                case BattlerSideFlags.PlayerSide:
+                case BattlerSideFlags.GenericAlliedSide:
+                    tmpBattlersListBuffer.AddRange(battlersBySide[BattlerSideFlags.GenericEnemySide]);
+                    break;
+                case BattlerSideFlags.GenericEnemySide:
+                    tmpBattlersListBuffer.AddRange(battlersBySide[BattlerSideFlags.PlayerSide]);
+                    tmpBattlersListBuffer.AddRange(battlersBySide[BattlerSideFlags.GenericAlliedSide]);
+                    break;
+                case BattlerSideFlags.GenericNeutralSide:
+                    break;
+                default:
+                    throw new System.Exception("Tried to find enemies of side " + side + ", but it wasn't in the table.");
+            }
+            for (int i = 0; i < tmpBattlersListBuffer.Count; i++) if (!outputList.Contains(tmpBattlersListBuffer[i])) outputList.Add(tmpBattlersListBuffer[i]);
+        }
+
+        /// <summary>
+        /// Gets all Battlers that are considered neutral to a battler of side side.
+        /// </summary>
+        public static void GetBattlersNeutralTo (BattlerSideFlags side, ref List<Battler> outputList)
+        {
+            tmpBattlersListBuffer.Clear(); // make sure this is empty before trying to use it
+            switch (side)
+            {
+                case BattlerSideFlags.PlayerSide:
+                case BattlerSideFlags.GenericAlliedSide:
+                case BattlerSideFlags.GenericEnemySide:
+                    tmpBattlersListBuffer.AddRange(battlersBySide[BattlerSideFlags.GenericNeutralSide]);
+                    break;
+                case BattlerSideFlags.GenericNeutralSide:
+                    tmpBattlersListBuffer.AddRange(battlersBySide[BattlerSideFlags.PlayerSide]);
+                    tmpBattlersListBuffer.AddRange(battlersBySide[BattlerSideFlags.GenericAlliedSide]);
+                    tmpBattlersListBuffer.AddRange(battlersBySide[BattlerSideFlags.GenericEnemySide]);
+                    break;
+                default:
+                    throw new System.Exception("Tried to find neutrals for side " + side + ", but it wasn't in the table.");
+            }
+            for (int i = 0; i < tmpBattlersListBuffer.Count; i++) if (!outputList.Contains(tmpBattlersListBuffer[i])) outputList.Add(tmpBattlersListBuffer[i]);
+        }
+
+        /// <summary>
+        /// Gets all Battlers that are the same side as a battler of side side.
+        /// Side. Side side side sidddeeee.
+        /// Whose side is this side? My side, your side, side's side, side side side.
+        /// </summary>
+        public static void GetBattlersSameSideAs (BattlerSideFlags side, ref List<Battler> outputList)
+        {
+            tmpBattlersListBuffer.Clear();
+            tmpBattlersListBuffer.AddRange(battlersBySide[side]);
+            for (int i = 0; i < tmpBattlersListBuffer.Count; i++) if (!outputList.Contains(tmpBattlersListBuffer[i])) outputList.Add(tmpBattlersListBuffer[i]);
         }
     }
 }

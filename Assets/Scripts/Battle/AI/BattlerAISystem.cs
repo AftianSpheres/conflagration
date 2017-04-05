@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using CnfBattleSys.AI;
 
 namespace CnfBattleSys
@@ -14,6 +15,18 @@ namespace CnfBattleSys
     /// </summary>
     public static class BattlerAISystem
     {
+        private static List<Battler> battlersListBuffer;
+        private static List<Battler> alsoBattlersListBuffer; // I am probably way too worried about unnecessary allocations to be doing things this way
+
+        /// <summary>
+        /// First-run setup for BattlerAISystem.
+        /// </summary>
+        public static void FirstRunSetup ()
+        {
+            battlersListBuffer = new List<Battler>();
+            alsoBattlersListBuffer = new List<Battler>();
+        }
+
         /// <summary>
         /// Starts the AI on deciding what the unit should do.
         /// Thia is basically just an intermediary that goes between the Battler and
@@ -43,5 +56,48 @@ namespace CnfBattleSys
             if (outputIsDelayed) throw new NotImplementedException(); // this should start a coroutine that waits for the AI or player "AI" to finish, then calls b.ReceiveAThought whenever that's done
             else b.ReceiveAThought(turnActions, messageFlags);
         }
+
+        /// <summary>
+        /// Returns a 2D array of battlers.
+        /// The first array contains all valid primary targets for the specified battler/action combination.
+        /// The second array contains all valid secondary targets for the specified battler/action combination.
+        /// If there are no valid targets for either targeting type, the array will be empty.
+        /// </summary>
+        public static Battler[][] FindLegalTargetsForAction (Battler b, BattleAction battleAction)
+        {
+            Battler[][] output = new Battler[2][];
+            Action<TargetSideFlags> populateList = (targetSideFlags) =>
+            {
+                battlersListBuffer.Clear();
+                alsoBattlersListBuffer.Clear();
+                if (targetSideFlags == TargetSideFlags.None) throw new Exception("Can't find legal targets for action " + battleAction.actionID.ToString() + " because it doesn't _have_ legal targets. This is either a special case that shouldn't go through normal target acquisition, something that just shouldn't _be_ executed, or completely broken.");
+                if ((targetSideFlags & TargetSideFlags.MySide) == TargetSideFlags.MySide)
+                {
+                    BattleOverseer.GetBattlersSameSideAs(b.side, ref battlersListBuffer);
+                }
+                if ((targetSideFlags & TargetSideFlags.MyFriends) == TargetSideFlags.MyFriends)
+                {
+                    BattleOverseer.GetBattlersAlliedTo_Strict(b.side, ref battlersListBuffer);
+                }
+                if ((targetSideFlags & TargetSideFlags.MyEnemies) == TargetSideFlags.MyEnemies)
+                {
+                    BattleOverseer.GetBattlersEnemiesTo(b.side, ref battlersListBuffer);
+                }
+                if ((targetSideFlags & TargetSideFlags.Neutral) == TargetSideFlags.Neutral)
+                {
+                    BattleOverseer.GetBattlersEnemiesTo(b.side, ref battlersListBuffer);
+                }
+                for (int i = 0; i < battlersListBuffer.Count; i++) if (battlersListBuffer[i].IsValidTargetFor(b, battleAction)) alsoBattlersListBuffer.Add(battlersListBuffer[i]);
+            };
+            populateList(battleAction.targetingSideFlags);
+            output[0] = alsoBattlersListBuffer.ToArray();
+            if (battleAction.alternateTargetSideFlags != TargetSideFlags.None)
+            {
+                populateList(battleAction.alternateTargetSideFlags);
+                output[1] = alsoBattlersListBuffer.ToArray();
+            }
+            else output[1] = new Battler[0];
+            return output;
+        }    
     }
 }

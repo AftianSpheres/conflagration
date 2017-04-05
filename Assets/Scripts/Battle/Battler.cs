@@ -1072,6 +1072,16 @@ namespace CnfBattleSys
                 Debug.Log("What even is movement, mannnn");
         }
 
+        /// <summary>
+        /// DUMMY: Always returns true.
+        /// Designed behavior: returns true if this battler is a valid target given the combination of targeting battler and action.
+        /// </summary>
+        public bool IsValidTargetFor (Battler targeter, BattleAction action)
+        {
+            Debug.Log("Please implement Battler.IsValidTargetFor()");
+            return true;
+        }
+
     }
 
 }
