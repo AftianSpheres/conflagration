@@ -58,6 +58,34 @@ namespace CnfBattleSys
         }
 
         /// <summary>
+        /// Runs through the given list of potential targets, does damage calculations and (eventually) applies any modifiers or bonuses that make sense to favor/disfavor better/worse targets,
+        /// and spits out a one-length array containing target against which the selected action is best used.
+        public static Battler[] GetOptimumTargetForSingleTargetDamaging (Battler user, BattleAction action, Battler[] potentialTargets)
+        {
+            if (potentialTargets.Length < 1) throw new Exception("Can't pick optimum target unless you actually provide some targets.");
+            const float confirmedKillBonus = 1f;
+            float highestScore = float.MinValue;
+            int tentativeTargetIndex = -1;
+            float[] dmgScores = new float[potentialTargets.Length]; // dmgScore is typically just damage / maxHP, but if you want to eg. prioritize specific units, apply score penalties if the attack is likely to miss, etc., you apply those to dmgScores
+            for (int i = 0; i < potentialTargets.Length; i++)
+            {
+                int dmg = 0;
+                for (int s = 0; s < action.Subactions.Length; i++)
+                {
+                    dmg += potentialTargets[i].CalcDamageAgainstMe(user, action.Subactions[s]);
+                }
+                dmgScores[i] = (float)dmg / potentialTargets[i].stats.maxHP;
+                if (potentialTargets[i].currentHP <= dmg) dmgScores[i] += confirmedKillBonus;
+                if (dmgScores[i] > highestScore)
+                {
+                    highestScore = dmgScores[i];
+                    tentativeTargetIndex = i;
+                }
+            }
+            return new Battler[] { potentialTargets[tentativeTargetIndex] };
+        }
+
+        /// <summary>
         /// Returns a 2D array of battlers.
         /// The first array contains all valid primary targets for the specified battler/action combination.
         /// The second array contains all valid secondary targets for the specified battler/action combination.
