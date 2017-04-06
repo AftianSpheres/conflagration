@@ -76,6 +76,13 @@
             public readonly LogicalStatType hitStat;
             public readonly LogicalStatType evadeStat;
             public readonly DamageTypeFlags damageTypes;
+            /// <summary>
+            /// The categoryFlags of a subaction determine if that subaction is considered by the AI system
+            /// when calculating that category score.
+            /// These should always be a subset of the action's own categoryFlags; we can't do anything with categoryFlags that _aren't_ shared.
+            /// If the action doesn't identify itself as a buff, we never bother scoring subactions as buffs!
+            /// </summary>
+            public readonly BattleActionCategoryFlags categoryFlags;
 
             /// <summary>
             /// Must be lower than the Subaction's index in the BattleAction.Subactions array.
@@ -99,7 +106,7 @@
                              AnimEventType _onSubactionHitTargetAnim, AnimEventType _onSubactionExecuteUserAnim,
                              LogicalStatType _atkStat, LogicalStatType _defStat, LogicalStatType _hitStat, LogicalStatType _evadeStat,
                              sbyte _thisSubactionDamageTiedToSubactionAtIndex, sbyte _thisSubactionSuccessTiedToSubactionAtIndex,
-                             FXPackage[] _fx, DamageTypeFlags _damageTypes)
+                             BattleActionCategoryFlags _categoryFlags, FXPackage[] _fx, DamageTypeFlags _damageTypes)
             {
                 baseDamage = _baseDamage;
                 baseAccuracy = _baseAccuracy;
@@ -112,6 +119,7 @@
                 evadeStat = _evadeStat;
                 thisSubactionDamageTiedToSubactionAtIndex = _thisSubactionDamageTiedToSubactionAtIndex;
                 thisSubactionSuccessTiedToSubactionAtIndex = _thisSubactionSuccessTiedToSubactionAtIndex;
+                categoryFlags = _categoryFlags;
                 fx = _fx;
                 damageTypes = _damageTypes;
             }
@@ -139,6 +147,7 @@
         public readonly AnimEventType onActionEndUserAnim;
         public readonly AnimEventType onActionUseTargetAnim;
         public readonly AnimEventType onActionUseUserAnim;
+        public readonly BattleActionCategoryFlags categoryFlags;
         public readonly Subaction[] Subactions;
 
         /// <summary>
@@ -148,7 +157,7 @@
         public BattleAction(ActionType _actionID, float _baseAOERadius, float _baseDelay, float _baseFollowthroughStanceChangeDelay, float _baseMinimumTargetingDistance, float _basetargetingRange,
             byte _baseSPCost, TargetSideFlags _alternateTargetSideFlags, TargetSideFlags _targetingSideFlags, ActionTargetType _alternateTargetType, ActionTargetType _targetingType, AnimEventType _animSkipTargetHitAnim,
             AnimEventType _onActionEndTargetAnim, AnimEventType _onActionEndUserAnim, AnimEventType _OnActionUseTargetAnim, AnimEventType _OnActionUseUserAnim,
-            Subaction[] _Subactions)
+            BattleActionCategoryFlags _categoryFlags, Subaction[] _Subactions)
         {
             if (_Subactions.Length == 0) throw new System.Exception("Tried to create a battle Action with no Subactions, which should never happen.");
             actionID = _actionID;
@@ -165,6 +174,7 @@
             onActionEndUserAnim = _onActionEndUserAnim;
             onActionUseTargetAnim = _OnActionUseTargetAnim;
             onActionUseUserAnim = _OnActionUseUserAnim;
+            categoryFlags = _categoryFlags;
             Subactions = _Subactions;
         }
     }

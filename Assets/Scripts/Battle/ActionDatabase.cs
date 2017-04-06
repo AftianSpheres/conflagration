@@ -7,9 +7,9 @@ namespace CnfBattleSys
     public class ActionDatabase
     {
         private static BattleAction[] _actions;
-        private static readonly BattleAction.Subaction[] defaultSubactionArray = { new BattleAction.Subaction(0, 0, false, AnimEventType.None, AnimEventType.None, LogicalStatType.None, LogicalStatType.None, LogicalStatType.None, LogicalStatType.None, -1, -1, new BattleAction.Subaction.FXPackage[0], DamageTypeFlags.None) };
+        private static readonly BattleAction.Subaction[] defaultSubactionArray = { new BattleAction.Subaction(0, 0, false, AnimEventType.None, AnimEventType.None, LogicalStatType.None, LogicalStatType.None, LogicalStatType.None, LogicalStatType.None, -1, -1, BattleActionCategoryFlags.None,new BattleAction.Subaction.FXPackage[0], DamageTypeFlags.None) };
         public static readonly BattleAction defaultBattleAction = new BattleAction(ActionType.InvalidAction, 0, 0, 0, 0, 0, 0, TargetSideFlags.None, TargetSideFlags.None, ActionTargetType.None, ActionTargetType.None, AnimEventType.None, AnimEventType.None, AnimEventType.None, AnimEventType.None, AnimEventType.None,
-                                                       defaultSubactionArray);
+                                                       BattleActionCategoryFlags.None, defaultSubactionArray);
 
         /// <summary>
         /// Loads in and parses all of the xml files, populates the action dataset.
@@ -99,9 +99,11 @@ namespace CnfBattleSys
             AnimEventType onActionUseTargetAnim = DBTools.ParseAnimEventType(workingNode.InnerText);
             actOnNode("//onActionUseUserAnim");
             AnimEventType onActionUseUserAnim = DBTools.ParseAnimEventType(workingNode.InnerText);
+            actOnNode("//categoryFlags");
+            BattleActionCategoryFlags categoryFlags = DBTools.ParseBattleActionCategoryFlags(workingNode.InnerText);
             Resources.UnloadAsset(unreadFileBuffer);
             return new BattleAction(actionID, baseAOERadius, baseDelay, baseFollowthroughStanceChangeDelay, baseMinimumTargetingDistance, baseTargetingRange, baseSPCost, alternateTargetingSideFlags, targetingSideFlags,
-                alternateTargetType, targetingType, animSkipTargetHitAnim, onActionEndTargetAnim, onActionEndUserAnim, onActionUseTargetAnim, onActionUseUserAnim, Subactions);
+                alternateTargetType, targetingType, animSkipTargetHitAnim, onActionEndTargetAnim, onActionEndUserAnim, onActionUseTargetAnim, onActionUseUserAnim, categoryFlags, Subactions);
 
         }
 
@@ -149,6 +151,8 @@ namespace CnfBattleSys
             LogicalStatType evadeStat = DBTools.ParseLogicalStatType(workingNode.InnerText);
             actOnNode("//damageTypes");
             DamageTypeFlags damageTypes = DBTools.ParseDamageTypeFlags(workingNode.InnerText);
+            actOnNode("//categoryFlags");
+            BattleActionCategoryFlags categoryFlags = DBTools.ParseBattleActionCategoryFlags(workingNode.InnerText);
             workingNode = SubactionNode.SelectSingleNode("//thisSubactionDamageTiedToSubactionAtIndex");
             if (workingNode != null)
             {
@@ -164,7 +168,7 @@ namespace CnfBattleSys
                 else if (thisSubactionSuccessTiedToSubactionAtIndex >= index) throw new Exception(exceptionSubactionIDStr() + " tries to tie itself to a Subaction index that doesn't precede it!");
             }
             return new BattleAction.Subaction(baseDamage, baseAccuracy, useAlternateTargetSet, onSubactionHitTargetAnim, onSubactionExecuteUserAnim, atkStat, defStat, hitStat, evadeStat,
-                thisSubactionDamageTiedToSubactionAtIndex, thisSubactionSuccessTiedToSubactionAtIndex, fx, damageTypes);
+                thisSubactionDamageTiedToSubactionAtIndex, thisSubactionSuccessTiedToSubactionAtIndex, categoryFlags ,fx, damageTypes);
         }
 
         /// <summary>

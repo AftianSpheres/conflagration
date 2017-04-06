@@ -451,31 +451,31 @@ namespace CnfBattleSys
         /// <summary>
         /// Data structure for Battler resistance/weakness mods. Stores raw values and does transformations on those.
         /// </summary>
-        public struct Resistances
+        public class Resistances
         {
             public readonly Resistances_Raw raw;
             public readonly Battler owner;
 
             public float global { get { return raw.global * owner.currentStance.resistances.global * owner.metaStance.resistances.global * GetMulti_Global(); } }
-            public float magic { get { return global * raw.magic * owner.currentStance.resistances.magic * owner.metaStance.resistances.magic * GetMulti_Magic(); } }
-            public float strike { get { return global * raw.strike * owner.currentStance.resistances.strike * owner.metaStance.resistances.strike * GetMulti_Strike(); } }
-            public float slash { get { return global * raw.slash * owner.currentStance.resistances.slash * owner.metaStance.resistances.slash * GetMulti_Slash(); } }
-            public float thrust { get { return global * raw.thrust * owner.currentStance.resistances.thrust * owner.metaStance.resistances.thrust * GetMulti_Thrust(); } }
-            public float fire { get { return global * raw.fire * owner.currentStance.resistances.fire * owner.metaStance.resistances.fire * GetMulti_Fire(); } }
-            public float earth { get { return global * raw.earth * owner.currentStance.resistances.earth * owner.metaStance.resistances.earth * GetMulti_Earth(); } }
-            public float air { get { return global * raw.air * owner.currentStance.resistances.air * owner.metaStance.resistances.air * GetMulti_Air(); } }
-            public float water { get { return global * raw.water * owner.currentStance.resistances.water * owner.metaStance.resistances.water * GetMulti_Water(); } }
-            public float light { get { return global * raw.light * owner.currentStance.resistances.light * owner.metaStance.resistances.light * GetMulti_Light(); } }
-            public float dark { get { return global * raw.dark * owner.currentStance.resistances.dark * owner.metaStance.resistances.dark * GetMulti_Dark(); } }
-            public float bio { get { return global * raw.bio * owner.currentStance.resistances.bio * owner.metaStance.resistances.bio * GetMulti_Bio(); } }
-            public float sound { get { return global * raw.sound * owner.currentStance.resistances.sound * owner.metaStance.resistances.sound * GetMulti_Sound(); } }
-            public float psyche { get { return global * raw.psyche * owner.currentStance.resistances.psyche * owner.metaStance.resistances.psyche * GetMulti_Psyche(); } }
-            public float reality { get { return global * raw.reality * owner.currentStance.resistances.reality * owner.metaStance.resistances.reality * GetMulti_Reality(); } }
-            public float time { get { return global * raw.time * owner.currentStance.resistances.time * owner.metaStance.resistances.time * GetMulti_Time(); } }
-            public float space { get { return global * raw.space * owner.currentStance.resistances.space * owner.metaStance.resistances.space * GetMulti_Space(); } }
-            public float electric { get { return global * raw.electric * owner.currentStance.resistances.electric * owner.metaStance.resistances.electric * GetMulti_Electric(); } }
-            public float ice { get { return global * raw.ice * owner.currentStance.resistances.ice * owner.metaStance.resistances.ice * GetMulti_Ice(); } }
-            public float spirit { get { return global * raw.spirit * owner.currentStance.resistances.spirit * owner.metaStance.resistances.spirit * GetMulti_Spirit(); } }
+            public float magic { get { return raw.magic * owner.currentStance.resistances.magic * owner.metaStance.resistances.magic * GetMulti_Magic(); } }
+            public float strike { get { return raw.strike * owner.currentStance.resistances.strike * owner.metaStance.resistances.strike * GetMulti_Strike(); } }
+            public float slash { get { return raw.slash * owner.currentStance.resistances.slash * owner.metaStance.resistances.slash * GetMulti_Slash(); } }
+            public float thrust { get { return raw.thrust * owner.currentStance.resistances.thrust * owner.metaStance.resistances.thrust * GetMulti_Thrust(); } }
+            public float fire { get { return raw.fire * owner.currentStance.resistances.fire * owner.metaStance.resistances.fire * GetMulti_Fire(); } }
+            public float earth { get { return raw.earth * owner.currentStance.resistances.earth * owner.metaStance.resistances.earth * GetMulti_Earth(); } }
+            public float air { get { return raw.air * owner.currentStance.resistances.air * owner.metaStance.resistances.air * GetMulti_Air(); } }
+            public float water { get { return raw.water * owner.currentStance.resistances.water * owner.metaStance.resistances.water * GetMulti_Water(); } }
+            public float light { get { return raw.light * owner.currentStance.resistances.light * owner.metaStance.resistances.light * GetMulti_Light(); } }
+            public float dark { get { return raw.dark * owner.currentStance.resistances.dark * owner.metaStance.resistances.dark * GetMulti_Dark(); } }
+            public float bio { get { return raw.bio * owner.currentStance.resistances.bio * owner.metaStance.resistances.bio * GetMulti_Bio(); } }
+            public float sound { get { return raw.sound * owner.currentStance.resistances.sound * owner.metaStance.resistances.sound * GetMulti_Sound(); } }
+            public float psyche { get { return raw.psyche * owner.currentStance.resistances.psyche * owner.metaStance.resistances.psyche * GetMulti_Psyche(); } }
+            public float reality { get { return raw.reality * owner.currentStance.resistances.reality * owner.metaStance.resistances.reality * GetMulti_Reality(); } }
+            public float time { get { return raw.time * owner.currentStance.resistances.time * owner.metaStance.resistances.time * GetMulti_Time(); } }
+            public float space { get { return raw.space * owner.currentStance.resistances.space * owner.metaStance.resistances.space * GetMulti_Space(); } }
+            public float electric { get { return raw.electric * owner.currentStance.resistances.electric * owner.metaStance.resistances.electric * GetMulti_Electric(); } }
+            public float ice { get { return raw.ice * owner.currentStance.resistances.ice * owner.metaStance.resistances.ice * GetMulti_Ice(); } }
+            public float spirit { get { return raw.spirit * owner.currentStance.resistances.spirit * owner.metaStance.resistances.spirit * GetMulti_Spirit(); } }
 
             /// <summary>
             /// Constructor. Only Battler should call this. (and only within its own constructor, too)
@@ -818,6 +818,7 @@ namespace CnfBattleSys
         public readonly BattleStance[] stances;
         public BattleStance metaStance { get; private set; } // a second stance that goes "on top" of the main one adding actions/bonus/multis
         public float footprintRadius { get; private set; }
+        public Resistances resistances { get; private set; }
 
         // Things derived from a specific formation instance
         public BattlerSideFlags side { get; private set; } // This is a bitflag, but it should never do bitflaggy things here because that'd be weird.
@@ -867,6 +868,7 @@ namespace CnfBattleSys
             stances = fm.battlerData.stances;
             metaStance = fm.battlerData.metaStance;
             footprintRadius = fm.battlerData.size;
+            resistances = new Resistances(fm.battlerData.resistances, this);
 
             // Now: conform the Battler to the details in the FormationMember
             currentStance = fm.startStance;
@@ -928,7 +930,7 @@ namespace CnfBattleSys
         /// Given the attacking Battler and the damage-dealing subaction, fetches the pertinent stats, applies any modifiers or whatever we need to, and
         /// runs the final figures through the damage calculator.
         /// </summary>
-        public int CalcDamageAgainstMe (Battler attacker, BattleAction.Subaction subaction)
+        public int CalcDamageAgainstMe (Battler attacker, BattleAction.Subaction subaction, bool weaknessAware, bool resistanceAware)
         {
             const float deviation = 0.15f; // this is fiddly and will almost certainly get the shit tuned out of it
             int dmg = 0;
@@ -937,12 +939,14 @@ namespace CnfBattleSys
                 int atkStat = -1;
                 int defStat = -1;
                 if (subaction.atkStat != LogicalStatType.None) atkStat = attacker.GetLogicalStatValue(subaction.atkStat);
-                if (subaction.defStat != LogicalStatType.None) defStat = attacker.GetLogicalStatValue(subaction.defStat);
+                if (subaction.defStat != LogicalStatType.None) defStat = GetLogicalStatValue(subaction.defStat);
                 int modifiedBaseDamage = subaction.baseDamage;
                 if (subaction.baseDamage < 0) modifiedBaseDamage *= -1; // this should be positive for damage calculations as a rule; we re-flip the damage figure later if we're healing, but this gives more flexibility if I wanna change the damage formula down the line
                 if (atkStat != -1 && defStat != -1) dmg = Util.DamageCalc(attacker.level, atkStat, defStat, subaction.baseDamage, deviation);
                 else dmg = modifiedBaseDamage; // like with hit/misses: it should be possible for atk/def to do something unopposed but I dunno what that looks like.
                 if (subaction.baseDamage < 0) dmg *= -1; // re-flip
+                float resMod = GetResistance(subaction.damageTypes, resistanceAware, weaknessAware);
+                dmg = Mathf.FloorToInt(dmg * resMod);
             }
             return dmg;
         }
@@ -1075,6 +1079,38 @@ namespace CnfBattleSys
                 default:
                     throw new System.Exception("Can't return value logical stat value for LogicalStatType value of " + logicalStatType.ToString());
             }
+        }
+
+        /// <summary>
+        /// Gets total resistances for an attack of the given damage type.
+        /// This can accept a DamageTypeFlags with multiple flags set, and will spit out
+        /// the product of all relevant resistances.
+        /// </summary>
+        public float GetResistance (DamageTypeFlags damageType, bool resistanceAware, bool weaknessAware)
+        {
+            float r;
+            if ((resistanceAware | resistances.global > 1) | (weaknessAware | resistances.global < 1)) r = resistances.global;
+            else r = 1;
+            if ((damageType & DamageTypeFlags.Magic) == DamageTypeFlags.Magic && (resistanceAware | resistances.magic > 1) && (weaknessAware | resistances.magic < 1)) r *= resistances.magic;
+            if ((damageType & DamageTypeFlags.Strike) == DamageTypeFlags.Strike && (resistanceAware | resistances.strike > 1) && (weaknessAware | resistances.strike < 1)) r *= resistances.strike;
+            if ((damageType & DamageTypeFlags.Slash) == DamageTypeFlags.Slash && (resistanceAware | resistances.slash > 1) && (weaknessAware | resistances.slash < 1)) r *= resistances.slash;
+            if ((damageType & DamageTypeFlags.Thrust) == DamageTypeFlags.Thrust && (resistanceAware | resistances.thrust > 1) && (weaknessAware | resistances.thrust < 1)) r *= resistances.thrust;
+            if ((damageType & DamageTypeFlags.Fire) == DamageTypeFlags.Fire && (resistanceAware | resistances.fire > 1) && (weaknessAware | resistances.fire < 1)) r *= resistances.fire;
+            if ((damageType & DamageTypeFlags.Earth) == DamageTypeFlags.Earth && (resistanceAware | resistances.earth > 1) && (weaknessAware | resistances.earth < 1)) r *= resistances.earth;
+            if ((damageType & DamageTypeFlags.Air) == DamageTypeFlags.Air && (resistanceAware | resistances.air > 1) && (weaknessAware | resistances.air < 1)) r *= resistances.air;
+            if ((damageType & DamageTypeFlags.Water) == DamageTypeFlags.Water && (resistanceAware | resistances.water > 1) && (weaknessAware | resistances.water < 1)) r *= resistances.water;
+            if ((damageType & DamageTypeFlags.Light) == DamageTypeFlags.Light && (resistanceAware | resistances.light > 1) && (weaknessAware | resistances.light < 1)) r *= resistances.light;
+            if ((damageType & DamageTypeFlags.Dark) == DamageTypeFlags.Dark && (resistanceAware | resistances.dark > 1) && (weaknessAware | resistances.dark < 1)) r *= resistances.dark;
+            if ((damageType & DamageTypeFlags.Bio) == DamageTypeFlags.Bio && (resistanceAware | resistances.bio > 1) && (weaknessAware | resistances.bio < 1)) r *= resistances.bio;
+            if ((damageType & DamageTypeFlags.Sound) == DamageTypeFlags.Sound && (resistanceAware | resistances.sound > 1) && (weaknessAware | resistances.sound < 1)) r *= resistances.sound;
+            if ((damageType & DamageTypeFlags.Psyche) == DamageTypeFlags.Psyche && (resistanceAware | resistances.psyche > 1) && (weaknessAware | resistances.psyche < 1)) r *= resistances.psyche;
+            if ((damageType & DamageTypeFlags.Reality) == DamageTypeFlags.Reality && (resistanceAware | resistances.reality > 1) && (weaknessAware | resistances.reality < 1)) r *= resistances.reality;
+            if ((damageType & DamageTypeFlags.Time) == DamageTypeFlags.Time && (resistanceAware | resistances.time > 1) && (weaknessAware | resistances.time < 1)) r *= resistances.time;
+            if ((damageType & DamageTypeFlags.Space) == DamageTypeFlags.Space && (resistanceAware | resistances.space > 1) && (weaknessAware | resistances.space < 1)) r *= resistances.space;
+            if ((damageType & DamageTypeFlags.Electric) == DamageTypeFlags.Electric && (resistanceAware | resistances.electric > 1) && (weaknessAware | resistances.electric < 1)) r *= resistances.electric;
+            if ((damageType & DamageTypeFlags.Ice) == DamageTypeFlags.Ice && (resistanceAware | resistances.ice > 1) && (weaknessAware | resistances.ice < 1)) r *= resistances.ice;
+            if ((damageType & DamageTypeFlags.Spirit) == DamageTypeFlags.Spirit && (resistanceAware | resistances.spirit > 1) && (weaknessAware | resistances.spirit < 1)) r *= resistances.spirit;
+            return r;
         }
 
         /// <summary>

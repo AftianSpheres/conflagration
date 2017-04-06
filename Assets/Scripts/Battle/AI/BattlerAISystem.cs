@@ -57,32 +57,124 @@ namespace CnfBattleSys
             else b.ReceiveAThought(turnActions, messageFlags);
         }
 
+        public static Battler[][] PareLegalTargetsToOptimumTargets (Battler b, BattleAction battleAction, Battler[][] jointLegalTargets)
+        {
+            battlersListBuffer.Clear();
+            Func<ActionTargetType, Battler[], Battler[]> ProduceTargetsArray = (targetType, legalTargets) =>
+            {
+                switch (targetType)
+                {
+                    case ActionTargetType.Self:
+                        for (int i = 0; i < legalTargets.Length; i++) if (legalTargets[i] == b)
+                            {
+                                return new Battler[] { b };
+                            }
+                        goto default; // if self isn't a legal target we can't target anything
+                    case ActionTargetType.SingleTarget:
+                        return GetOptimumTargetForSingleTarget(b, battleAction, legalTargets);
+                    // ADD THE OTHER TARGET TYPES!!!
+                    default:
+                        return new Battler[0]; // if we weren't able to acquire targets, return an empty array
+                }
+                
+            };
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         /// Runs through the given list of potential targets, does damage calculations and (eventually) applies any modifiers or bonuses that make sense to favor/disfavor better/worse targets,
         /// and spits out a one-length array containing target against which the selected action is best used.
-        public static Battler[] GetOptimumTargetForSingleTargetDamaging (Battler user, BattleAction action, Battler[] potentialTargets)
+        /// </summary>
+        private static Battler[] GetOptimumTargetForSingleTarget (Battler user, BattleAction action, Battler[] potentialTargets)
         {
             if (potentialTargets.Length < 1) throw new Exception("Can't pick optimum target unless you actually provide some targets.");
-            const float confirmedKillBonus = 1f;
-            float highestScore = float.MinValue;
-            int tentativeTargetIndex = -1;
+            float[] attackTargetsScores;
+            float[] healTargetsScores;
+            float[] buffTargetsScores;
+            float[] debuffTargetsScores;
+
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Determines total efficacy scores for a single action on each potential target it could be used against.
+        /// Scores each potential target for the action on the criteria of each of that action's category flags.
+        /// That is to say - for example - if an action is both an attack and a debuff or both a heal and a buff,
+        /// we evaluate it in both of those contexts, determine what the most optimal overall target is (if a heal and a buff, the friendly unit that gets the most benefit from either of those angles)
+        /// and target that.
+        /// Returns an array of floats, index-matched to the potentialTargets input array, containing the total score for each of those targets.
+        /// Single-target attacks can go on to use those scores directly; AOE attacks
+        /// will need to so further calculations to determine the scores for each _set_ of targets.
+        /// </summary>
+        private static float[] ScoreTargets (BattlerAIFlags flags, Battler user, BattleAction action, Battler[] potentialTargets)
+        {
+            float[] attackTargetsScores;
+            float[] healTargetsScores;
+            float[] buffTargetsScores;
+            float[] debuffTargetsScores;
+            Func<float[]> populateZeroedScoreArray = () =>
+            {
+                float[] scoreArray = new float[potentialTargets.Length];
+                for (int i = 0; i < scoreArray.Length; i++) scoreArray[i] = 0;
+                return scoreArray;
+            };
+            if ((action.categoryFlags & BattleActionCategoryFlags.Attack) == BattleActionCategoryFlags.Attack) attackTargetsScores = ScoreTargets_Damaging(flags, user, action, potentialTargets);
+            else attackTargetsScores = populateZeroedScoreArray();
+            if ((action.categoryFlags & BattleActionCategoryFlags.Heal) == BattleActionCategoryFlags.Heal) healTargetsScores = ScoreTargets_Damaging(flags, user, action, potentialTargets, true);
+            else healTargetsScores = populateZeroedScoreArray();
+            if ((action.categoryFlags & BattleActionCategoryFlags.Buff) == BattleActionCategoryFlags.Buff) throw new NotImplementedException();
+            else buffTargetsScores = populateZeroedScoreArray();
+            if ((action.categoryFlags & BattleActionCategoryFlags.Debuff) == BattleActionCategoryFlags.Debuff) throw new NotImplementedException();
+            else debuffTargetsScores = populateZeroedScoreArray();
+            float[] finalScores = new float[potentialTargets.Length];
+            for (int i = 0; i < finalScores.Length; i++) finalScores[i] = attackTargetsScores[i] + healTargetsScores[i] + buffTargetsScores[i] + debuffTargetsScores[i];
+            return finalScores;
+        }
+
+        /// <summary>
+        /// Score potential targets on the criterion of a damaging attack.
+        /// If asHeal = true, we score targets on the criteria of a heal instead, since that's _broadly_ similar.
+        /// </summary>
+        private static float[] ScoreTargets_Damaging (BattlerAIFlags flags, Battler user, BattleAction action, Battler[] potentialTargets, bool asHeal = false)
+        {
+            const float killConfirmBonus = 1f;
+            BattleActionCategoryFlags category;
+            if (asHeal) category = BattleActionCategoryFlags.Heal;
+            else category = BattleActionCategoryFlags.Attack;
             float[] dmgScores = new float[potentialTargets.Length]; // dmgScore is typically just damage / maxHP, but if you want to eg. prioritize specific units, apply score penalties if the attack is likely to miss, etc., you apply those to dmgScores
             for (int i = 0; i < potentialTargets.Length; i++)
             {
                 int dmg = 0;
+                float accuracyMod = 1;
                 for (int s = 0; s < action.Subactions.Length; i++)
                 {
-                    dmg += potentialTargets[i].CalcDamageAgainstMe(user, action.Subactions[s]);
+                    if ((action.Subactions[s].categoryFlags & category) == category)
+                    {
+                        dmg += potentialTargets[i].CalcDamageAgainstMe(user, action.Subactions[s], (flags & BattlerAIFlags.WeaknessAware) == BattlerAIFlags.WeaknessAware, (flags & BattlerAIFlags.ResistanceAware) == BattlerAIFlags.ResistanceAware);
+                        if ((flags & BattlerAIFlags.EvadeAware) == BattlerAIFlags.EvadeAware && action.Subactions[s].evadeStat != LogicalStatType.None)
+                        {
+                            accuracyMod = BattleUtility.GetModifiedAccuracyFor(action.Subactions[s], user, potentialTargets[i]);
+                        }
+                    }
                 }
-                dmgScores[i] = (float)dmg / potentialTargets[i].stats.maxHP;
-                if (potentialTargets[i].currentHP <= dmg) dmgScores[i] += confirmedKillBonus;
-                if (dmgScores[i] > highestScore)
+                // Damage calculation can overheal/overkill things, but we don't want to score based on damage that doesn't "matter"
+                if (asHeal)
                 {
-                    highestScore = dmgScores[i];
-                    tentativeTargetIndex = i;
+                    if (dmg < potentialTargets[i].currentHP - potentialTargets[i].stats.maxHP) dmg = potentialTargets[i].currentHP - potentialTargets[i].stats.maxHP; 
                 }
+                else
+                {
+                    if (dmg > potentialTargets[i].currentHP) dmg = potentialTargets[i].currentHP;
+                }
+                dmgScores[i] = ((float)dmg / potentialTargets[i].stats.maxHP) * accuracyMod;
+                TargetSideFlags relativeSideToTarget = BattleUtility.GetRelativeSidesFor(user.side, potentialTargets[i].side);
+                if (relativeSideToTarget == TargetSideFlags.Neutral) dmgScores[i] /= 2;
+                // If we're using an attack, flipping positive values here gives us negative scores (very low) against allied units. 
+                // If we're using a heal, the exact same behavior gives us positive scores for healing friends and negative scores for healing foes.
+                else if (relativeSideToTarget == TargetSideFlags.MyFriends || relativeSideToTarget == TargetSideFlags.MySide) dmgScores[i] *= -1; 
+                if (potentialTargets[i].currentHP <= dmg) dmgScores[i] += killConfirmBonus; // kill confirm bonus never applies when figuring heals because raw damage is always < 0
             }
-            return new Battler[] { potentialTargets[tentativeTargetIndex] };
+            return dmgScores;
         }
 
         /// <summary>

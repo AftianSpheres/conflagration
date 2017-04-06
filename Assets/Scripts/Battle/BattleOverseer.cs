@@ -236,21 +236,13 @@ namespace CnfBattleSys
                 }
                 else
                 {
-                    int evadeStat = -1;
-                    int hitStat = -1;
-                    if (subaction.evadeStat != LogicalStatType.None) evadeStat = t[targetIndex].GetLogicalStatValue(subaction.evadeStat);
-                    if (subaction.hitStat != LogicalStatType.None) hitStat = currentActingBattler.GetLogicalStatValue(subaction.hitStat);
-                    float modifiedAccuracy = subaction.baseAccuracy;
-                    if (evadeStat != -1 && hitStat != -1)
-                    {
-                        modifiedAccuracy *= (hitStat / (float)evadeStat);
-                    }
+                    float modifiedAccuracy = BattleUtility.GetModifiedAccuracyFor(subaction, currentActingBattler, t[targetIndex]);
                     // like with fx packages: there should also be non-contested hit/evade bonuses if the subaction says "yo I got a hit stat but no evade stat" or vice versa, but I don't know what the math looks like yet
                     executionSuccess = (modifiedAccuracy > Random.Range(0f, 1f));
                 }
                 if (executionSuccess)
                 {                   
-                    subactions_FinalDamageFigures[subactionExecutionIndex][targetIndex] = t[targetIndex].CalcDamageAgainstMe(currentActingBattler, subaction);
+                    subactions_FinalDamageFigures[subactionExecutionIndex][targetIndex] = t[targetIndex].CalcDamageAgainstMe(currentActingBattler, subaction, true, true);
                     t[targetIndex].DealOrHealDamage(subactions_FinalDamageFigures[subactionExecutionIndex][targetIndex]);
                 }
                 return executionSuccess;

@@ -44,6 +44,23 @@
         }
 
         /// <summary>
+        /// Gets modified accuracy value for a single subaction based on attacker/target combination.
+        /// </summary>
+        public static float GetModifiedAccuracyFor (BattleAction.Subaction subaction, Battler attacker, Battler target)
+        {
+            int evadeStat = -1;
+            int hitStat = -1;
+            if (subaction.evadeStat != LogicalStatType.None) evadeStat = target.GetLogicalStatValue(subaction.evadeStat);
+            if (subaction.hitStat != LogicalStatType.None) hitStat = attacker.GetLogicalStatValue(subaction.hitStat);
+            float modifiedAccuracy = subaction.baseAccuracy;
+            if (evadeStat != -1 && hitStat != -1)
+            {
+                modifiedAccuracy *= (hitStat / (float)evadeStat);
+            }
+            return modifiedAccuracy;
+        }
+
+        /// <summary>
         /// Makes sure BattlerSideFlags doesn't have more than one bit set,
         /// because unless we're _trying_ to use it for bitflaggy things
         /// that would be bad.

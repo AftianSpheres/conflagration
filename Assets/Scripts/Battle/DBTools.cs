@@ -138,6 +138,14 @@ namespace CnfBattleSys
         }
 
         /// <summary>
+        /// CSV string => battle action category bitflags
+        /// </summary>
+        public static BattleActionCategoryFlags ParseBattleActionCategoryFlags(string s)
+        {
+            return (BattleActionCategoryFlags)Enum.Parse(typeof(BattleActionCategoryFlags), s);
+        }
+
+        /// <summary>
         /// Turns a string of format (float), (float) into a vector2.
         /// </summary>
         public static Vector2 ParseVector2 (string s)
