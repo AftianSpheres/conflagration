@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 using CnfBattleSys.AI;
+
 
 namespace CnfBattleSys
 {
@@ -15,6 +17,40 @@ namespace CnfBattleSys
     /// </summary>
     public static class BattlerAISystem
     {
+        /// <summary>
+        /// Data structure containing the final targets (and all associated scores) for a specific action.
+        /// </summary>
+        public struct ScoredActionTargets
+        {
+            public readonly Battler[] primaryTargets;
+            public readonly Battler[] secondaryTargets;
+            public readonly float[] primaryScores;
+            public readonly float[] secondaryScores;
+            public readonly float totalScore;
+
+            public ScoredActionTargets (Battler[] _primaryTargets, Battler[] _secondaryTargets, float[] _primaryScores, float[] _secondaryScores)
+            {
+                primaryTargets = _primaryTargets;
+                secondaryTargets = _secondaryTargets;
+                primaryScores = _primaryScores;
+                secondaryScores = _secondaryScores;
+                float ts = 0;
+                int q = 0;
+                for (int i = 0; i < primaryScores.Length; i++)
+                {
+                    ts += primaryScores[i];
+                    q++;
+                }
+                for (int i = 0; i < secondaryScores.Length; i++)
+                {
+                    ts += secondaryScores[i];
+                    q++;
+                }
+                ts /= q;
+                totalScore = ts;
+            }
+        }
+
         private static List<Battler> battlersListBuffer;
         private static List<Battler> alsoBattlersListBuffer; // I am probably way too worried about unnecessary allocations to be doing things this way
 
@@ -57,43 +93,96 @@ namespace CnfBattleSys
             else b.ReceiveAThought(turnActions, messageFlags);
         }
 
-        public static Battler[][] PareLegalTargetsToOptimumTargets (Battler b, BattleAction battleAction, Battler[][] jointLegalTargets)
-        {
-            battlersListBuffer.Clear();
-            Func<ActionTargetType, Battler[], Battler[]> ProduceTargetsArray = (targetType, legalTargets) =>
-            {
-                switch (targetType)
-                {
-                    case ActionTargetType.Self:
-                        for (int i = 0; i < legalTargets.Length; i++) if (legalTargets[i] == b)
-                            {
-                                return new Battler[] { b };
-                            }
-                        goto default; // if self isn't a legal target we can't target anything
-                    case ActionTargetType.SingleTarget:
-                        return GetOptimumTargetForSingleTarget(b, battleAction, legalTargets);
-                    // ADD THE OTHER TARGET TYPES!!!
-                    default:
-                        return new Battler[0]; // if we weren't able to acquire targets, return an empty array
-                }
-                
-            };
-            throw new NotImplementedException();
-        }
-
         /// <summary>
-        /// Runs through the given list of potential targets, does damage calculations and (eventually) applies any modifiers or bonuses that make sense to favor/disfavor better/worse targets,
-        /// and spits out a one-length array containing target against which the selected action is best used.
+        /// Gets optimum primary and secondary targets (and total action score) for the given user, action, and set of potential targets.
         /// </summary>
-        private static Battler[] GetOptimumTargetForSingleTarget (Battler user, BattleAction action, Battler[] potentialTargets)
+        private static ScoredActionTargets GetOptimumTargets (BattlerAIFlags flags, Battler user, BattleAction action, Battler[][] jointPotentialTargets)
         {
-            if (potentialTargets.Length < 1) throw new Exception("Can't pick optimum target unless you actually provide some targets.");
-            float[] attackTargetsScores;
-            float[] healTargetsScores;
-            float[] buffTargetsScores;
-            float[] debuffTargetsScores;
-
-            throw new NotImplementedException();
+            float[] scores = new float[0];
+            Func<ActionTargetType, Battler[], Battler[]> forSingle = (targetingType, potentialTargets) =>
+            {
+                if (potentialTargets.Length < 1) throw new Exception("Can't pick optimum target unless you actually provide some targets.");
+                scores = ScoreTargets(flags, user, action, potentialTargets);
+                // Since this is a single-target action, we don't need to do any additional processing to the scores
+                float highestScoreBuffer = float.MinValue;
+                Battler optimumTarget = null;
+                for (int i = 0; i < scores.Length; i++)
+                {
+                    if (scores[i] > highestScoreBuffer)
+                    {
+                        highestScoreBuffer = scores[i];
+                        optimumTarget = potentialTargets[i];
+                    }
+                }
+                return new Battler[] { optimumTarget };
+            };
+            Func<ActionTargetType, Battler[], Battler[]> forAOE = (targetingType, potentialTargets) =>
+            {
+                if (potentialTargets.Length < 1) throw new Exception("Can't pick optimum target unless you actually provide some targets.");
+                scores = ScoreTargets(flags, user, action, potentialTargets);
+                Battler[][] subtargetsForAOE = new Battler[potentialTargets.Length][];
+                for (int t = 0; t < potentialTargets.Length; t++)
+                {
+                    subtargetsForAOE[t] = BattleOverseer.GetBattlersWithinAOERangeOf(user, potentialTargets[t], targetingType, action.baseAOERadius, potentialTargets);
+                    for (int inAOERadIndex = 0; inAOERadIndex < subtargetsForAOE[t].Length; inAOERadIndex++)
+                    {
+                        float foundScore = float.NaN;
+                        for (int pt = 0; pt < potentialTargets.Length; pt++)
+                        {
+                            if (subtargetsForAOE[t][inAOERadIndex] == potentialTargets[pt])
+                            {
+                                foundScore = scores[pt];
+                                break;
+                            }
+                        }
+                        scores[t] += foundScore;
+                    }
+                }
+                float highestScoreBuffer = float.MinValue;
+                int optimumTargetIndex = int.MinValue;
+                for (int i = 0; i < scores.Length; i++)
+                {
+                    if (scores[i] > highestScoreBuffer)
+                    {
+                        highestScoreBuffer = scores[i];
+                        optimumTargetIndex = i;
+                    }
+                }
+                battlersListBuffer.Clear();
+                battlersListBuffer.Add(potentialTargets[optimumTargetIndex]);
+                for (int i = 0; i < subtargetsForAOE[optimumTargetIndex].Length; i++)
+                {
+                    battlersListBuffer.Add(subtargetsForAOE[optimumTargetIndex][i]);
+                }
+                return battlersListBuffer.ToArray();
+            };
+            Func<ActionTargetType, Battler[], Battler[]> forAll = (targetingType, potentialTargets) =>
+            {
+                return potentialTargets; // if we're acting on all potential targets, we don't need to do any processing, we just immediately spit the potentialTargets back
+            };
+            Func<ActionTargetType, Func<ActionTargetType, Battler[], Battler[]>> setTargetAcquisitionFunc = (targetingType) =>
+            {
+                switch (targetingType)
+                {
+                    case ActionTargetType.SingleTarget:
+                    case ActionTargetType.Self:
+                        return forSingle;
+                    case ActionTargetType.AllTargetsInRange:
+                        return forAll;
+                    case ActionTargetType.AllTargetsAlongLinearCorridor:
+                    case ActionTargetType.CircularAOE:
+                        return forAOE;
+                    default:
+                        throw new Exception("Tried to acquire targets for invalid targeting type: " + targetingType);
+                }
+            };
+            Func<ActionTargetType, Battler[], Battler[]> primaryTargetsAcquisition = setTargetAcquisitionFunc(action.targetingType);
+            Func<ActionTargetType, Battler[], Battler[]> secondaryTargetsAcquisition = setTargetAcquisitionFunc(action.alternateTargetType);
+            Battler[] primaryTargets = primaryTargetsAcquisition(action.targetingType, jointPotentialTargets[0]);
+            float[] primaryScores = scores;
+            Battler[] secondaryTarget = secondaryTargetsAcquisition(action.alternateTargetType, jointPotentialTargets[1]);
+            float[] secondaryScores = scores;
+            return new ScoredActionTargets(primaryTargets, secondaryTarget, primaryScores, secondaryScores);
         }
 
         /// <summary>
@@ -122,9 +211,9 @@ namespace CnfBattleSys
             else attackTargetsScores = populateZeroedScoreArray();
             if ((action.categoryFlags & BattleActionCategoryFlags.Heal) == BattleActionCategoryFlags.Heal) healTargetsScores = ScoreTargets_Damaging(flags, user, action, potentialTargets, true);
             else healTargetsScores = populateZeroedScoreArray();
-            if ((action.categoryFlags & BattleActionCategoryFlags.Buff) == BattleActionCategoryFlags.Buff) throw new NotImplementedException();
+            if ((action.categoryFlags & BattleActionCategoryFlags.Buff) == BattleActionCategoryFlags.Buff) buffTargetsScores = ScoreTargets_BuffDebuff(flags, user, action, potentialTargets);
             else buffTargetsScores = populateZeroedScoreArray();
-            if ((action.categoryFlags & BattleActionCategoryFlags.Debuff) == BattleActionCategoryFlags.Debuff) throw new NotImplementedException();
+            if ((action.categoryFlags & BattleActionCategoryFlags.Debuff) == BattleActionCategoryFlags.Debuff) debuffTargetsScores = ScoreTargets_BuffDebuff(flags, user, action, potentialTargets, true);
             else debuffTargetsScores = populateZeroedScoreArray();
             float[] finalScores = new float[potentialTargets.Length];
             for (int i = 0; i < finalScores.Length; i++) finalScores[i] = attackTargetsScores[i] + healTargetsScores[i] + buffTargetsScores[i] + debuffTargetsScores[i];
@@ -141,40 +230,85 @@ namespace CnfBattleSys
             BattleActionCategoryFlags category;
             if (asHeal) category = BattleActionCategoryFlags.Heal;
             else category = BattleActionCategoryFlags.Attack;
-            float[] dmgScores = new float[potentialTargets.Length]; // dmgScore is typically just damage / maxHP, but if you want to eg. prioritize specific units, apply score penalties if the attack is likely to miss, etc., you apply those to dmgScores
+            float[] scores = new float[potentialTargets.Length]; // dmgScore is typically just damage / maxHP, but if you want to eg. prioritize specific units, apply score penalties if the attack is likely to miss, etc., you apply those to dmgScores
             for (int i = 0; i < potentialTargets.Length; i++)
             {
-                int dmg = 0;
-                float accuracyMod = 1;
-                for (int s = 0; s < action.Subactions.Length; i++)
+                float score = 0;
+                int countedSubactions = 0;
+                for (int s = 0; s < action.Subactions.Length; s++)
                 {
                     if ((action.Subactions[s].categoryFlags & category) == category)
                     {
-                        dmg += potentialTargets[i].CalcDamageAgainstMe(user, action.Subactions[s], (flags & BattlerAIFlags.WeaknessAware) == BattlerAIFlags.WeaknessAware, (flags & BattlerAIFlags.ResistanceAware) == BattlerAIFlags.ResistanceAware);
+                        // Float imprecision is fine because scoring doesn't need to have _exact_ integral damage values, it just needs to indicate the general power of attacks relative to each other
+                        float thisSubActionDmg = potentialTargets[i].CalcDamageAgainstMe(user, action.Subactions[s], false, (flags & BattlerAIFlags.WeaknessAware) == BattlerAIFlags.WeaknessAware, (flags & BattlerAIFlags.ResistanceAware) == BattlerAIFlags.ResistanceAware);
                         if ((flags & BattlerAIFlags.EvadeAware) == BattlerAIFlags.EvadeAware && action.Subactions[s].evadeStat != LogicalStatType.None)
                         {
-                            accuracyMod = BattleUtility.GetModifiedAccuracyFor(action.Subactions[s], user, potentialTargets[i]);
+                            thisSubActionDmg = Mathf.FloorToInt(BattleUtility.GetModifiedAccuracyFor(action.Subactions[s], user, potentialTargets[i]));
                         }
                     }
                 }
+                score = Mathf.FloorToInt(score / countedSubactions);
                 // Damage calculation can overheal/overkill things, but we don't want to score based on damage that doesn't "matter"
-                if (asHeal)
-                {
-                    if (dmg < potentialTargets[i].currentHP - potentialTargets[i].stats.maxHP) dmg = potentialTargets[i].currentHP - potentialTargets[i].stats.maxHP; 
-                }
-                else
-                {
-                    if (dmg > potentialTargets[i].currentHP) dmg = potentialTargets[i].currentHP;
-                }
-                dmgScores[i] = ((float)dmg / potentialTargets[i].stats.maxHP) * accuracyMod;
+                if (asHeal && score < potentialTargets[i].currentHP - potentialTargets[i].stats.maxHP) score = potentialTargets[i].currentHP - potentialTargets[i].stats.maxHP;
+                else if (score > potentialTargets[i].currentHP) score = potentialTargets[i].currentHP;
+                if (potentialTargets[i].currentHP <= score) score += killConfirmBonus; // kill confirm bonus never applies when figuring heals because raw damage is always < 0
                 TargetSideFlags relativeSideToTarget = BattleUtility.GetRelativeSidesFor(user.side, potentialTargets[i].side);
-                if (relativeSideToTarget == TargetSideFlags.Neutral) dmgScores[i] /= 2;
+                if (relativeSideToTarget == TargetSideFlags.Neutral) score /= 2;
                 // If we're using an attack, flipping positive values here gives us negative scores (very low) against allied units. 
                 // If we're using a heal, the exact same behavior gives us positive scores for healing friends and negative scores for healing foes.
-                else if (relativeSideToTarget == TargetSideFlags.MyFriends || relativeSideToTarget == TargetSideFlags.MySide) dmgScores[i] *= -1; 
-                if (potentialTargets[i].currentHP <= dmg) dmgScores[i] += killConfirmBonus; // kill confirm bonus never applies when figuring heals because raw damage is always < 0
+                else if (relativeSideToTarget == TargetSideFlags.MyFriends || relativeSideToTarget == TargetSideFlags.MySide) score *= -1;
+                scores[i] = (score / potentialTargets[i].stats.maxHP);
+
             }
-            return dmgScores;
+            return scores;
+        }
+
+        /// <summary>
+        /// Scores potential targets on the criteria of a buff or debuff.
+        /// </summary>
+        private static float[] ScoreTargets_BuffDebuff (BattlerAIFlags flags, Battler user, BattleAction action, Battler[] potentialTargets, bool asDebuff = false)
+        {
+            BattleActionCategoryFlags category;
+            if (asDebuff) category = BattleActionCategoryFlags.Debuff;
+            else category = BattleActionCategoryFlags.Buff;
+            float[] scores = new float[potentialTargets.Length];
+            for (int i = 0; i < potentialTargets.Length; i++)
+            {
+                float score = 0;
+                float accuracyMod = 0;
+                int countedSubactions = 0;
+                for (int s = 0; s < action.Subactions.Length; s++)
+                {    
+                    if ((action.Subactions[s].categoryFlags & category) == category)
+                    {
+                        float subactionAccMod = 0;
+                        int f;
+                        for (f = 0; f < action.Subactions[s].fx.Length; f++)
+                        {
+                            float fxAccMod = 1;
+                            score += action.Subactions[s].fx[f].baseAIScoreValue;
+                            if ((flags & BattlerAIFlags.EvadeAware) == BattlerAIFlags.EvadeAware)
+                            {
+                                if (action.Subactions[s].fx[f].fxEvadeStat != LogicalStatType.None) fxAccMod = BattleUtility.GetModifiedAccuracyFor(action.Subactions[s].fx[f], user, potentialTargets[i]);
+                                if (!action.Subactions[s].fx[f].applyEvenIfSubactionMisses && action.Subactions[s].evadeStat != LogicalStatType.None) fxAccMod *= BattleUtility.GetModifiedAccuracyFor(action.Subactions[s], user, potentialTargets[i]);
+                            }
+                            // Eventually I need to add status resistances, at which point the difficulty or ease of landing that status on that target needs to be factored into the accuracy mod.
+                            subactionAccMod += fxAccMod;
+                        }
+                        subactionAccMod /= f;
+                        accuracyMod += subactionAccMod;
+                        countedSubactions++;
+                    }
+                }
+                accuracyMod /= countedSubactions;
+                score *= accuracyMod;
+                TargetSideFlags relativeSideToTarget = BattleUtility.GetRelativeSidesFor(user.side, potentialTargets[i].side);
+                if (relativeSideToTarget == TargetSideFlags.Neutral) score /= 2;
+                // buffs have negative base values, debuffs have positive ones, they're literally the exact same besides
+                else if (relativeSideToTarget == TargetSideFlags.MyFriends || relativeSideToTarget == TargetSideFlags.MySide) score *= -1;
+                scores[i] = score;
+            }
+            return scores;
         }
 
         /// <summary>

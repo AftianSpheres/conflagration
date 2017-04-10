@@ -39,6 +39,11 @@
                 /// for each target in the current Subaction!
                 /// </summary>
                 public readonly sbyte thisFXSuccessTiedToFXAtIndex;
+                /// <summary>
+                /// This is the base value the AI uses to score successful executions of this fx package.
+                /// This isn't used for anything else.
+                /// </summary>
+                public readonly float baseAIScoreValue;
 
                 /// <summary>
                 /// FXPackage constructor.
@@ -46,7 +51,7 @@
                 /// </summary>
                 public FXPackage(SubactionFXType _fxType, LogicalStatType _fxHitStat, LogicalStatType _fxEvadeStat,
                                  bool _applyEvenIfSubactionMisses, float _baseSuccessRate, float _fxLength_Float, float _fxStrength_Float,
-                                 byte _fxLength_Byte, int _fxStrength_Int, sbyte _thisFXSuccessTiedToFXAtIndex)
+                                 byte _fxLength_Byte, int _fxStrength_Int, sbyte _thisFXSuccessTiedToFXAtIndex, float _baseAIScoreValue)
                 {
                     fxType = _fxType;
                     fxHitStat = _fxHitStat;
@@ -58,6 +63,7 @@
                     fxLength_Byte = _fxLength_Byte;
                     fxStrength_Int = _fxStrength_Int;
                     thisFXSuccessTiedToFXAtIndex = _thisFXSuccessTiedToFXAtIndex;
+                    baseAIScoreValue = _baseAIScoreValue;
                 }
             }
 

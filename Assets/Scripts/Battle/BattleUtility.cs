@@ -44,6 +44,25 @@
         }
 
         /// <summary>
+        /// Gets modified accuracy value for a single FX package based on attacker/target combination.
+        /// </summary>
+        public static float GetModifiedAccuracyFor (BattleAction.Subaction.FXPackage fxPackage, Battler attacker, Battler target)
+        {
+            int evadeStat = -1;
+            if (fxPackage.fxEvadeStat != LogicalStatType.None) evadeStat = target.GetLogicalStatValue(fxPackage.fxEvadeStat);
+            int hitStat = -1;
+            if (fxPackage.fxHitStat != LogicalStatType.None) hitStat = attacker.GetLogicalStatValue(fxPackage.fxHitStat);
+            float adjustedSuccessRate = fxPackage.baseSuccessRate;
+            if (evadeStat != -1 && hitStat != -1) // this is contested, so let's work out the contest
+            {
+                adjustedSuccessRate *= (hitStat / (float)evadeStat);
+            }
+            // It should also be possible for uncontested hit/evade stats to provide hit/evade bonuses on FX packages, but that requires me to have some idea of what the numbers look like
+            if (adjustedSuccessRate > 1) adjustedSuccessRate = 1;
+            return adjustedSuccessRate;
+        }
+
+        /// <summary>
         /// Gets modified accuracy value for a single subaction based on attacker/target combination.
         /// </summary>
         public static float GetModifiedAccuracyFor (BattleAction.Subaction subaction, Battler attacker, Battler target)
@@ -57,6 +76,7 @@
             {
                 modifiedAccuracy *= (hitStat / (float)evadeStat);
             }
+            if (modifiedAccuracy > 1) modifiedAccuracy = 1; // can't have a >100% hit rate
             return modifiedAccuracy;
         }
 

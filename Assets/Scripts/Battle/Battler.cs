@@ -835,6 +835,9 @@ namespace CnfBattleSys
         public BattleAction lastActionExecuted { get; private set; }
         public BattleStance previousStance { get; private set; }
 
+        // Collider, which is ugly, but using Unity colliders is the simplest way to do AOE checks and shit
+        public CapsuleCollider capsuleCollider { get; private set; }
+
         // Magic
         public float speedFactor { get { return stats.Spe / BattleOverseer.normalizedSpeed; } }
 
@@ -930,9 +933,12 @@ namespace CnfBattleSys
         /// Given the attacking Battler and the damage-dealing subaction, fetches the pertinent stats, applies any modifiers or whatever we need to, and
         /// runs the final figures through the damage calculator.
         /// </summary>
-        public int CalcDamageAgainstMe (Battler attacker, BattleAction.Subaction subaction, bool weaknessAware, bool resistanceAware)
+        public int CalcDamageAgainstMe (Battler attacker, BattleAction.Subaction subaction, bool withDeviation, bool weaknessAware, bool resistanceAware)
         {
-            const float deviation = 0.15f; // this is fiddly and will almost certainly get the shit tuned out of it
+            const float normalDeviation = 0.15f; // this is fiddly and will almost certainly get the shit tuned out of it
+            float deviation;
+            if (withDeviation) deviation = normalDeviation;
+            else deviation = 0;
             int dmg = 0;
             if (subaction.baseDamage != 0)
             {
@@ -1114,6 +1120,16 @@ namespace CnfBattleSys
         }
 
         /// <summary>
+        /// Gives this Battler control over the specified capsule collider. This collider will be conformed to the Battler's footprint radius and logical position, and may be disjointed from 
+        /// its physical representation if needed as a result.
+        /// </summary>
+        public void GiveCollider (CapsuleCollider _collider)
+        {
+            capsuleCollider = _collider;
+            capsuleCollider.radius = footprintRadius;
+        }
+
+        /// <summary>
         /// Takes a TurnActions struct and stores it as our turnActions.
         /// Also takes a set of BattlerAIMessageFlags, which can
         /// be used to communicate things like eg. "extend your turn"
@@ -1139,6 +1155,26 @@ namespace CnfBattleSys
         {
             Debug.Log("Please implement Battler.IsValidTargetFor()");
             return true;
+        }
+
+        /// <summary>
+        /// Runs hit/evade checks for (the damage-dealing component of) a given subaction against this battler.
+        /// </summary>
+        public bool TryToLandAttackAgainstMe (Battler attacker, BattleAction.Subaction subaction)
+        {
+            float modifiedAccuracy = BattleUtility.GetModifiedAccuracyFor(subaction, attacker, this);
+            // like with fx packages: there should also be non-contested hit/evade bonuses if the subaction says "yo I got a hit stat but no evade stat" or vice versa, but I don't know what the math looks like yet
+            return (modifiedAccuracy > Random.Range(0f, 1f));
+        }
+
+        /// <summary>
+        /// Runs hit/evade checks for given fx package against this Battler.
+        /// </summary>
+        public bool TryToLandFXAgainstMe(Battler attacker, BattleAction.Subaction.FXPackage fxPackage)
+        {
+            float adjustedSuccessRate = BattleUtility.GetModifiedAccuracyFor(fxPackage, attacker, this);
+            // It should also be possible for uncontested hit/evade stats to provide hit/evade bonuses on FX packages, but that requires me to have some idea of what the numbers look like
+            return (adjustedSuccessRate > Random.Range(0f, 1f));
         }
 
     }

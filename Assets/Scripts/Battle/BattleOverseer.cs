@@ -156,20 +156,7 @@ namespace CnfBattleSys
                 bool executionSuccess = true;
                 if (fxPackage.thisFXSuccessTiedToFXAtIndex > -1) executionSuccess = (currentSubaction_FX_SuccessArrays[fxPackage.thisFXSuccessTiedToFXAtIndex][targetIndex] == true);
                 else if (!fxPackage.applyEvenIfSubactionMisses && subactions_TargetHitArrays[subactionExecutionIndex][targetIndex] == false) executionSuccess = false;
-                else if (fxPackage.baseSuccessRate < 1.0f)
-                {
-                    int evadeStat = -1;
-                    if (fxPackage.fxEvadeStat != LogicalStatType.None) evadeStat = t[targetIndex].GetLogicalStatValue(fxPackage.fxEvadeStat);
-                    int hitStat = -1;
-                    if (fxPackage.fxHitStat != LogicalStatType.None) hitStat = currentActingBattler.GetLogicalStatValue(fxPackage.fxHitStat);
-                    float adjustedSuccessRate = fxPackage.baseSuccessRate;
-                    if (evadeStat != -1 && hitStat != -1) // this is contested, so let's work out the contest
-                    {
-                        adjustedSuccessRate *= (hitStat / (float)evadeStat);
-                    }
-                    // It should also be possible for uncontested hit/evade stats to provide hit/evade bonuses on FX packages, but that requires me to have some idea of what the numbers look like
-                    if (Random.Range(0, 1) > adjustedSuccessRate) executionSuccess = false;
-                }
+                else if (fxPackage.baseSuccessRate < 1.0f) executionSuccess = t[targetIndex].TryToLandFXAgainstMe(currentActingBattler, fxPackage);
                 if (executionSuccess) t[targetIndex].ApplyFXPackage(fxPackage);
                 return executionSuccess;
             }
@@ -234,15 +221,10 @@ namespace CnfBattleSys
                     }
                     else executionSuccess = subactions_TargetHitArrays[subactionExecutionIndex][targetIndex];
                 }
-                else
-                {
-                    float modifiedAccuracy = BattleUtility.GetModifiedAccuracyFor(subaction, currentActingBattler, t[targetIndex]);
-                    // like with fx packages: there should also be non-contested hit/evade bonuses if the subaction says "yo I got a hit stat but no evade stat" or vice versa, but I don't know what the math looks like yet
-                    executionSuccess = (modifiedAccuracy > Random.Range(0f, 1f));
-                }
+                else executionSuccess = t[targetIndex].TryToLandAttackAgainstMe(currentActingBattler, subaction);
                 if (executionSuccess)
                 {                   
-                    subactions_FinalDamageFigures[subactionExecutionIndex][targetIndex] = t[targetIndex].CalcDamageAgainstMe(currentActingBattler, subaction, true, true);
+                    subactions_FinalDamageFigures[subactionExecutionIndex][targetIndex] = t[targetIndex].CalcDamageAgainstMe(currentActingBattler, subaction, true, true, true);
                     t[targetIndex].DealOrHealDamage(subactions_FinalDamageFigures[subactionExecutionIndex][targetIndex]);
                 }
                 return executionSuccess;
@@ -400,6 +382,8 @@ namespace CnfBattleSys
         }
 
         public const float battleTickLength = 1 / 60;
+        public const float fieldRadius = 50;
+        private readonly static int layerMask = Animator.StringToHash("BATTLE_Battlers");
         /// <summary>
         /// Speed stats determine the delay units acquire after acting.
         /// Less speed = more delay.
@@ -592,6 +576,50 @@ namespace CnfBattleSys
                 int randomIndex = Random.Range(0, allBattlers.Count);
                 if (!battlerTiebreakerStack.Contains(allBattlers[randomIndex])) battlerTiebreakerStack.Push(allBattlers[randomIndex]);
             }
+        }
+
+        /// <summary>
+        /// Given an AOE targeting type, user, main target, and radius, returns the subset of battlersToCheck that are within range of the given AOE.
+        /// </summary>
+        public static Battler[] GetBattlersWithinAOERangeOf(Battler user, Battler target, ActionTargetType targetType, float radius, Battler[] battlersToCheck)
+        {
+            tmpBattlersListBuffer.Clear();
+            switch (targetType)
+            {
+                case ActionTargetType.AllTargetsAlongLinearCorridor:
+                    RaycastHit[] hits = Physics.BoxCastAll(user.capsuleCollider.center, new Vector3(radius, 1, radius), target.logicalPosition - user.logicalPosition, Quaternion.FromToRotation(Vector3.zero, target.logicalPosition - user.logicalPosition), fieldRadius, layerMask);
+                    for (int h = 0; h < hits.Length; h++)
+                    {
+                        for (int b = 0; b < battlersToCheck.Length; b++)
+                        {
+                            if (hits[h].collider == battlersToCheck[b].capsuleCollider)
+                            {
+                                tmpBattlersListBuffer.Add(battlersToCheck[b]);
+                                break;
+                            }
+                        }
+                    }
+                    break;
+                case ActionTargetType.AllTargetsInRange:
+                    if (radius >= fieldRadius * 2) return battlersToCheck; // if you cover a wider range than the battlefield (usually infinite range for hit-all shit) then ofc there's no point in going further
+                    for (int b = 0; b < battlersToCheck.Length; b++)
+                    {
+                        RaycastHit hit;
+                        user.capsuleCollider.Raycast(new Ray(battlersToCheck[b].capsuleCollider.center, battlersToCheck[b].logicalPosition - user.logicalPosition), out hit, fieldRadius);
+                        if (hit.collider != null && hit.distance < radius + battlersToCheck[b].footprintRadius + user.footprintRadius) tmpBattlersListBuffer.Add(battlersToCheck[b]);
+                    }
+                    break;
+                case ActionTargetType.CircularAOE:
+                    if (radius >= fieldRadius * 2) return battlersToCheck; // if you cover a wider range than the battlefield (usually infinite range for hit-all shit) then ofc there's no point in going further
+                    for (int b = 0; b < battlersToCheck.Length; b++)
+                    {
+                        RaycastHit r;
+                        target.capsuleCollider.Raycast(new Ray(battlersToCheck[b].capsuleCollider.center, battlersToCheck[b].logicalPosition - target.logicalPosition), out r, fieldRadius);
+                        if (r.collider != null && r.distance < radius + battlersToCheck[b].footprintRadius + target.footprintRadius) tmpBattlersListBuffer.Add(battlersToCheck[b]);
+                    }
+                    break;
+            }
+            return tmpBattlersListBuffer.ToArray();
         }
 
         // Interfaces to subsystem functionality

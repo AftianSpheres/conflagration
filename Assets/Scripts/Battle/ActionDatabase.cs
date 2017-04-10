@@ -220,7 +220,7 @@ namespace CnfBattleSys
                 if (thisFXSuccessTiedToFXAtIndex < 0) throw new Exception(exceptionFXPackageIDStr() + " tries to tie itself to an invalid FX index!");
                 else if (thisFXSuccessTiedToFXAtIndex >= index) throw new Exception(exceptionFXPackageIDStr() + " tries to tie itself to an FX index that doesn't precede it!");
             }
-            return new BattleAction.Subaction.FXPackage(fxType, fxHitStat, fxEvadeStat, applyEvenIfSubactionMisses, baseSuccessRate, fxLengthFloat, fxStrengthFloat, fxLengthByte, fxStrengthInt, thisFXSuccessTiedToFXAtIndex);
+            return new BattleAction.Subaction.FXPackage(fxType, fxHitStat, fxEvadeStat, applyEvenIfSubactionMisses, baseSuccessRate, fxLengthFloat, fxStrengthFloat, fxLengthByte, fxStrengthInt, thisFXSuccessTiedToFXAtIndex, 0);
         }
 
         /// <summary>
