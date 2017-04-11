@@ -958,6 +958,18 @@ namespace CnfBattleSys
         }
 
         /// <summary>
+        /// Sets battler stance immediately. Doesn't do any of the normal
+        /// stance break behavior. This should only be used to let the AI
+        /// system test a Battler's prospective actions in multiple stances,
+        /// and you should be very careful to make sure you set the stance back
+        /// to what it was originally when you're done.
+        /// </summary>
+        public void ChangeStance_Immediate(BattleStance stance)
+        {
+            currentStance = stance;
+        }
+
+        /// <summary>
         /// Sets battler stance and removes the stance break debuffs.
         /// </summary>
         public void ChangeStanceTo (BattleStance stance)

@@ -42,6 +42,9 @@
                 /// <summary>
                 /// This is the base value the AI uses to score successful executions of this fx package.
                 /// This isn't used for anything else.
+                /// The most useful way to think of this is as the amount of damage or healing, as a percentage of target HP, that this effect is "worth" if it executes successfully.
+                /// So, ex: you have a score of 20, you're saying "treat this as equal in value to dealing 20% of the target's HP in damage."
+                /// You have a score of -45.15, you're saying that it's (presumably) a buff, and it's a buff that's equal in value to a _heal_ of 45.15% of target HP.
                 /// </summary>
                 public readonly float baseAIScoreValue;
 

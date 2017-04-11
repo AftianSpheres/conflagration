@@ -22,32 +22,38 @@ namespace CnfBattleSys
         /// </summary>
         public struct ScoredActionTargets
         {
+            public readonly BattleAction action;
             public readonly Battler[] primaryTargets;
             public readonly Battler[] secondaryTargets;
             public readonly float[] primaryScores;
             public readonly float[] secondaryScores;
             public readonly float totalScore;
 
-            public ScoredActionTargets (Battler[] _primaryTargets, Battler[] _secondaryTargets, float[] _primaryScores, float[] _secondaryScores)
+            public ScoredActionTargets (BattleAction _action, Battler[] _primaryTargets, Battler[] _secondaryTargets, float[] _primaryScores, float[] _secondaryScores)
             {
+                action = _action;
                 primaryTargets = _primaryTargets;
                 secondaryTargets = _secondaryTargets;
                 primaryScores = _primaryScores;
                 secondaryScores = _secondaryScores;
                 float ts = 0;
                 int q = 0;
-                for (int i = 0; i < primaryScores.Length; i++)
+                if (primaryScores.Length > 0)
                 {
-                    ts += primaryScores[i];
-                    q++;
+                    for (int i = 0; i < primaryScores.Length; i++)
+                    {
+                        ts += primaryScores[i];
+                        q++;
+                    }
+                    for (int i = 0; i < secondaryScores.Length; i++)
+                    {
+                        ts += secondaryScores[i];
+                        q++;
+                    }
+                    ts /= q;
+                    totalScore = ts;
                 }
-                for (int i = 0; i < secondaryScores.Length; i++)
-                {
-                    ts += secondaryScores[i];
-                    q++;
-                }
-                ts /= q;
-                totalScore = ts;
+                else totalScore = 0;
             }
         }
 
@@ -91,6 +97,82 @@ namespace CnfBattleSys
             }
             if (outputIsDelayed) throw new NotImplementedException(); // this should start a coroutine that waits for the AI or player "AI" to finish, then calls b.ReceiveAThought whenever that's done
             else b.ReceiveAThought(turnActions, messageFlags);
+        }
+
+        /// <summary>
+        /// Gets optimum actions for a turn given a set of AI flags, an acting battler, and stance change difficulty.
+        /// stanceChangeDifficulty functions as a multiplier applied to the score of the action associated with the battler's current stance.
+        /// Think of it as representing the extend to which the battler prefers not to change stances. Since you can't act on the turn that you change stances,
+        /// stanceChangeDifficulty should normally be pretty high - you need to be talking about something substantially better than anything you can do in this stance.
+        /// </summary>
+        public static Battler.TurnActions GetOptimumActionsForTurn (BattlerAIFlags flags, Battler user, float stanceChangeDifficulty)
+        {
+            float highestScore = float.MinValue;
+            BattleAction actionDecidedUpon = ActionDatabase.defaultBattleAction;
+            Battler[] primaryTargets = new Battler[0];
+            Battler[] secondaryTargets = new Battler[0];
+            bool changeStances = true;
+            ScoredActionTargets[] optimalActionsPerStance = GetOptimumActionsForEachStance(flags, user);
+            for (int i = 0; i < optimalActionsPerStance.Length; i++)
+            {
+                float score = optimalActionsPerStance[i].totalScore;
+                if (user.stances[i] == user.currentStance) score *= stanceChangeDifficulty;
+                if (score > highestScore)
+                {
+                    highestScore = score;
+                    actionDecidedUpon = optimalActionsPerStance[i].action;
+                    primaryTargets = optimalActionsPerStance[i].primaryTargets;
+                    secondaryTargets = optimalActionsPerStance[i].secondaryTargets;
+                    changeStances = (user.stances[i] != user.currentStance);
+                }
+            }
+            return new Battler.TurnActions(changeStances, 0.0f, primaryTargets, secondaryTargets, actionDecidedUpon);
+        }
+
+        /// <summary>
+        /// Returns an array of ScoredActionTargets (index-matched to the battler's stances) containing the most optimum action and target set for it to use in each stance.
+        /// </summary>
+        private static ScoredActionTargets[] GetOptimumActionsForEachStance (BattlerAIFlags flags, Battler user)
+        {
+            ScoredActionTargets[] output = new ScoredActionTargets[user.stances.Length];
+            BattleStance originalStance = user.currentStance;
+            BattleAction[] currentStanceActions = new BattleAction[user.currentStance.actionSet.Length + user.metaStance.actionSet.Length];
+            for (int i = 0; i < user.currentStance.actionSet.Length; i++) currentStanceActions[i] = user.currentStance.actionSet[i];
+            for (int i = 0; i < user.metaStance.actionSet.Length; i++) currentStanceActions[user.currentStance.actionSet.Length + i] = user.metaStance.actionSet[i];
+            for (int s = 0; s < user.stances.Length; s++)
+            {
+                ScoredActionTargets[] scoresForStance;
+                user.ChangeStance_Immediate(user.stances[s]); // guve the battker a provisional stance so its stats are right when we're running damage calcs, etc.
+                if (user.stances[s] == originalStance) scoresForStance = GetScoresAndOptimumTargetSets(flags, user, currentStanceActions);
+                else scoresForStance = GetScoresAndOptimumTargetSets(flags, user, user.stances[s].actionSet);
+                float thisStanceHighestScore = float.MinValue;
+                ScoredActionTargets thisStanceBestAction = new ScoredActionTargets(ActionDatabase.defaultBattleAction, new Battler[0], new Battler[0], new float[0], new float[0]);
+                for (int t = 0; t < scoresForStance.Length; t++)
+                {
+                    if (scoresForStance[t].totalScore > thisStanceHighestScore)
+                    {
+                        thisStanceHighestScore = scoresForStance[t].totalScore;
+                        thisStanceBestAction = scoresForStance[t];
+                    }
+                }
+                if (thisStanceBestAction.action != ActionDatabase.defaultBattleAction) output[s] = thisStanceBestAction;
+            }
+            user.ChangeStance_Immediate(originalStance);
+            return output;
+        }
+
+        /// <summary>
+        /// Given AI flags, user, and an array of actions, returns final score and optimum target sets for each of those actions.
+        /// </summary>
+        private static ScoredActionTargets[] GetScoresAndOptimumTargetSets (BattlerAIFlags flags, Battler user, BattleAction[] actions)
+        {
+            ScoredActionTargets[] output = new ScoredActionTargets[actions.Length];
+            for (int a = 0; a < actions.Length; a++)
+            {
+                Battler[][] potentialTargets = FindLegalTargetsForAction(user, actions[a]);
+                output[a] = GetOptimumTargets(flags, user, actions[a], potentialTargets);
+            }
+            return output;
         }
 
         /// <summary>
@@ -172,6 +254,8 @@ namespace CnfBattleSys
                     case ActionTargetType.AllTargetsAlongLinearCorridor:
                     case ActionTargetType.CircularAOE:
                         return forAOE;
+                    case ActionTargetType.None:
+                        throw new Exception("Tried to find targets for an action that doesn't take targets. Wut factor: at least 8 or 9.");
                     default:
                         throw new Exception("Tried to acquire targets for invalid targeting type: " + targetingType);
                 }
@@ -182,7 +266,7 @@ namespace CnfBattleSys
             float[] primaryScores = scores;
             Battler[] secondaryTarget = secondaryTargetsAcquisition(action.alternateTargetType, jointPotentialTargets[1]);
             float[] secondaryScores = scores;
-            return new ScoredActionTargets(primaryTargets, secondaryTarget, primaryScores, secondaryScores);
+            return new ScoredActionTargets(action, primaryTargets, secondaryTarget, primaryScores, secondaryScores);
         }
 
         /// <summary>
@@ -239,12 +323,14 @@ namespace CnfBattleSys
                 {
                     if ((action.Subactions[s].categoryFlags & category) == category)
                     {
+                        countedSubactions++;
                         // Float imprecision is fine because scoring doesn't need to have _exact_ integral damage values, it just needs to indicate the general power of attacks relative to each other
                         float thisSubActionDmg = potentialTargets[i].CalcDamageAgainstMe(user, action.Subactions[s], false, (flags & BattlerAIFlags.WeaknessAware) == BattlerAIFlags.WeaknessAware, (flags & BattlerAIFlags.ResistanceAware) == BattlerAIFlags.ResistanceAware);
                         if ((flags & BattlerAIFlags.EvadeAware) == BattlerAIFlags.EvadeAware && action.Subactions[s].evadeStat != LogicalStatType.None)
                         {
                             thisSubActionDmg = Mathf.FloorToInt(BattleUtility.GetModifiedAccuracyFor(action.Subactions[s], user, potentialTargets[i]));
                         }
+                        score += thisSubActionDmg;
                     }
                 }
                 score = Mathf.FloorToInt(score / countedSubactions);
