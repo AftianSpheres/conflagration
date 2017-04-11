@@ -4,12 +4,41 @@ using System.Xml;
 
 namespace CnfBattleSys
 {
-    public class ActionDatabase
+    public static class ActionDatabase
     {
         private static BattleAction[] _actions;
         private static readonly BattleAction.Subaction[] defaultSubactionArray = { new BattleAction.Subaction(0, 0, false, AnimEventType.None, AnimEventType.None, LogicalStatType.None, LogicalStatType.None, LogicalStatType.None, LogicalStatType.None, -1, -1, BattleActionCategoryFlags.None,new BattleAction.Subaction.FXPackage[0], DamageTypeFlags.None) };
-        public static readonly BattleAction defaultBattleAction = new BattleAction(ActionType.InvalidAction, 0, 0, 0, 0, 0, 0, TargetSideFlags.None, TargetSideFlags.None, ActionTargetType.None, ActionTargetType.None, AnimEventType.None, AnimEventType.None, AnimEventType.None, AnimEventType.None, AnimEventType.None,
-                                                       BattleActionCategoryFlags.None, defaultSubactionArray);
+
+        /// <summary>
+        /// Contains special-case action defs that exust outside of the main table we populate from the XML files.
+        /// </summary>
+        public static class SpecialActions
+        {
+            /// <summary>
+            /// The number of special action defs. Since these have their own (less than zero) entries in the ActionType enum, we need to subtract the number of special actions from the total when determining how many spaces there need to be 
+            /// </summary>
+            const int count = 2;
+
+            /// <summary>
+            /// The default battle action entry, used to populate invalid entries on the table or when we need a placeholder action entry somewhere else in the battle system.
+            /// </summary>
+            public static readonly BattleAction defaultBattleAction = new BattleAction(ActionType.InvalidAction, 0, 0, 0, 0, 0, 0, TargetSideFlags.None, TargetSideFlags.None, ActionTargetType.None, ActionTargetType.None, AnimEventType.None, 
+                                                           AnimEventType.None, AnimEventType.None, AnimEventType.None, AnimEventType.None, BattleActionCategoryFlags.None, defaultSubactionArray);
+
+            /// <summary>
+            /// Another empty placeholder battle action - all we care about with any of these placeholder actions is _identity_. They don't do anything.
+            /// This actually gets plugged into the table, so don't count it as part of the special actions count above. None is index 0, not a negative index.
+            /// </summary>
+            public static readonly BattleAction noneBattleAction = new BattleAction(ActionType.None, 0, 0, 0, 0, 0, 0, TargetSideFlags.None, TargetSideFlags.None, ActionTargetType.None, ActionTargetType.None, AnimEventType.None,
+                                                           AnimEventType.None, AnimEventType.None, AnimEventType.None, AnimEventType.None, BattleActionCategoryFlags.None, defaultSubactionArray);
+
+            /// <summary>
+            /// The entry for the "break own stance" entry, which is a placeholder just like the other two. We don't "execute" this action in the normal sense - 
+            /// if you go into action execution with this action, you go through some hardcoded special-case behavior instead of executing an action def.
+            /// </summary>
+            public static readonly BattleAction selfStanceBreakAction = new BattleAction(ActionType.INTERNAL_BreakOwnStance, 0, 0, 0, 0, 0, 0, TargetSideFlags.None, TargetSideFlags.None, ActionTargetType.None, ActionTargetType.None, AnimEventType.None,
+                                                           AnimEventType.None, AnimEventType.None, AnimEventType.None, AnimEventType.None, BattleActionCategoryFlags.None, defaultSubactionArray);
+        }
 
         /// <summary>
         /// Loads in and parses all of the xml files, populates the action dataset.
@@ -19,9 +48,10 @@ namespace CnfBattleSys
         {
             XmlDocument doc = new XmlDocument();
             XmlNode workingNode = doc.DocumentElement;
-            int c = Enum.GetValues(typeof(ActionType)).Length - 1;
+            int c = Enum.GetValues(typeof(ActionType)).Length - 2;
             _actions = new BattleAction[c];
-            for (int a = 0; a < c; a++) _actions[a] = ImportActionDefWithID((ActionType)a, doc, workingNode);
+            _actions[0] = SpecialActions.noneBattleAction;
+            for (int a = 1; a < c; a++) _actions[a] = ImportActionDefWithID((ActionType)a, doc, workingNode);
         }
 
         /// <summary>
@@ -36,7 +66,7 @@ namespace CnfBattleSys
             else
             {
                 Debug.Log(actionID.ToString() + " has no action def file, so the invalid action placeholder was loaded instead.");
-                return defaultBattleAction;
+                return SpecialActions.defaultBattleAction;
             }
             XmlNode rootNode = doc.DocumentElement;
             Action<string> actOnNode = (node) =>

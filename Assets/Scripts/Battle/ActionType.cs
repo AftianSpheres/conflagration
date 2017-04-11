@@ -2,9 +2,9 @@
 {
     public enum ActionType
     {
+        INTERNAL_BreakOwnStance = -2,
         InvalidAction = -1,
         None = 0,
-        INTERNAL_BreakOwnStance,
         TestMeleeAtk,
         TestRangedAOEAtk,
         TestHeal,

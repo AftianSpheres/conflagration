@@ -10,7 +10,7 @@ namespace CnfBattleSys
     public static class StanceDatabase
     {
         private static BattleStance[] _stances;
-        public static readonly BattleStance defaultStance = new BattleStance(StanceType.InvalidStance, AnimEventType.None, AnimEventType.None, AnimEventType.None, AnimEventType.None, AnimEventType.None, new BattleAction[0], ActionDatabase.defaultBattleAction,
+        public static readonly BattleStance defaultStance = new BattleStance(StanceType.InvalidStance, AnimEventType.None, AnimEventType.None, AnimEventType.None, AnimEventType.None, AnimEventType.None, new BattleAction[0], ActionDatabase.SpecialActions.defaultBattleAction,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, new Battler.Resistances_Raw(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
 
         /// <summary>
