@@ -13,7 +13,7 @@ namespace CnfBattleSys
     public class Battler
     {
         public const int maxLevel = 120; // you could actually have things over maxLevel but we use this for scaling stats w/ level...
-        public static TurnActions defaultTurnActions = new TurnActions(false, -1, new Battler[0], new Battler[0], ActionDatabase.defaultBattleAction);
+        public static TurnActions defaultTurnActions = new TurnActions(false, -1, new Battler[0], new Battler[0], ActionDatabase.SpecialActions.defaultBattleAction);
 
         /// <summary>
         /// Data structure for Battler stats.

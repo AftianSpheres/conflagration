@@ -7,16 +7,24 @@ namespace CnfBattleSys.AI
     /// </summary>
     public static class AIModule_TestAI
     {
+        const float stanceChangeDifficulty = 2.5f;
+
         /// <summary>
         /// Decides what the test AI does.
         /// This should be _very simple!
         /// </summary>
         public static void DecideTurnActions_AndStanceIfApplicable (Battler b, bool changeStances, out Battler.TurnActions turnActions, out BattlerAIMessageFlags messageFlags)
         {
-            if (changeStances) throw new NotImplementedException();
-            BattleAction action = b.currentStance.actionSet[UnityEngine.Random.Range(0, b.currentStance.actionSet.Length)];
-            Battler[][] allowedTargets = BattlerAISystem.FindLegalTargetsForAction(b, action);
-            throw new NotImplementedException(); // need to do target acquisition tools!
+            if (changeStances)
+            {
+                turnActions = new Battler.TurnActions(false, 0, new Battler[0], new Battler[0], ActionDatabase.SpecialActions.selfStanceBreakAction);
+                messageFlags = BattlerAIMessageFlags.None;
+            }
+            else
+            {
+                turnActions = BattlerAISystem.GetOptimumActionsForTurn(b.aiFlags, b, stanceChangeDifficulty);
+                messageFlags = BattlerAIMessageFlags.None;
+            }
         }
     }
 }

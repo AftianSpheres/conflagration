@@ -108,7 +108,7 @@ namespace CnfBattleSys
         public static Battler.TurnActions GetOptimumActionsForTurn (BattlerAIFlags flags, Battler user, float stanceChangeDifficulty)
         {
             float highestScore = float.MinValue;
-            BattleAction actionDecidedUpon = ActionDatabase.defaultBattleAction;
+            BattleAction actionDecidedUpon = ActionDatabase.SpecialActions.defaultBattleAction;
             Battler[] primaryTargets = new Battler[0];
             Battler[] secondaryTargets = new Battler[0];
             bool changeStances = true;
@@ -146,7 +146,7 @@ namespace CnfBattleSys
                 if (user.stances[s] == originalStance) scoresForStance = GetScoresAndOptimumTargetSets(flags, user, currentStanceActions);
                 else scoresForStance = GetScoresAndOptimumTargetSets(flags, user, user.stances[s].actionSet);
                 float thisStanceHighestScore = float.MinValue;
-                ScoredActionTargets thisStanceBestAction = new ScoredActionTargets(ActionDatabase.defaultBattleAction, new Battler[0], new Battler[0], new float[0], new float[0]);
+                ScoredActionTargets thisStanceBestAction = new ScoredActionTargets(ActionDatabase.SpecialActions.defaultBattleAction, new Battler[0], new Battler[0], new float[0], new float[0]);
                 for (int t = 0; t < scoresForStance.Length; t++)
                 {
                     if (scoresForStance[t].totalScore > thisStanceHighestScore)
@@ -155,7 +155,7 @@ namespace CnfBattleSys
                         thisStanceBestAction = scoresForStance[t];
                     }
                 }
-                if (thisStanceBestAction.action != ActionDatabase.defaultBattleAction) output[s] = thisStanceBestAction;
+                if (thisStanceBestAction.action != ActionDatabase.SpecialActions.defaultBattleAction) output[s] = thisStanceBestAction;
             }
             user.ChangeStance_Immediate(originalStance);
             return output;

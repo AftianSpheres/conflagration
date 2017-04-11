@@ -115,6 +115,7 @@ namespace CnfBattleSys
             /// </summary>
             internal static void BeginProcessingAction (BattleAction action, Battler user, Battler[] _targets, Battler[] _alternateTargets)
             {
+                if (action == ActionDatabase.SpecialActions.selfStanceBreakAction) throw new System.NotImplementedException();
                 actionInExecution = action;
                 currentActingBattler = user;
                 targets.Clear();
@@ -347,7 +348,7 @@ namespace CnfBattleSys
             private static IEnumerator<float> _WaitUntilBattlerReadyToAct (Battler b)
             {
                 b.GetAction();
-                while (b.turnActions.action == ActionDatabase.defaultBattleAction) yield return 0; // wait until b decides what to do
+                while (b.turnActions.action == ActionDatabase.SpecialActions.defaultBattleAction) yield return 0; // wait until b decides what to do
                 ActionExecutionSubsystem.BeginProcessingAction(b.turnActions.action, b, b.turnActions.targets, b.turnActions.alternateTargets);
             }
 
