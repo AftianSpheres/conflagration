@@ -17,10 +17,9 @@ namespace CnfBattleSys
         public enum OverseerState 
         {
             Offline,
-            TimeAdvancing,
+            BetweenTurns,
             WaitingForInput,
             ExecutingAction,
-            ExecutingMovement, // not actually doing this atm
             Paused,
             BattleWon,
             BattleLost
@@ -115,18 +114,24 @@ namespace CnfBattleSys
             /// </summary>
             internal static void BeginProcessingAction (BattleAction action, Battler user, Battler[] _targets, Battler[] _alternateTargets)
             {
-                if (action == ActionDatabase.SpecialActions.selfStanceBreakAction) throw new System.NotImplementedException();
-                actionInExecution = action;
-                currentActingBattler = user;
-                targets.Clear();
-                alternateTargets.Clear();
-                subactions_FinalDamageFigures.Clear();
-                subactions_TargetHitArrays.Clear();
-                subactionExecutionIndex = subactionFXExecutionIndex = 0;
-                for (int i = 0; i < _targets.Length && i < _alternateTargets.Length; i++)
+                if (action == ActionDatabase.SpecialActions.selfStanceBreakAction)
                 {
-                    if (i < _targets.Length) targets.Add(_targets[i]);
-                    if (i < _alternateTargets.Length) alternateTargets.Add(_targets[i]);
+                    user.BreakStance(); // we never bother setting up the action execution subsystem in this event
+                }
+                else
+                {
+                    actionInExecution = action;
+                    currentActingBattler = user;
+                    targets.Clear();
+                    alternateTargets.Clear();
+                    subactions_FinalDamageFigures.Clear();
+                    subactions_TargetHitArrays.Clear();
+                    subactionExecutionIndex = subactionFXExecutionIndex = 0;
+                    for (int i = 0; i < _targets.Length && i < _alternateTargets.Length; i++)
+                    {
+                        if (i < _targets.Length) targets.Add(_targets[i]);
+                        if (i < _alternateTargets.Length) alternateTargets.Add(_targets[i]);
+                    }
                 }
             }
 
@@ -243,6 +248,7 @@ namespace CnfBattleSys
                     if (HandleSubaction(actionInExecution.Subactions[subactionExecutionIndex])) atLeastOneSuccess = true;
                     subactionExecutionIndex++;
                 }
+                if (subactionExecutionIndex == actionInExecution.Subactions.Length) StopExecutingAction();
                 return atLeastOneSuccess;
             }
 
@@ -252,6 +258,7 @@ namespace CnfBattleSys
             internal static void StopExecutingAction ()
             {
                 Cleanup(); // this is just a passthrough to cleanup atm, but it should acquire functionality as the system grows so it's nice to have the call in place
+                ChangeState(OverseerState.BetweenTurns); // action execution is done
             }
 
             /// <summary>
@@ -273,7 +280,6 @@ namespace CnfBattleSys
             internal static bool FinishCurrentAction ()
             {
                 bool r = StepSubactions(int.MaxValue); // we just call StepSubactions with a very big int - because StepSubactions keeps you from stepping past the end of the array, giving it int.MaxValue causes it to just step until it can't step any further
-                StopExecutingAction();
                 return r;
             }
         }
@@ -402,7 +408,7 @@ namespace CnfBattleSys
         /// </summary>
         public static float normalizedSpeed { get; private set; }
         public static BattleFormation activeFormation { get; private set; }
-
+        public static OverseerState overseerState { get; private set; }
 
         public static List<Battler> allBattlers { get; private set; }
         public static Dictionary<BattlerSideFlags, List<Battler>> battlersBySide { get; private set; } // xzibit.jpg
@@ -435,6 +441,41 @@ namespace CnfBattleSys
                 allBattlers.Add(bat);
                 battlersBySide[bat.side].Add(bat);
             }
+        }
+
+        /// <summary>
+        /// Advances the battle simulation by one "step."
+        /// The way this is intended to be used, basically, is that BattleStage calls BattleStep() whenever it doesn't have any animation events
+        /// to process, goes through all of those, and then calls BattleStep() again.
+        /// </summary>
+        public static void BattleStep ()
+        {
+            switch (overseerState)
+            {
+                case OverseerState.Paused:
+                    throw new System.Exception("Can't advance battle state: battle is paused.");
+                case OverseerState.Offline:
+                    throw new System.Exception("Can't advance battle state: battle system is offline.");
+                case OverseerState.BetweenTurns:
+                    BetweenTurns();
+                    break;
+                case OverseerState.WaitingForInput:
+                    throw new System.Exception("Can't advance battle state: waiting for player input.");
+                case OverseerState.ExecutingAction:
+                    ActionExecutionSubsystem.StepSubactions(1);
+                    break;
+                case OverseerState.BattleWon:
+                    throw new System.Exception("Can't advance battle state: battle is already won.");
+                case OverseerState.BattleLost:
+                    throw new System.Exception("Can't advance battle state: battle is already lost.");
+                default:
+                    throw new System.Exception("Can't advance battle state: invalid overseer state " + overseerState.ToString());
+            }
+        }
+
+        public static void ChangeState (OverseerState _state)
+        {
+            // do things
         }
 
         /// <summary>
@@ -506,6 +547,19 @@ namespace CnfBattleSys
         // Bits and pieces for use within the battle loop
 
         /// <summary>
+        /// Called between turns - handles delay logic and updates battlers so that they can request turns.
+        /// </summary>
+        private static void BetweenTurns ()
+        {
+            float lowestDelay = float.MaxValue;
+            for (int i = 0; i < allBattlers.Count; i++)
+            {
+                if (allBattlers[i].currentDelay < lowestDelay) lowestDelay = allBattlers[i].currentDelay;
+            }
+            for (int i = 0; i < allBattlers.Count; i++) allBattlers[i].BetweenTurns(lowestDelay);
+        }
+
+        /// <summary>
         /// Uses BattlerTiebreakerStack to break a tie.
         /// Returns the Battler that won.
         /// </summary>
@@ -537,33 +591,6 @@ namespace CnfBattleSys
                 c++;
             }
             normalizedSpeed = nS / c; // if c = 0 every battler is dead. so, yeah, /0, but if we're running this with every battler dead something is very very wrong anyway
-        }
-
-        /// <summary>
-        /// Updates BattleOverseer to reflect that however much time has passed.
-        /// This is only accurate to within 1/60 of a second. You'll need to make sure
-        /// that you don't call ElapsedTime at intervals smaller than battleTickLength or
-        /// things will get sorta weird.
-        /// If there's a battler ready to take a turn, returns any time remaining, since we
-        /// can't step any further until all turns are taken; otherwise, returns 0.
-        /// </summary>
-        private static float ElapsedTime(float time)
-        {
-            float remainingTime = 0;
-            while (time - battleTickLength > 0) // If you're calling this at very infrequent intervals it's gonna be kinda slow each time. This should run every frame when the simulation is running, though...
-            {
-                time -= battleTickLength;
-                for (int i = 0; i < allBattlers.Count; i++)
-                {
-                    allBattlers[i].ElapsedTime(battleTickLength);
-                }
-                if (TurnManagementSubsystem.ReadyToTakeATurn())
-                {
-                    remainingTime = time; // hold onto the remainder and add it next time you call remainingTime
-                    break;
-                }
-            }
-            return remainingTime;
         }
 
         /// <summary>

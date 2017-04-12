@@ -838,6 +838,8 @@ namespace CnfBattleSys
         // Collider, which is ugly, but using Unity colliders is the simplest way to do AOE checks and shit
         public CapsuleCollider capsuleCollider { get; private set; }
 
+        public BattlerPuppet puppet { get; private set; }
+
         // Magic
         public float speedFactor { get { return stats.Spe / BattleOverseer.normalizedSpeed; } }
 
@@ -921,12 +923,56 @@ namespace CnfBattleSys
                     Debug.Log("If unit movement existed, we would be pushed backward now");
                     break;
                 case SubactionFXType.Test_Buff_STR:
-                    statusPackets.Add(StatusType.TestBuff, new StatusPacket(statusPackets, StatusType.TestBuff, StatusPacket_CancelationCondition.CancelWhenDurationZero, 0, fxPackage.fxLength_Byte, new Resistances_Raw(1), 0, DamageTypeFlags.None,
-                        MiscStatusEffectFlags.None, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, fxPackage.fxStrength_Float, 1, 1, 1, 1, 1, 1, 1, 1));
+                    ApplyStatus(StatusType.TestBuff, StatusPacket_CancelationCondition.CancelWhenDurationZero, 0, fxPackage.fxLength_Byte, new Resistances_Raw(1), 0, DamageTypeFlags.None,
+                        MiscStatusEffectFlags.None, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, fxPackage.fxStrength_Float, 1, 1, 1, 1, 1, 1, 1, 1);
                     break;
                 default:
                     throw new System.Exception("Unregognized FXtype: " + fxPackage.fxType);
             }
+        }
+
+        /// <summary>
+        /// Creates a status packet based on the given parameters. If there's already a status packet in the dictionary of this type, collides the new one with it;
+        /// otherwise, adds it to the dict. Returns true if we collided with an existing packet, false otherwise.
+        /// </summary>
+        public bool ApplyStatus (StatusType _statusType, StatusPacket_CancelationCondition _cancelationCondition, int _charges, int _duration, Resistances_Raw _resistances, int _recurringDamage, DamageTypeFlags _damageTypeFlags,
+            MiscStatusEffectFlags _miscStatusEffectFlags, int _statBonus_MaxHP, int _statBonus_ATK, int _statBonus_DEF, int _statBonus_MATK, int _statBonus_MDEF, int _statBonus_SPE, int _statBonus_EVA, int _statBonus_HIT,
+            float _statBonus_MoveDelay, float _statBonus_MoveDist, float _statMulti_MaxHP, float _statMulti_ATK, float _statMulti_DEF, float _statMulti_MATK, float _statMulti_MDEF, float _statMulti_SPE, float _statMulti_EVA,
+            float _statMulti_HIT, float _statMulti_MoveDelay, float _statMulti_MoveDist)
+        {
+            bool keyAlreadyExisted = false;
+            StatusPacket packet = new StatusPacket(statusPackets, _statusType, _cancelationCondition, _charges, _duration, _resistances, _recurringDamage, _damageTypeFlags, _miscStatusEffectFlags,
+                _statBonus_MaxHP, _statBonus_ATK, _statBonus_DEF, _statBonus_MATK, _statBonus_MDEF, _statBonus_SPE, _statBonus_EVA, _statBonus_HIT, _statBonus_MoveDelay, _statBonus_MoveDist,
+                _statMulti_MaxHP, _statMulti_ATK, _statMulti_DEF, _statMulti_MATK, _statMulti_MDEF, _statMulti_SPE, _statMulti_EVA, _statMulti_HIT, _statMulti_MoveDelay, _statMulti_MoveDist);
+            if (statusPackets.ContainsKey(_statusType))
+            {
+                keyAlreadyExisted = true;
+                statusPackets[_statusType].CollideWith(packet);
+            }
+            else statusPackets[_statusType] = packet;
+            return keyAlreadyExisted;
+        }
+
+        /// <summary>
+        /// Breaks this unit's stance.
+        /// If spPenalty is greater than or equal to zero, we're forced to break our stance, so we're going to apply
+        /// the forced version of the stance break debuffs with a strength dependent on how far into the red we are.
+        /// Otherwise, we're breaking our stance voluntarily, so we get the much more friendly voluntary-stance-change
+        /// penalties.
+        /// </summary>
+        public void BreakStance (int spPenalty = -1)
+        {
+            const float statPenaltiesMin = 0.25f; // at worst, forced stat changes leave you with one quarter of your previous def/mdef/spe
+            if (spPenalty < 0) ApplyStatus(StatusType.StanceBroken_Voluntary, StatusPacket_CancelationCondition.None, 0, 0, new Resistances_Raw(1), 0, DamageTypeFlags.None, MiscStatusEffectFlags.None,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0.85f, 1, 0.85f, 1, 0.85f, 1, 1, 1);
+            else
+            {
+                float penalty = 0.75f - ((spPenalty / 2.0f) * 0.01f);
+                if (penalty < statPenaltiesMin) penalty = statPenaltiesMin;
+                ApplyStatus(StatusType.StanceBroken_Forced, StatusPacket_CancelationCondition.None, 0, 0, new Resistances_Raw(1), 0, DamageTypeFlags.None, MiscStatusEffectFlags.None,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, penalty, 1, penalty, 1, penalty, 1, 1, 1);
+            }
+            puppet.ProcessAnimEvent(currentStance.animEvent_Break);
         }
 
         /// <summary>
@@ -1002,6 +1048,8 @@ namespace CnfBattleSys
             currentHP += dmg;
             if (currentHP > stats.maxHP) currentHP = stats.maxHP;
             if (currentHP <= 0) Die();
+            else if (dmg > 0) puppet.ProcessAnimEvent(currentStance.animEvent_Hit);
+            else if (dmg < 0) puppet.ProcessAnimEvent(currentStance.animEvent_Heal);
         }
 
         /// <summary>
@@ -1015,17 +1063,20 @@ namespace CnfBattleSys
             currentDelay = float.PositiveInfinity;
             statusPackets.Clear();
             isDead = true;
+            puppet.ProcessAnimEvent(currentStance.animEvent_Die);
             BattleOverseer.BattlerIsDead(this);
         }
 
         /// <summary>
-        /// Updates Battler to reflect the amount of time that's elapsed.
+        /// Called on each Battler in the battle between turns.
+        /// turndelayReduction is the "lowest delay" value we get during the
+        /// between-turns phase, and we subtract that from the delay value of all battlers.
         /// </summary>
-        public void ElapsedTime (float time)
+        public void BetweenTurns (float turnDelayReduction)
         {
             if (!isDead)
             {
-                currentDelay -= time;
+                currentDelay -= turnDelayReduction;
                 if (currentDelay < 0) currentDelay = 0;
                 if (currentDelay == 0) BattleOverseer.RequestTurn(this);
             }

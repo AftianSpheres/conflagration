@@ -10,7 +10,8 @@ namespace CnfBattleSys
     public static class StanceDatabase
     {
         private static BattleStance[] _stances;
-        public static readonly BattleStance defaultStance = new BattleStance(StanceType.InvalidStance, AnimEventType.None, AnimEventType.None, AnimEventType.None, AnimEventType.None, AnimEventType.None, new BattleAction[0], ActionDatabase.SpecialActions.defaultBattleAction,
+        public static readonly BattleStance defaultStance = new BattleStance(StanceType.InvalidStance, AnimEventType.None, AnimEventType.None, AnimEventType.None, AnimEventType.None, AnimEventType.None, 
+            AnimEventType.None, AnimEventType.None, new BattleAction[0], ActionDatabase.SpecialActions.defaultBattleAction,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, new Battler.Resistances_Raw(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
 
         /// <summary>
@@ -57,6 +58,10 @@ namespace CnfBattleSys
             AnimEventType animEvent_Break = DBTools.ParseAnimEventType(workingNode.InnerText);
             actOnNode("//animEvent_Dodge");
             AnimEventType animEvent_Dodge = DBTools.ParseAnimEventType(workingNode.InnerText);
+            actOnNode("//animEvent_Heal");
+            AnimEventType animEvent_Heal = DBTools.ParseAnimEventType(workingNode.InnerText);
+            actOnNode("//animEvent_Die");
+            AnimEventType animEvent_Die = DBTools.ParseAnimEventType(workingNode.InnerText);
             actOnNode("//actions");
             XmlNodeList actionNodes = workingNode.SelectNodes("//action");
             BattleAction[] actionSet = new BattleAction[actionNodes.Count];
@@ -114,9 +119,9 @@ namespace CnfBattleSys
             byte maxSP = byte.Parse(workingNode.InnerText);
             Battler.Resistances_Raw resistances = DBTools.GetResistancesFromXML(resNode, workingNode);
             Resources.UnloadAsset(unreadFileBuffer);
-            return new BattleStance(stanceID, animEvent_Idle, animEvent_Move, animEvent_Hit, animEvent_Break, animEvent_Dodge, actionSet, counterattackAction, moveDelayBonus, moveDelayMultiplier, moveDistBonus, moveDistMultiplier,
-                stanceChangeDelayBonus, stanceChangeDelayMultiplier, statMultiplier_MaxHP, statMultiplier_ATK, statMultiplier_DEF, statMultiplier_MATK, statMultiplier_MDEF, statMultiplier_SPE, statMultiplier_HIT, statMultiplier_EVA,
-                statBonus_MaxHP, statBonus_ATK, statBonus_DEF, statBonus_MATK, statBonus_MDEF, statBonus_SPE, statBonus_HIT, statBonus_EVA, maxSP, resistances);
+            return new BattleStance(stanceID, animEvent_Idle, animEvent_Move, animEvent_Hit, animEvent_Break, animEvent_Dodge, animEvent_Heal, animEvent_Die, actionSet, counterattackAction, moveDelayBonus, moveDelayMultiplier, 
+                moveDistBonus, moveDistMultiplier, stanceChangeDelayBonus, stanceChangeDelayMultiplier, statMultiplier_MaxHP, statMultiplier_ATK, statMultiplier_DEF, statMultiplier_MATK, statMultiplier_MDEF, statMultiplier_SPE, 
+                statMultiplier_HIT, statMultiplier_EVA, statBonus_MaxHP, statBonus_ATK, statBonus_DEF, statBonus_MATK, statBonus_MDEF, statBonus_SPE, statBonus_HIT, statBonus_EVA, maxSP, resistances);
             
         }
 
