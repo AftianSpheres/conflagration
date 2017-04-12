@@ -17,7 +17,7 @@ namespace CnfBattleSys.AI
         {
             if (changeStances)
             {
-                turnActions = new Battler.TurnActions(false, 0, new Battler[0], new Battler[0], ActionDatabase.SpecialActions.selfStanceBreakAction);
+                turnActions = new Battler.TurnActions(false, 0, new Battler[0], new Battler[0], ActionDatabase.SpecialActions.selfStanceBreakAction, b.currentStance);
                 messageFlags = BattlerAIMessageFlags.None;
             }
             else

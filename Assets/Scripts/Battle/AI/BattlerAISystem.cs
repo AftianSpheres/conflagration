@@ -109,24 +109,27 @@ namespace CnfBattleSys
         {
             float highestScore = float.MinValue;
             BattleAction actionDecidedUpon = ActionDatabase.SpecialActions.defaultBattleAction;
+            BattleStance stance = user.currentStance;
             Battler[] primaryTargets = new Battler[0];
             Battler[] secondaryTargets = new Battler[0];
             bool changeStances = true;
             ScoredActionTargets[] optimalActionsPerStance = GetOptimumActionsForEachStance(flags, user);
             for (int i = 0; i < optimalActionsPerStance.Length; i++)
             {
+                if (user.stances[i] == user.lockedStance) break; // break immediately if stance is forbidden
                 float score = optimalActionsPerStance[i].totalScore;
                 if (user.stances[i] == user.currentStance) score *= stanceChangeDifficulty;
-                if (score > highestScore)
+                if (score > highestScore || (score == highestScore && user.stances[i] == user.currentStance))
                 {
                     highestScore = score;
                     actionDecidedUpon = optimalActionsPerStance[i].action;
                     primaryTargets = optimalActionsPerStance[i].primaryTargets;
                     secondaryTargets = optimalActionsPerStance[i].secondaryTargets;
                     changeStances = (user.stances[i] != user.currentStance);
+                    stance = user.stances[i];
                 }
             }
-            return new Battler.TurnActions(changeStances, 0.0f, primaryTargets, secondaryTargets, actionDecidedUpon);
+            return new Battler.TurnActions(changeStances, 0.0f, primaryTargets, secondaryTargets, actionDecidedUpon, stance);
         }
 
         /// <summary>

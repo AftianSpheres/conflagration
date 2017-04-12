@@ -114,6 +114,8 @@ namespace CnfBattleSys
             /// </summary>
             internal static void BeginProcessingAction (BattleAction action, Battler user, Battler[] _targets, Battler[] _alternateTargets)
             {
+                overseerState = OverseerState.ExecutingAction;
+                user.CommitCurrentChosenActions();
                 if (action == ActionDatabase.SpecialActions.selfStanceBreakAction)
                 {
                     user.BreakStance(); // we never bother setting up the action execution subsystem in this event
@@ -258,7 +260,7 @@ namespace CnfBattleSys
             internal static void StopExecutingAction ()
             {
                 Cleanup(); // this is just a passthrough to cleanup atm, but it should acquire functionality as the system grows so it's nice to have the call in place
-                ChangeState(OverseerState.BetweenTurns); // action execution is done
+                overseerState = OverseerState.BetweenTurns;
             }
 
             /// <summary>
@@ -353,6 +355,7 @@ namespace CnfBattleSys
             /// </summary>
             private static IEnumerator<float> _WaitUntilBattlerReadyToAct (Battler b)
             {
+                overseerState = OverseerState.WaitingForInput;
                 b.GetAction();
                 while (b.turnActions.action == ActionDatabase.SpecialActions.defaultBattleAction) yield return 0; // wait until b decides what to do
                 ActionExecutionSubsystem.BeginProcessingAction(b.turnActions.action, b, b.turnActions.targets, b.turnActions.alternateTargets);
@@ -458,6 +461,10 @@ namespace CnfBattleSys
                     throw new System.Exception("Can't advance battle state: battle system is offline.");
                 case OverseerState.BetweenTurns:
                     BetweenTurns();
+                    if (TurnManagementSubsystem.ReadyToTakeATurn())
+                    {
+                        TurnManagementSubsystem.StartTurn();
+                    }
                     break;
                 case OverseerState.WaitingForInput:
                     throw new System.Exception("Can't advance battle state: waiting for player input.");
@@ -471,11 +478,6 @@ namespace CnfBattleSys
                 default:
                     throw new System.Exception("Can't advance battle state: invalid overseer state " + overseerState.ToString());
             }
-        }
-
-        public static void ChangeState (OverseerState _state)
-        {
-            // do things
         }
 
         /// <summary>
@@ -551,12 +553,23 @@ namespace CnfBattleSys
         /// </summary>
         private static void BetweenTurns ()
         {
-            float lowestDelay = float.MaxValue;
-            for (int i = 0; i < allBattlers.Count; i++)
+            if (CheckIfBattleWon())
             {
-                if (allBattlers[i].currentDelay < lowestDelay) lowestDelay = allBattlers[i].currentDelay;
+                throw new System.Exception("You won! Your prize: an unhandled exception");
             }
-            for (int i = 0; i < allBattlers.Count; i++) allBattlers[i].BetweenTurns(lowestDelay);
+            else if (CheckIfBattleLost())
+            {
+                throw new System.Exception("Battle lost, but that isn't implemented yet");
+            }
+            else
+            {
+                float lowestDelay = float.MaxValue;
+                for (int i = 0; i < allBattlers.Count; i++)
+                {
+                    if (allBattlers[i].currentDelay < lowestDelay) lowestDelay = allBattlers[i].currentDelay;
+                }
+                for (int i = 0; i < allBattlers.Count; i++) allBattlers[i].BetweenTurns(lowestDelay);
+            }
         }
 
         /// <summary>
@@ -575,6 +588,34 @@ namespace CnfBattleSys
                 }
             }
             throw new System.Exception("Tried to break a tie, but none of the tiedBattlers were in the battlerTiebreakerStack. That... shouldn't happen.");
+        }
+
+        /// <summary>
+        /// Returns true if no enemy units are still alive.
+        /// </summary>
+        private static bool CheckIfBattleWon ()
+        {
+            int liveEnemiesCount = 0;
+            tmpBattlersListBuffer.Clear();
+            GetBattlersEnemiesTo(BattlerSideFlags.PlayerSide, ref tmpBattlersListBuffer);
+            for (int i = 0; i < tmpBattlersListBuffer.Count; i++)
+            {
+                if (!tmpBattlersListBuffer[i].isDead) liveEnemiesCount++;
+            }
+            return liveEnemiesCount < 1;
+        }
+
+        /// <summary>
+        /// Returns true if no player units are still alive.
+        /// </summary>
+        private static bool CheckIfBattleLost ()
+        {
+            int livePlayersCount = 0;
+            for (int i = 0; i < battlersBySide[BattlerSideFlags.PlayerSide].Count; i++)
+            {
+                if (!battlersBySide[BattlerSideFlags.PlayerSide][i].isDead) livePlayersCount++;
+            }
+            return livePlayersCount < 1;
         }
 
         /// <summary>

@@ -13,7 +13,7 @@ namespace CnfBattleSys
     public class Battler
     {
         public const int maxLevel = 120; // you could actually have things over maxLevel but we use this for scaling stats w/ level...
-        public static TurnActions defaultTurnActions = new TurnActions(false, -1, new Battler[0], new Battler[0], ActionDatabase.SpecialActions.defaultBattleAction);
+        public static TurnActions defaultTurnActions = new TurnActions(false, -1, new Battler[0], new Battler[0], ActionDatabase.SpecialActions.defaultBattleAction, StanceDatabase.defaultStance);
 
         /// <summary>
         /// Data structure for Battler stats.
@@ -794,18 +794,23 @@ namespace CnfBattleSys
             /// Action what we're doing.
             /// </summary>
             public readonly BattleAction action;
+            /// <summary>
+            /// Stance what we do it in
+            /// </summary>
+            public readonly BattleStance stance;
 
             /// <summary>
             /// Constructor. TurnActions is a structure for passing data on what we're doing this turn to the battle overseer, so
             /// you should only really be generating these at its behest.
             /// </summary>
-            internal TurnActions (bool _stanceChanged, float _moveDist, Battler[] _targets, Battler[] _alternateTargets, BattleAction _action)
+            internal TurnActions (bool _stanceChanged, float _moveDist, Battler[] _targets, Battler[] _alternateTargets, BattleAction _action, BattleStance _stance)
             {
                 stanceChanged = _stanceChanged;
                 moveDist = _moveDist;
                 targets = _targets;
                 alternateTargets = _alternateTargets;
                 action = _action;
+                stance = _stance;
             }
         }
 
@@ -833,7 +838,7 @@ namespace CnfBattleSys
         public readonly Dictionary<StatusType, StatusPacket> statusPackets;
         public TurnActions turnActions { get; private set; }
         public BattleAction lastActionExecuted { get; private set; }
-        public BattleStance previousStance { get; private set; }
+        public BattleStance lockedStance { get; private set; }
 
         // Collider, which is ugly, but using Unity colliders is the simplest way to do AOE checks and shit
         public CapsuleCollider capsuleCollider { get; private set; }
@@ -1020,7 +1025,8 @@ namespace CnfBattleSys
         /// </summary>
         public void ChangeStanceTo (BattleStance stance)
         {
-            previousStance = currentStance;
+            if (stance == lockedStance) throw new System.Exception("Can't change stances to locked stance!");
+            lockedStance = currentStance;
             currentStance = stance;
             statusPackets.Remove(StatusType.StanceBroken_Voluntary);
             statusPackets.Remove(StatusType.StanceBroken_Forced);
@@ -1032,6 +1038,7 @@ namespace CnfBattleSys
         /// </summary>
         public void CommitCurrentChosenActions ()
         {
+            if (turnActions.stanceChanged) ChangeStanceTo(turnActions.stance);
             ApplyDelay(turnActions.moveDist * stats.moveDelay);
             // stance break is a special case - it doesn't have its own base delay value; the delay incurred by breaking your own stance is determined by the followthrough stance change delay of the last action you used
             if (turnActions.action.actionID == ActionType.INTERNAL_BreakOwnStance) ApplyDelay(turnActions.action.baseFollowthroughStanceChangeDelay);
