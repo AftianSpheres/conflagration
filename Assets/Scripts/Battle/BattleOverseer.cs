@@ -425,6 +425,7 @@ namespace CnfBattleSys
         /// <summary>
         /// Use this to avoid instantiating new battler list instances when you just want it for a single function.
         /// Assume this needs to be cleared if you're going to use it, and that it could basically contain any random grouping of battlers.
+        /// This is not safe for use in asynchronous operations.
         /// </summary>
         private static List<Battler> tmpBattlersListBuffer;
 

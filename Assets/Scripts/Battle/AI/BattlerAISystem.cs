@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using CnfBattleSys.AI;
-
+using MovementEffects;
 
 namespace CnfBattleSys
 {
@@ -57,7 +57,13 @@ namespace CnfBattleSys
             }
         }
 
+        /// <summary>
+        /// This is not safe for use in asynchronous operations.
+        /// </summary>
         private static List<Battler> battlersListBuffer;
+        /// <summary>
+        /// This is not safe for use in asynchronous operations.
+        /// </summary>
         private static List<Battler> alsoBattlersListBuffer; // I am probably way too worried about unnecessary allocations to be doing things this way
 
         /// <summary>
@@ -88,15 +94,16 @@ namespace CnfBattleSys
                     break; // if the battler says it doesn't have any AI, we dutifully decline to provide the battler with AI
                 case BattlerAIType.PlayerSide_ManualControl:
                     outputIsDelayed = true;
-                    throw new NotImplementedException();
+                    AIModule_PlayerSide_ManualControl.GetTurnActionsFromPlayer(b, changeStances);
+                    break;
                 case BattlerAIType.TestAI:
                     AIModule_TestAI.DecideTurnActions_AndStanceIfApplicable(b, changeStances, out turnActions, out messageFlags);
                     break;
                 default:
                     throw new Exception("No entry in AI function jump table for AI type of: " + b.aiType.ToString());
             }
-            if (outputIsDelayed) throw new NotImplementedException(); // this should start a coroutine that waits for the AI or player "AI" to finish, then calls b.ReceiveAThought whenever that's done
-            else b.ReceiveAThought(turnActions, messageFlags);
+            if (!outputIsDelayed) b.ReceiveAThought(turnActions, messageFlags);
+            // If the AI module delays output, it needs to assume responsibility for passing a thought onto the Battler itself; keep that in mind.
         }
 
         /// <summary>
@@ -405,6 +412,9 @@ namespace CnfBattleSys
         /// The first array contains all valid primary targets for the specified battler/action combination.
         /// The second array contains all valid secondary targets for the specified battler/action combination.
         /// If there are no valid targets for either targeting type, the array will be empty.
+        /// (TO DO: once movement is a thing this gets more complex, because a target can be "legal only if you move first."
+        /// It'll probably be necessary to create a struct that associates a target with the required move vector to target it?
+        /// Luckily it's just a maneuvering map vs. having terrain and shit, so there's not any real _pathfinding_ to speak of.)
         /// </summary>
         public static Battler[][] FindLegalTargetsForAction (Battler b, BattleAction battleAction)
         {

@@ -1100,7 +1100,7 @@ namespace CnfBattleSys
         public void GetAction ()
         {
             bool changeStances = false;
-            if (statusPackets.ContainsKey(StatusType.StanceBroken_Forced) || statusPackets.ContainsKey(StatusType.StanceBroken_Voluntary)) changeStances = true;
+            if (StanceBroken()) changeStances = true;
             BattlerAISystem.StartThinking(this, changeStances);
         }
 
@@ -1215,6 +1215,14 @@ namespace CnfBattleSys
                 BattleOverseer.ExtendCurrentTurn();
             if ((messageFlags & BattlerAIMessageFlags.ForbidMovementOnNextTurn) == BattlerAIMessageFlags.ForbidMovementOnNextTurn)
                 Debug.Log("What even is movement, mannnn");
+        }
+
+        /// <summary>
+        /// Returns true if either stance break debuff is currently on the Battler, false otherwise.
+        /// </summary>
+        public bool StanceBroken ()
+        {
+            return statusPackets.ContainsKey(StatusType.StanceBroken_Forced) || statusPackets.ContainsKey(StatusType.StanceBroken_Voluntary);
         }
 
         /// <summary>
