@@ -260,7 +260,6 @@ namespace CnfBattleSys
             internal static void StopExecutingAction ()
             {
                 Cleanup(); // this is just a passthrough to cleanup atm, but it should acquire functionality as the system grows so it's nice to have the call in place
-                overseerState = OverseerState.BetweenTurns;
             }
 
             /// <summary>
@@ -359,6 +358,7 @@ namespace CnfBattleSys
                 b.GetAction();
                 while (b.turnActions.action == ActionDatabase.SpecialActions.defaultBattleAction) yield return 0; // wait until b decides what to do
                 ActionExecutionSubsystem.BeginProcessingAction(b.turnActions.action, b, b.turnActions.targets, b.turnActions.alternateTargets);
+                Timing.RunCoroutine(_EndTurnOnceActionExecutionCompleted());
             }
 
             /// <summary>
@@ -375,6 +375,7 @@ namespace CnfBattleSys
             /// </summary>
             internal static void StartTurn ()
             {
+                BattleStage.instance.StartOfTurn();
                 currentTurnBattler = battlersReadyToTakeTurns[0];
                 battlersReadyToTakeTurns.Remove(currentTurnBattler);
                 Timing.RunCoroutine(_WaitUntilBattlerReadyToAct(currentTurnBattler));
@@ -387,6 +388,7 @@ namespace CnfBattleSys
             {
                 ActionExecutionSubsystem.FinishCurrentAction();
                 currentTurnBattler = null;
+                overseerState = OverseerState.BetweenTurns;
                 DeriveNormalizedSpeed();
             }
         }
@@ -486,10 +488,10 @@ namespace CnfBattleSys
         /// Executes steps subactions from the current action's subaction set, or however many are left.
         /// Returns true if any of the subactions we step through do anything at all.
         /// </summary>
-        public static bool StepSubactions (int steps = 1)
-        {
-            return ActionExecutionSubsystem.StepSubactions(steps);
-        }
+        //public static bool StepSubactions (int steps = 1)
+        //{
+        //    return ActionExecutionSubsystem.StepSubactions(steps);
+        //}
 
         // BattleOverseer state management
 

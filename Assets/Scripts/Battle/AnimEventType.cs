@@ -6,12 +6,12 @@
     public enum AnimEventType
     {
         None,
+        StanceBreak,
+        Dodge,
+        Idle,
+        Move,
+        Hit,
         TestAnim_OnHit,
         TestAnim_OnUse,
-        TestStance_Idle,
-        TestStance_Move,
-        TestStance_Hit,
-        TestStance_Break,
-        TestStance_Dodge
     }
 }

@@ -49,7 +49,24 @@ public class BattlerPuppet : MonoBehaviour
             yield return 0;
         }
         SyncPosition();
-        ProcessAnimEvent(exitEvent);
+        DispatchAnimEvent(exitEvent);
+    }
+
+    /// <summary>
+    /// Stub.
+    /// TO-DO: This returns true if the animator has an animation of the same name as the animEventType.
+    /// </summary>
+    private bool HasAnimFor (AnimEventType animEventType)
+    {
+        return true;
+    }
+
+    /// <summary>
+    /// Stubbed. This just forwards the animEvent straight to the BattleStage right now.
+    /// </summary>
+    public void DispatchAnimEvent (AnimEventType animEventType)
+    {
+        BattleStage.instance.PrepareAnimEvent(animEventType, battler);
     }
 
     /// <summary>
@@ -60,7 +77,7 @@ public class BattlerPuppet : MonoBehaviour
     /// </summary>
     public bool ProcessMove(Vector3 moveVector, float speed, AnimEventType moveEvent, AnimEventType exitEvent)
     {
-        bool r = ProcessAnimEvent(moveEvent);
+        bool r = HasAnimFor(moveEvent);
         if (r == true)
         {
             Timing.RunCoroutine(_Move(moveVector, speed, exitEvent));
@@ -68,26 +85,6 @@ public class BattlerPuppet : MonoBehaviour
         else
         {
             SyncPosition();
-        }
-        return r;
-    }
-
-    /// <summary>
-    /// Processes anim event.
-    /// TO DO: this should actually queue these up with a nice event-handling model
-    /// </summary>
-    public bool ProcessAnimEvent(AnimEventType animEventType)
-    {
-        bool r = false;
-        for (int i = 0; i < animator.runtimeAnimatorController.animationClips.Length; i++)
-        {
-            string s = animEventType.ToString();
-            if (animator.runtimeAnimatorController.animationClips[i].name == s)
-            {
-                animator.Play(s);
-                r = true;
-                break;
-            }
         }
         return r;
     }

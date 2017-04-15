@@ -977,7 +977,7 @@ namespace CnfBattleSys
                 ApplyStatus(StatusType.StanceBroken_Forced, StatusPacket_CancelationCondition.None, 0, 0, new Resistances_Raw(1), 0, DamageTypeFlags.None, MiscStatusEffectFlags.None,
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, penalty, 1, penalty, 1, penalty, 1, 1, 1);
             }
-            puppet.ProcessAnimEvent(currentStance.animEvent_Break);
+            puppet.DispatchAnimEvent(currentStance.animEvent_Break);
         }
 
         /// <summary>
@@ -1055,8 +1055,8 @@ namespace CnfBattleSys
             currentHP += dmg;
             if (currentHP > stats.maxHP) currentHP = stats.maxHP;
             if (currentHP <= 0) Die();
-            else if (dmg > 0) puppet.ProcessAnimEvent(currentStance.animEvent_Hit);
-            else if (dmg < 0) puppet.ProcessAnimEvent(currentStance.animEvent_Heal);
+            else if (dmg > 0) puppet.DispatchAnimEvent(currentStance.animEvent_Hit);
+            else if (dmg < 0) puppet.DispatchAnimEvent(currentStance.animEvent_Heal);
         }
 
         /// <summary>
@@ -1070,7 +1070,7 @@ namespace CnfBattleSys
             currentDelay = float.PositiveInfinity;
             statusPackets.Clear();
             isDead = true;
-            puppet.ProcessAnimEvent(currentStance.animEvent_Die);
+            puppet.DispatchAnimEvent(currentStance.animEvent_Die);
             BattleOverseer.BattlerIsDead(this);
         }
 

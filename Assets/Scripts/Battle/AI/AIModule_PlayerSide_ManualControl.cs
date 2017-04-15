@@ -11,6 +11,9 @@ namespace CnfBattleSys.AI
     /// </summary>
     public static class AIModule_PlayerSide_ManualControl
     {
+        /// <summary>
+        /// Flags for player side psuedo-AI state info.
+        /// </summary>
         [Flags]
         private enum StateFlags
         {
