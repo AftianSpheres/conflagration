@@ -11,8 +11,29 @@ namespace CnfBattleSys
     public static class BattlerDatabase
     {
         private static BattlerData[] _battlerData;
-        private static readonly BattlerData defaultBattler = new BattlerData(BattlerType.InvalidUnit, true, BattlerAIType.None, BattlerAIFlags.None, 0, 0, 1, 0, BattlerModelType.None, new BattleStance[0], StanceDatabase.defaultStance, 
-            10, 1, 1, 1, 1, 1, 1, 1, 0, 0, new BattlerData.Growths(1, 1, 1, 1, 1, 1, 1, 1), new Battler.Resistances_Raw(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1));
+
+        /// <summary>
+        /// Special-case battler data definitions.
+        /// </summary>
+        public static class SpecialBattlers
+        {
+            /// <summary>
+            /// Number of special battler data entries.
+            /// </summary>
+            public const int count = 1;
+
+            /// <summary>
+            /// "Invalid data" battler data entry.
+            /// </summary>
+            public static readonly BattlerData defaultBattler = new BattlerData(BattlerType.InvalidUnit, true, BattlerAIType.None, BattlerAIFlags.None, 0, 0, 1, 0, BattlerModelType.None, new BattleStance[0], StanceDatabase.SpecialStances.defaultStance,
+                10, 1, 1, 1, 1, 1, 1, 1, 0, 0, new BattlerData.Growths(1, 1, 1, 1, 1, 1, 1, 1), new Battler.Resistances_Raw(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1));
+
+            /// <summary>
+            /// "No battler" battler data entry. This gets plugged into the table, and shouldn't be included in count.
+            /// </summary>
+            public static readonly BattlerData noneBattler = new BattlerData(BattlerType.None, true, BattlerAIType.None, BattlerAIFlags.None, 0, 0, 1, 0, BattlerModelType.None, new BattleStance[0], StanceDatabase.SpecialStances.defaultStance,
+                10, 1, 1, 1, 1, 1, 1, 1, 0, 0, new BattlerData.Growths(1, 1, 1, 1, 1, 1, 1, 1), new Battler.Resistances_Raw(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1));
+        }
 
         /// <summary>
         /// Loads in and parses all the xml files, parses the unit dataset.
@@ -22,9 +43,10 @@ namespace CnfBattleSys
         {
             XmlDocument doc = new XmlDocument();
             XmlNode workingNode = doc.DocumentElement;
-            int c = Enum.GetValues(typeof(BattlerType)).Length - 1;
+            int c = Enum.GetValues(typeof(BattlerType)).Length - SpecialBattlers.count;
             _battlerData = new BattlerData[c];
-            for (int b = 0; b < c; b++) _battlerData[b] = ImportUnitDefWithID((BattlerType)b, doc, workingNode);
+            _battlerData[0] = SpecialBattlers.noneBattler;
+            for (int b = 1; b < c; b++) _battlerData[b] = ImportUnitDefWithID((BattlerType)b, doc, workingNode);
         }
 
         /// <summary>
@@ -39,7 +61,7 @@ namespace CnfBattleSys
             else
             {
                 Debug.Log(battlerType.ToString() + " has no unit def file, so the invalid battler placeholder was loaded instead.");
-                return defaultBattler;
+                return SpecialBattlers.defaultBattler;
             }
             XmlNode rootNode = doc.DocumentElement;
             Action<string> actOnNode = (node) =>
@@ -94,9 +116,16 @@ namespace CnfBattleSys
             float baseMoveDelay = float.Parse(workingNode.InnerText);
             XmlNode secondaryNode = rootNode.SelectSingleNode("//resistances");
             Battler.Resistances_Raw resistances = DBTools.GetResistancesFromXML(secondaryNode, workingNode);
-            secondaryNode = rootNode.SelectSingleNode("//growths");
-            BattlerData.Growths growths = DBTools.GetGrowthsFromXML(secondaryNode, workingNode);
-
+            BattlerData.Growths growths;
+            if (isFixedStats)
+            {
+                growths = new BattlerData.Growths(1, 1, 1, 1, 1, 1, 1, 1);
+            }
+            else
+            {
+                secondaryNode = rootNode.SelectSingleNode("//growths");
+                growths = DBTools.GetGrowthsFromXML(secondaryNode, workingNode);
+            }
             Resources.UnloadAsset(unreadFileBuffer);
             return new BattlerData(battlerType, isFixedStats, aiType, aiFlags, level, size, stepTime, yOffset, modelType, stances, metaStance,
                 baseHP, baseATK, baseDEF, baseMATK, baseMDEF, baseSPE, baseHIT, baseEVA, baseMoveDist, baseMoveDelay, growths, resistances);

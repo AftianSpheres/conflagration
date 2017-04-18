@@ -1,10 +1,14 @@
 <?xml version="1.0"?>
 <stance>
-  <animEvent_Idle>TestStance_Idle</animEvent_Idle>
-  <animEvent_Move>TestStance_Move</animEvent_Move>
-  <animEvent_Hit>TestStance_Hit</animEvent_Hit>
-  <animEvent_Break>TestStance_Break</animEvent_Break>
-  <animEvent_Dodge>TestStance_Dodge</animEvent_Dodge>
+  <animNames>
+    <break>TestStance_Break</break>
+    <die>TestStance_Die</die>
+    <dodge>TestStance_Dodge</dodge>
+    <idle>TestStance_Idle</idle>
+    <heal>TestStance_Heal</heal>
+    <hit>TestStance_Hit</hit>
+    <move>TestStance_Move</move>
+  </animNames>
   <actions>
     <action>TestMeleeAtk</action>
     <action>TestRangedAOEAtk</action>

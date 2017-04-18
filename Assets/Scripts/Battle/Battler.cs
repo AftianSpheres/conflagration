@@ -13,7 +13,7 @@ namespace CnfBattleSys
     public class Battler
     {
         public const int maxLevel = 120; // you could actually have things over maxLevel but we use this for scaling stats w/ level...
-        public static TurnActions defaultTurnActions = new TurnActions(false, -1, new Battler[0], new Battler[0], ActionDatabase.SpecialActions.defaultBattleAction, StanceDatabase.defaultStance);
+        public static TurnActions defaultTurnActions = new TurnActions(false, -1, new Battler[0], new Battler[0], ActionDatabase.SpecialActions.defaultBattleAction, StanceDatabase.SpecialStances.defaultStance);
 
         /// <summary>
         /// Data structure for Battler stats.
@@ -977,7 +977,7 @@ namespace CnfBattleSys
                 ApplyStatus(StatusType.StanceBroken_Forced, StatusPacket_CancelationCondition.None, 0, 0, new Resistances_Raw(1), 0, DamageTypeFlags.None, MiscStatusEffectFlags.None,
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, penalty, 1, penalty, 1, penalty, 1, 1, 1);
             }
-            puppet.DispatchAnimEvent(currentStance.animEvent_Break);
+            puppet.DispatchAnimEvent(AnimEventType.StanceBreak);
         }
 
         /// <summary>
@@ -1055,8 +1055,8 @@ namespace CnfBattleSys
             currentHP += dmg;
             if (currentHP > stats.maxHP) currentHP = stats.maxHP;
             if (currentHP <= 0) Die();
-            else if (dmg > 0) puppet.DispatchAnimEvent(currentStance.animEvent_Hit);
-            else if (dmg < 0) puppet.DispatchAnimEvent(currentStance.animEvent_Heal);
+            else if (dmg > 0) puppet.DispatchAnimEvent(AnimEventType.Hit);
+            else if (dmg < 0) puppet.DispatchAnimEvent(AnimEventType.Heal);
         }
 
         /// <summary>
@@ -1070,7 +1070,7 @@ namespace CnfBattleSys
             currentDelay = float.PositiveInfinity;
             statusPackets.Clear();
             isDead = true;
-            puppet.DispatchAnimEvent(currentStance.animEvent_Die);
+            puppet.DispatchAnimEvent(AnimEventType.Die);
             BattleOverseer.BattlerIsDead(this);
         }
 

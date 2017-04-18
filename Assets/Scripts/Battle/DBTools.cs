@@ -160,12 +160,13 @@ namespace CnfBattleSys
         /// </summary>
         public static BattlerData.Growths GetGrowthsFromXML (XmlNode growthsNode, XmlNode workingNode)
         {
+            if (growthsNode == null) throw new Exception("No growths node!");
             Action<string> actOnNode = (node) =>
             {
                 workingNode = growthsNode.SelectSingleNode(node);
                 if (workingNode == null) throw new Exception("Malformed growths set in xml file - missing node  " + node);
             };
-            actOnNode("//HP");
+            actOnNode("//MaxHP");
             float HP = float.Parse(workingNode.InnerText);
             actOnNode("//ATK");
             float ATK = float.Parse(workingNode.InnerText);

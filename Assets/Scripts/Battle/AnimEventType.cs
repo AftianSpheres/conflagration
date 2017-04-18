@@ -11,6 +11,8 @@
         Idle,
         Move,
         Hit,
+        Heal,
+        Die,
         TestAnim_OnHit,
         TestAnim_OnUse,
     }

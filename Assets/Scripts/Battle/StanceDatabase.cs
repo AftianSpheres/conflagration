@@ -10,9 +10,33 @@ namespace CnfBattleSys
     public static class StanceDatabase
     {
         private static BattleStance[] _stances;
-        public static readonly BattleStance defaultStance = new BattleStance(StanceType.InvalidStance, AnimEventType.None, AnimEventType.None, AnimEventType.None, AnimEventType.None, AnimEventType.None, 
-            AnimEventType.None, AnimEventType.None, new BattleAction[0], ActionDatabase.SpecialActions.defaultBattleAction,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, new Battler.Resistances_Raw(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+
+        /// <summary>
+        /// Special-case stance defs.
+        /// </summary>
+        public static class SpecialStances
+        {
+            /// <summary>
+            /// Number od special stances.
+            /// </summary>
+            public const int count = 1;
+
+            /// <summary>
+            /// Default stance entry.
+            /// </summary>
+            public static readonly BattleStance defaultStance = new BattleStance(StanceType.InvalidStance, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty,
+                new BattleAction[0], ActionDatabase.SpecialActions.defaultBattleAction, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+                new Battler.Resistances_Raw(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+
+            /// <summary>
+            /// Stance entry representing "no stance."
+            /// This gets plugged into the table. Don't count it as part of the special stance count, as such.
+            /// </summary>
+            public static readonly BattleStance noneStance = new BattleStance(StanceType.None, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty,
+                new BattleAction[0], ActionDatabase.SpecialActions.defaultBattleAction, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+                new Battler.Resistances_Raw(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+
+        }
 
         /// <summary>
         /// Loads in and parses all the xml files for the stance dataset.
@@ -22,9 +46,10 @@ namespace CnfBattleSys
         {
             XmlDocument doc = new XmlDocument();
             XmlNode workingNode = doc.DocumentElement;
-            int c = Enum.GetValues(typeof(StanceType)).Length - 1;
+            int c = Enum.GetValues(typeof(StanceType)).Length - SpecialStances.count;
             _stances = new BattleStance[c];
-            for (int s = 0; s < c; s++) _stances[s] = ImportStanceDefWithID((StanceType)s, doc, workingNode);
+            _stances[0] = SpecialStances.noneStance;
+            for (int s = 1; s < c; s++) _stances[s] = ImportStanceDefWithID((StanceType)s, doc, workingNode);
         }
 
         /// <summary>
@@ -39,7 +64,7 @@ namespace CnfBattleSys
             else
             {
                 Debug.Log(stanceID.ToString() + " has no stance def file, so the invalid stance placeholder was loaded instead.");
-                return defaultStance;
+                return SpecialStances.defaultStance;
             }
             XmlNode rootNode = doc.DocumentElement;
             XmlNode resNode = rootNode.SelectSingleNode("//resistances");
@@ -48,20 +73,20 @@ namespace CnfBattleSys
                 workingNode = rootNode.SelectSingleNode(node);
                 if (workingNode == null) throw new Exception(stanceID.ToString() + " has no node " + node);
             };
-            actOnNode("//animEvent_Idle");
-            AnimEventType animEvent_Idle = DBTools.ParseAnimEventType(workingNode.InnerText);
-            actOnNode("//animEvent_Move");
-            AnimEventType animEvent_Move = DBTools.ParseAnimEventType(workingNode.InnerText);
-            actOnNode("//animEvent_Hit");
-            AnimEventType animEvent_Hit = DBTools.ParseAnimEventType(workingNode.InnerText);
-            actOnNode("//animEvent_Break");
-            AnimEventType animEvent_Break = DBTools.ParseAnimEventType(workingNode.InnerText);
-            actOnNode("//animEvent_Dodge");
-            AnimEventType animEvent_Dodge = DBTools.ParseAnimEventType(workingNode.InnerText);
-            actOnNode("//animEvent_Heal");
-            AnimEventType animEvent_Heal = DBTools.ParseAnimEventType(workingNode.InnerText);
-            actOnNode("//animEvent_Die");
-            AnimEventType animEvent_Die = DBTools.ParseAnimEventType(workingNode.InnerText);
+            actOnNode("//animNames/break");
+            string animName_Break = workingNode.InnerText;
+            actOnNode("//animNames/die");
+            string animName_Die = workingNode.InnerText;
+            actOnNode("//animNames/dodge");
+            string animName_Dodge = workingNode.InnerText;
+            actOnNode("//animNames/idle");
+            string animName_Idle = workingNode.InnerText;
+            actOnNode("//animNames/heal");
+            string animName_Heal = workingNode.InnerText;
+            actOnNode("//animNames/hit");
+            string animName_Hit = workingNode.InnerText;
+            actOnNode("//animNames/move");
+            string animName_Move = workingNode.InnerText;
             actOnNode("//actions");
             XmlNodeList actionNodes = workingNode.SelectNodes("//action");
             BattleAction[] actionSet = new BattleAction[actionNodes.Count];
@@ -119,7 +144,7 @@ namespace CnfBattleSys
             byte maxSP = byte.Parse(workingNode.InnerText);
             Battler.Resistances_Raw resistances = DBTools.GetResistancesFromXML(resNode, workingNode);
             Resources.UnloadAsset(unreadFileBuffer);
-            return new BattleStance(stanceID, animEvent_Idle, animEvent_Move, animEvent_Hit, animEvent_Break, animEvent_Dodge, animEvent_Heal, animEvent_Die, actionSet, counterattackAction, moveDelayBonus, moveDelayMultiplier, 
+            return new BattleStance(stanceID, animName_Break, animName_Die, animName_Dodge, animName_Heal, animName_Hit, animName_Idle, animName_Move, actionSet, counterattackAction, moveDelayBonus, moveDelayMultiplier, 
                 moveDistBonus, moveDistMultiplier, stanceChangeDelayBonus, stanceChangeDelayMultiplier, statMultiplier_MaxHP, statMultiplier_ATK, statMultiplier_DEF, statMultiplier_MATK, statMultiplier_MDEF, statMultiplier_SPE, 
                 statMultiplier_HIT, statMultiplier_EVA, statBonus_MaxHP, statBonus_ATK, statBonus_DEF, statBonus_MATK, statBonus_MDEF, statBonus_SPE, statBonus_HIT, statBonus_EVA, maxSP, resistances);
             

@@ -17,7 +17,7 @@ namespace CnfBattleSys
             /// <summary>
             /// The number of special action defs. Since these have their own (less than zero) entries in the ActionType enum, we need to subtract the number of special actions from the total when determining how many spaces there need to be 
             /// </summary>
-            const int count = 2;
+            public const int count = 2;
 
             /// <summary>
             /// The default battle action entry, used to populate invalid entries on the table or when we need a placeholder action entry somewhere else in the battle system.
@@ -48,7 +48,7 @@ namespace CnfBattleSys
         {
             XmlDocument doc = new XmlDocument();
             XmlNode workingNode = doc.DocumentElement;
-            int c = Enum.GetValues(typeof(ActionType)).Length - 2;
+            int c = Enum.GetValues(typeof(ActionType)).Length - SpecialActions.count;
             _actions = new BattleAction[c];
             _actions[0] = SpecialActions.noneBattleAction;
             for (int a = 1; a < c; a++) _actions[a] = ImportActionDefWithID((ActionType)a, doc, workingNode);
