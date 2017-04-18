@@ -13,6 +13,7 @@
   <onActionEndUserAnim>None</onActionEndUserAnim>
   <onActionUseTargetAnim>None</onActionUseTargetAnim>
   <onActionUseUserAnim>TestAnim_OnUse</onActionUseUserAnim>
+  <categoryFlags>Buff</categoryFlags>
   <subaction>
     <baseDamage>-35</baseDamage>
     <baseAccuracy>1.0</baseAccuracy>
@@ -23,8 +24,10 @@
     <hitStat>None</hitStat>
     <evadeStat>None</evadeStat>
     <damageTypes>None</damageTypes>
+    <useAlternateTargetSet>False</useAlternateTargetSet>
+    <categoryFlags>Buff</categoryFlags>
     <fxPackage>
-      <fxType>Buff_STR</fxType>
+      <fxType>Test_Buff_STR</fxType>
       <fxHitStat>None</fxHitStat>
       <fxEvadeStat>None</fxEvadeStat>
       <baseSuccessRate>1.0</baseSuccessRate>

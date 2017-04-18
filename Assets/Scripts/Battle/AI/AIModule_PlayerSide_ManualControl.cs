@@ -50,6 +50,38 @@ namespace CnfBattleSys.AI
         public static Battler[][] waitingMainSecondaryTargets_ForStanceActions { get; private set; }
         public static Battler[][] waitingMainSecondaryTargets_ForMetaStanceActions { get; private set; }
 
+        /// <summary>
+        /// Returns true if we still need action input
+        /// </summary>
+        public static bool WaitingForActionInput ()
+        {
+            return ((stateFlags & StateFlags.WaitingForAction) == StateFlags.WaitingForAction);
+        }
+
+        /// <summary>
+        /// Returns true if we still need main targets
+        /// </summary>
+        public static bool WaitingForMainTargets ()
+        {
+            return ((stateFlags & StateFlags.WaitingForMainTargets) == StateFlags.WaitingForMainTargets);
+        }
+
+        /// <summary>
+        /// Returns true if we still need secondary targets
+        /// </summary>
+        public static bool WaitingForSecondaryTargets ()
+        {
+            return ((stateFlags & StateFlags.WaitingForSecondaryTargets) == StateFlags.WaitingForSecondaryTargets);
+        }
+
+        /// <summary>
+        /// Returns true if we still need stance input.
+        /// </summary>
+        public static bool WaitingForStanceInput ()
+        {
+            return ((stateFlags & StateFlags.WaitingForStance) == StateFlags.WaitingForStance);
+        }
+
 
         /// <summary>
         /// Resets player side psuedo-AI module state.

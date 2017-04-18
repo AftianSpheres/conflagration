@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<textBank>   <!-------This is a test textbank to illustrate the schema----->
+	<page no = "0">
+		<eng>English text</eng>
+		<jpn>日本語を少し話します。</jpn>
+		<spn>I don't even speak a little shitty Spanish, but if you were going to have Spanish text it'd go here.</spn>
+		<ita>Basically: each of these nodes is a different translation of the same line, in intended usage.</ita>
+		<ger>Note that this language set was just sorta pulled out of my ass. I'm not seriously looking at localizations right now, to say the least - but having the schema defined is handy.</ger>
+		<heb>You don't need to define translations in a particular order, either. If we want the German version of textbank "foo" line 4, we get that regardless of where the 'ger' tag is in the sequence.</heb>
+	</page>
+	<page no = "1">
+		<eng>
+			A "page" here, it should be noted, doesn't mean "one line of text." Pages can have newlines and control codes and shit!
+			Pages are, essentially, the smallest blocks of text it makes sense to talk about independent of each other.
+			A skill name can be one page, because that's something you can use on its own, but if you have a character
+			delivering some long-ass monologue, that entire thing is going to be just one page, too.
+			Don't worry about formatting or anything here, either. If you want to explicitly use a newline, go ahead, but if you don't line break, the game will automatically split even looonnnnngggg lines to fit in the textboxes you give it. Like so.
+		</eng>
+		<jpn>etc.</jpn>
+		<spn>etc.</spn>
+		<ita>Also, note that there should be graceful handling of cases where a line is missing one or more translations, for whatever reason.</ita>
+	</page>
+</textBank>

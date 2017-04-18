@@ -13,6 +13,7 @@
   <onActionEndUserAnim>None</onActionEndUserAnim>
   <onActionUseTargetAnim>None</onActionUseTargetAnim>
   <onActionUseUserAnim>TestAnim_OnUse</onActionUseUserAnim>
+  <categoryFlags>Attack</categoryFlags>
   <subaction>
     <baseDamage>15</baseDamage>
     <baseAccuracy>1.0</baseAccuracy>
@@ -23,5 +24,7 @@
     <hitStat>None</hitStat>
     <evadeStat>None</evadeStat>
     <damageTypes>Thrust</damageTypes>
+    <useAlternateTargetSet>False</useAlternateTargetSet>
+    <categoryFlags>Attack</categoryFlags>
   </subaction>
 </action>

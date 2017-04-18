@@ -13,6 +13,7 @@
   <onActionEndUserAnim>None</onActionEndUserAnim>
   <onActionUseTargetAnim>None</onActionUseTargetAnim>
   <onActionUseUserAnim>TestAnim_OnUse</onActionUseUserAnim>
+  <categoryFlags>Heal</categoryFlags>
   <subaction>
     <baseDamage>-35</baseDamage>
     <baseAccuracy>1.0</baseAccuracy>
@@ -23,5 +24,7 @@
     <hitStat>None</hitStat>
     <evadeStat>None</evadeStat>
     <damageTypes>None</damageTypes>
+    <useAlternateTargetSet>False</useAlternateTargetSet>
+    <categoryFlags>Heal</categoryFlags>
   </subaction>
 </action>
