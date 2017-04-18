@@ -58,7 +58,6 @@ namespace CnfBattleSys
         private static BattleStance ImportStanceDefWithID (StanceType stanceID, XmlDocument doc, XmlNode workingNode)
         {
             const string stanceDefsResourcePath = "Battle/StanceDefs/";
-            Debug.Log("Loading stance def from XML file: " + stanceDefsResourcePath + stanceID.ToString()); // unconditional logging is OK because this is going to move to pre-build before I'd need to strip it anyhow
             TextAsset unreadFileBuffer = Resources.Load<TextAsset>(stanceDefsResourcePath + stanceID.ToString());
             if (unreadFileBuffer != null) doc.LoadXml(unreadFileBuffer.text);
             else

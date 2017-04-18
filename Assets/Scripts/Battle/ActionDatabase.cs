@@ -60,7 +60,6 @@ namespace CnfBattleSys
         private static BattleAction ImportActionDefWithID(ActionType actionID, XmlDocument doc, XmlNode workingNode)
         {
             const string actionDefsResourcePath = "Battle/ActionDefs/";
-            Debug.Log("Loading action def from XML file: " + actionDefsResourcePath + actionID.ToString()); // unconditional logging is OK because this is going to move to pre-build before I'd need to strip it anyhow
             TextAsset unreadFileBuffer = Resources.Load<TextAsset>(actionDefsResourcePath + actionID.ToString());
             if (unreadFileBuffer != null) doc.LoadXml(unreadFileBuffer.text);
             else

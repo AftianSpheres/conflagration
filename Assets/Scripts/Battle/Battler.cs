@@ -850,6 +850,8 @@ namespace CnfBattleSys
 
         public Battler (BattleFormation.FormationMember fm)
         {
+            statusPackets = new Dictionary<StatusType, StatusPacket>();
+
             // Load in everything from the battler data table first
             battlerType = fm.battlerData.battlerType;
             level = fm.battlerData.level;

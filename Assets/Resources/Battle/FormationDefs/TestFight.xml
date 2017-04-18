@@ -2,20 +2,20 @@
 <formation>
   <venue>TestVenue</venue>
   <bgm>TestBGM</bgm>
-  <flags>None</flags
+  <flags>None</flags>
   <fieldSize>20, 20</fieldSize>
   <battlers>
     <GenericEnemySide>
-      <unit>
+      <battler>
         <battlerType>TestAIUnit</battlerType>
         <position>3, -9</position>
         <startStance>TestStance</startStance>
-      </unit>
-      <unit>
+      </battler>
+      <battler>
         <battlerType>TestAIUnit</battlerType>
         <position>0, 0</position>
         <startStance>TestStance</startStance>
-      </unit>
+      </battler>
     </GenericEnemySide>
   </battlers>
 </formation>

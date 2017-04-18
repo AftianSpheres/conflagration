@@ -12,10 +12,32 @@ namespace CnfBattleSys
     public static class FormationDatabase
     {
         private static BattleFormation[] _formations;
-        public static readonly BattleFormation defaultFormation = new BattleFormation(FormationType.InvalidFormation, VenueType.None, BGMTrackType.None, BattleFormationFlags.None, Vector2.zero, new BattleFormation.FormationMember[0]);
         private static string[] sideNames = { "GenericEnemySide", "GenericAlliedSide", "GenericNeutralSide" };
         private static string[] sideNodes = { "//GenericEnemySide", "//GenericAlliedSide", "//GenericNeutralSide" };
         private static List<BattleFormation.FormationMember> listBuffer;
+
+        /// <summary>
+        /// Contains special-purpose formation defs.
+        /// </summary>
+        public static class SpecialFormations
+        {
+            /// <summary>
+            /// Number of special formations.
+            /// </summary>
+            public const int count = 1;
+
+            /// <summary>
+            /// Invalid formation data.
+            /// </summary>
+            public static readonly BattleFormation defaultFormation = new BattleFormation(FormationType.InvalidFormation, VenueType.None, BGMTrackType.None, BattleFormationFlags.None, Vector2.zero, new BattleFormation.FormationMember[0]);
+
+            /// <summary>
+            /// "No formation." Not included in count, because it plugs into the table.
+            /// </summary>
+            public static readonly BattleFormation noneFormation = new BattleFormation(FormationType.None, VenueType.None, BGMTrackType.None, BattleFormationFlags.None, Vector2.zero, new BattleFormation.FormationMember[0]);
+
+
+        }
 
         /// <summary>
         /// Loads in and parses all of the xml files, populates the formation dataset.
@@ -25,9 +47,9 @@ namespace CnfBattleSys
         {
             XmlDocument doc = new XmlDocument();
             XmlNode workingNode = doc.DocumentElement;
-            int c = Enum.GetValues(typeof(FormationType)).Length - 1;
+            int c = Enum.GetValues(typeof(FormationType)).Length - SpecialFormations.count;
             _formations = new BattleFormation[c];
-            for (int f = 0; f < c; f++) _formations[f] = ImportFormationWithID((FormationType)f, doc, workingNode);
+            for (int f = 1; f < c; f++) _formations[f] = ImportFormationWithID((FormationType)f, doc, workingNode);
         }
 
         /// <summary>
@@ -35,16 +57,15 @@ namespace CnfBattleSys
         /// </summary>
         private static BattleFormation ImportFormationWithID (FormationType formationType, XmlDocument doc, XmlNode workingNode)
         {
-            const string formationDefsResourcePath = "Battle/FormationDefs";
+            const string formationDefsResourcePath = "Battle/FormationDefs/";
             if (listBuffer == null) listBuffer = new List<BattleFormation.FormationMember>();
             else listBuffer.Clear();
-            Debug.Log("Loading battler def from XML file: " + formationDefsResourcePath + formationType.ToString()); // unconditional logging is OK because this is going to move to pre-build before I'd need to strip it anyhow
             TextAsset unreadFileBuffer = Resources.Load<TextAsset>(formationDefsResourcePath + formationType.ToString());
             if (unreadFileBuffer != null) doc.LoadXml(unreadFileBuffer.text);
             else
             {
                 Debug.Log(formationType.ToString() + " has no formation def file, so the invalid formation placeholder was loaded instead.");
-                return defaultFormation;
+                return SpecialFormations.defaultFormation;
             }
             XmlNode rootNode = doc.DocumentElement;
             Action<string> actOnNode = (node) =>

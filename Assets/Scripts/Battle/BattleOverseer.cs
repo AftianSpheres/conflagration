@@ -447,6 +447,12 @@ namespace CnfBattleSys
                 allBattlers.Add(bat);
                 battlersBySide[bat.side].Add(bat);
             }
+            DeriveNormalizedSpeed();
+            for (int b = 0; b < allBattlers.Count; b++)
+            {
+                allBattlers[b].ApplyDelay(1.0f);
+            }
+            overseerState = OverseerState.BetweenTurns;
         }
 
         /// <summary>

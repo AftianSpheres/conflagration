@@ -55,7 +55,6 @@ namespace CnfBattleSys
         private static BattlerData ImportUnitDefWithID (BattlerType battlerType, XmlDocument doc, XmlNode workingNode)
         {
             const string unitDefsResourcePath = "Battle/UnitDefs/";
-            Debug.Log("Loading battler def from XML file: " + unitDefsResourcePath + battlerType.ToString()); // unconditional logging is OK because this is going to move to pre-build before I'd need to strip it anyhow
             TextAsset unreadFileBuffer = Resources.Load<TextAsset>(unitDefsResourcePath + battlerType.ToString());
             if (unreadFileBuffer != null) doc.LoadXml(unreadFileBuffer.text);
             else
