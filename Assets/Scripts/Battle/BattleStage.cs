@@ -123,7 +123,7 @@ public class BattleStage : MonoBehaviour
                 Initialize();
                 break;
             case LocalState.ReadyToAdvanceBattle:
-                BattleOverseer.BattleStep();
+                if (BattleOverseer.overseerState != BattleOverseer.OverseerState.WaitingForInput && BattleOverseer.overseerState != BattleOverseer.OverseerState.Paused) BattleOverseer.BattleStep();
                 break;
             case LocalState.HandlingAnimEvent:
                 if (activeAnimEvents.Count == 0)
@@ -181,7 +181,10 @@ public class BattleStage : MonoBehaviour
             stageEventsBuffer.Add(evt);
             if ((evt.flags & AnimEventFlags.RunConcurrentWithOtherEvents) != AnimEventFlags.RunConcurrentWithOtherEvents || evt.priority != priority) break;
         }
-        for (int i = 0; i < stageEventsBuffer.Count; i++) unhandledAnimEvents.Remove(stageEventsBuffer[i] as AnimEvent);
+        for (int i = 0; i < stageEventsBuffer.Count; i++)
+        {
+            HandleNextAnimEvent(stageEventsBuffer[i] as AnimEvent);
+        }
     }
 
     /// <summary>
@@ -189,6 +192,7 @@ public class BattleStage : MonoBehaviour
     /// </summary>
     private void HandleNextAnimEvent (AnimEvent evt)
     {
+        unhandledAnimEvents.Remove(evt);
         RunAnimEventCoroutine(evt, evt.animEventType, evt.invoker);
         allActiveStageEvents.Add(evt);
         activeAnimEvents.Add(evt);

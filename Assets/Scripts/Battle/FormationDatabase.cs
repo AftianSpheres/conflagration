@@ -12,8 +12,8 @@ namespace CnfBattleSys
     public static class FormationDatabase
     {
         private static BattleFormation[] _formations;
-        private static string[] sideNames = { "GenericEnemySide", "GenericAlliedSide", "GenericNeutralSide" };
-        private static string[] sideNodes = { "//GenericEnemySide", "//GenericAlliedSide", "//GenericNeutralSide" };
+        private static string[] sideNames = { "GenericEnemySide", "GenericAlliedSide", "GenericNeutralSide", "PlayerSide" };
+        private static string[] sideNodes = { "GenericEnemySide", "GenericAlliedSide", "GenericNeutralSide", "PlayerSide" };
         private static List<BattleFormation.FormationMember> listBuffer;
 
         /// <summary>
@@ -73,17 +73,17 @@ namespace CnfBattleSys
                 workingNode = rootNode.SelectSingleNode(node);
                 if (workingNode == null) throw new Exception(formationType.ToString() + " has no node " + node);
             };
-            actOnNode("//venue");
+            actOnNode("venue");
             VenueType venue = DBTools.ParseVenueType(workingNode.InnerText);
-            actOnNode("//bgm");
+            actOnNode("bgm");
             BGMTrackType bgmTrack = DBTools.ParseBGMTrackType(workingNode.InnerText);
-            actOnNode("//flags");
+            actOnNode("flags");
             BattleFormationFlags flags = DBTools.ParseBattleFormationFlags(workingNode.InnerText);
-            actOnNode("//fieldSize");
+            actOnNode("fieldSize");
             Vector2 fieldSize = DBTools.ParseVector2(workingNode.InnerText);
-            actOnNode("//battlers");
+            actOnNode("battlers");
             XmlNode sideNode = doc.DocumentElement;
-            Func<string, bool> actONSideNode = (node) =>
+            Func<string, bool> actOnSideNode = (node) =>
             {
                 sideNode = workingNode.SelectSingleNode(node);
                 if (sideNode == null) return false; // formation doesn't have battlers on this side
@@ -91,15 +91,16 @@ namespace CnfBattleSys
             };
             for (int i = 0; i < sideNodes.Length; i++)
             {
-                if (actONSideNode(sideNodes[i]))
+                if (actOnSideNode(sideNodes[i]))
                 {
                     BattlerSideFlags side = DBTools.ParseBattlerSideFlags(sideNames[i]);
-                    XmlNodeList battlers = sideNode.SelectNodes("//battler");
+                    XmlNodeList battlers = sideNode.SelectNodes("battler");
                     for (int b = 0; b < battlers.Count; b++)
                     {
-                        BattlerData battler = BattlerDatabase.Get(DBTools.ParseBattlerType(battlers[i].SelectSingleNode("//battlerType").InnerText));
-                        Vector2 pos = DBTools.ParseVector2(battlers[i].SelectSingleNode("//position").InnerText);
-                        BattleStance startStance = StanceDatabase.Get(DBTools.ParseStanceType(battlers[i].SelectSingleNode("//startStance").InnerText));
+                        XmlNode battlerNode = battlers[b];
+                        BattlerData battler = BattlerDatabase.Get(DBTools.ParseBattlerType(battlerNode.SelectSingleNode("battlerType").InnerText));
+                        Vector2 pos = DBTools.ParseVector2(battlerNode.SelectSingleNode("position").InnerText);
+                        BattleStance startStance = StanceDatabase.Get(DBTools.ParseStanceType(battlerNode.SelectSingleNode("startStance").InnerText));
                         listBuffer.Add(new BattleFormation.FormationMember(battler, pos, startStance, side));
                     }
                 }

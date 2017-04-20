@@ -61,6 +61,7 @@ public class PlayerInput : MonoBehaviour
             case LocalState.Online:
                 if (AIModule_PlayerSide_ManualControl.waitingBattler == null)
                 {
+                    Debug.Log("Done getting input");
                     localState = LocalState.Offline;
                     selectedBattleAction = null;
                     selectedMainPrimaryTarget = null;
@@ -78,6 +79,7 @@ public class PlayerInput : MonoBehaviour
     /// </summary>
     private void PresentActions ()
     {
+        localState = LocalState.Online;
         KeyCode[] alphaKeyCodes = { KeyCode.Alpha0, KeyCode.Alpha1, KeyCode.Alpha2, KeyCode.Alpha3, KeyCode.Alpha4, KeyCode.Alpha5, KeyCode.Alpha6, KeyCode.Alpha7, KeyCode.Alpha8, KeyCode.Alpha9 };
         KeyCode[] numpadKeyCodes = { KeyCode.Keypad0, KeyCode.Keypad1, KeyCode.Keypad2, KeyCode.Keypad3, KeyCode.Keypad4, KeyCode.Keypad5, KeyCode.Keypad6, KeyCode.Keypad7, KeyCode.Keypad8, KeyCode.Keypad9 };
         selectableBattleActions.Clear();
@@ -98,7 +100,7 @@ public class PlayerInput : MonoBehaviour
         string s = "Select an action using an alphanumeric or number key: ";
         for (int i = 0; i < selectableBattleActions.Count; i++)
         {
-            s += Environment.NewLine + i.ToString() + " " + selectableBattleActions[i].ToString();
+            s += Environment.NewLine + i.ToString() + " " + selectableBattleActions[i].actionID.ToString();
         }
         Debug.Log(s);
         Timing.RunCoroutine(_WaitForPlayerToSelectActionFrom(alphaKeyCodes, numpadKeyCodes, metaStanceSplitIndex));
@@ -115,10 +117,11 @@ public class PlayerInput : MonoBehaviour
             {
                 if (Input.GetKeyDown(alphaKeyCodes[i]) || Input.GetKeyDown(numpadKeyCodes[i]))
                 {
-                    Debug.Log("Selected action: " + selectableBattleActions[i]);
+                    Debug.Log("Selected action: " + selectableBattleActions[i].actionID);
                     selectedBattleAction = selectableBattleActions[i];
                     selectedBattleActionIndex = i;
                     selectedActionIsOnMetaStance = i >= metaStanceSplitIndex;
+                    PresentTargets();
                     break;
                 }
             }
@@ -132,6 +135,7 @@ public class PlayerInput : MonoBehaviour
     /// </summary>
     private void PresentStances ()
     {
+        localState = LocalState.Online;
         BattleStance[] stances = AIModule_PlayerSide_ManualControl.waitingStanceSet;
         KeyCode[] keyCodes = { KeyCode.UpArrow, KeyCode.DownArrow, KeyCode.LeftArrow, KeyCode.RightArrow };
         Debug.Log("Select a stance." + Environment.NewLine + "UP: " + stances[0].ToString() + Environment.NewLine + "DOWN: " + stances[1].ToString() +
@@ -242,6 +246,7 @@ public class PlayerInput : MonoBehaviour
         }
         if (targetAcquired)
         {
+            Debug.Log("Confirmed target set");
             battlersListBuffer.Clear();
             Battler[] subtargets;
             if (asSecondary) 

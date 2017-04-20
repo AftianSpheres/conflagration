@@ -73,35 +73,35 @@ namespace CnfBattleSys
                 workingNode = rootNode.SelectSingleNode(node);
                 if (workingNode == null) throw new Exception(actionID.ToString() + " has no node " + node);
             };
-            actOnNode("//baseAOERadius");
+            actOnNode("baseAOERadius");
             float baseAOERadius = float.Parse(workingNode.InnerText);
-            actOnNode("//baseDelay");
+            actOnNode("baseDelay");
             float baseDelay = float.Parse(workingNode.InnerText);
-            actOnNode("//baseFollowthroughStanceChangeDelay");
+            actOnNode("baseFollowthroughStanceChangeDelay");
             float baseFollowthroughStanceChangeDelay = float.Parse(workingNode.InnerText);
-            actOnNode("//baseMinimumTargetingDistance");
+            actOnNode("baseMinimumTargetingDistance");
             float baseMinimumTargetingDistance = float.Parse(workingNode.InnerText);
-            actOnNode("//baseTargetingRange");
+            actOnNode("baseTargetingRange");
             float baseTargetingRange = float.Parse(workingNode.InnerText);
-            actOnNode("//baseSPCost");
+            actOnNode("baseSPCost");
             byte baseSPCost = byte.Parse(workingNode.InnerText);
-            actOnNode("//targetingSideFlags");
+            actOnNode("targetingSideFlags");
             TargetSideFlags targetingSideFlags = DBTools.ParseTargetSideFlags(workingNode.InnerText);
-            actOnNode("//targetingType");
+            actOnNode("targetingType");
             ActionTargetType targetingType = DBTools.ParseActionTargetType(workingNode.InnerText);
             TargetSideFlags alternateTargetingSideFlags = TargetSideFlags.None;
             ActionTargetType alternateTargetType = ActionTargetType.None;
-            workingNode = rootNode.SelectSingleNode("//alternateTargets");
+            workingNode = rootNode.SelectSingleNode("alternateTargets");
             if (workingNode != null)
             {
-                XmlNode subNode = workingNode.SelectSingleNode("//targetingType");
+                XmlNode subNode = workingNode.SelectSingleNode("targetingType");
                 if (subNode == null) throw new Exception("Malformed action def: has alternate targets, but no alternate targeting type.");
                 alternateTargetType = DBTools.ParseActionTargetType(subNode.InnerText);
-                subNode = workingNode.SelectSingleNode("//targetingSideFlags");
+                subNode = workingNode.SelectSingleNode("targetingSideFlags");
                 if (subNode == null) throw new Exception("Malformed action def: has alternate targets, but no alternate targeting side flags.");
                 alternateTargetingSideFlags = DBTools.ParseTargetSideFlags(subNode.InnerText);
             }
-            XmlNodeList SubactionsList = rootNode.SelectNodes("//subaction");
+            XmlNodeList SubactionsList = rootNode.SelectNodes("subaction");
             if (SubactionsList.Count < 1) throw new Exception("Battle action " + actionID.ToString() + " has no defined Subactions!");
             BattleAction.Subaction[] Subactions = new BattleAction.Subaction[SubactionsList.Count];
             for (int s = 0; s < Subactions.Length; s++)
@@ -118,17 +118,17 @@ namespace CnfBattleSys
                     }
                 }
             }
-            actOnNode("//animSkipTargetHitAnim");
+            actOnNode("animSkipTargetHitAnim");
             AnimEventType animSkipTargetHitAnim = DBTools.ParseAnimEventType(workingNode.InnerText);
-            actOnNode("//onActionEndTargetAnim");
+            actOnNode("onActionEndTargetAnim");
             AnimEventType onActionEndTargetAnim = DBTools.ParseAnimEventType(workingNode.InnerText);
-            actOnNode("//onActionEndUserAnim");
+            actOnNode("onActionEndUserAnim");
             AnimEventType onActionEndUserAnim = DBTools.ParseAnimEventType(workingNode.InnerText);
-            actOnNode("//onActionUseTargetAnim");
+            actOnNode("onActionUseTargetAnim");
             AnimEventType onActionUseTargetAnim = DBTools.ParseAnimEventType(workingNode.InnerText);
-            actOnNode("//onActionUseUserAnim");
+            actOnNode("onActionUseUserAnim");
             AnimEventType onActionUseUserAnim = DBTools.ParseAnimEventType(workingNode.InnerText);
-            actOnNode("//categoryFlags");
+            actOnNode("categoryFlags");
             BattleActionCategoryFlags categoryFlags = DBTools.ParseBattleActionCategoryFlags(workingNode.InnerText);
             Resources.UnloadAsset(unreadFileBuffer);
             return new BattleAction(actionID, baseAOERadius, baseDelay, baseFollowthroughStanceChangeDelay, baseMinimumTargetingDistance, baseTargetingRange, baseSPCost, alternateTargetingSideFlags, targetingSideFlags,
@@ -147,7 +147,7 @@ namespace CnfBattleSys
                 workingNode = SubactionNode.SelectSingleNode(node);
                 if (workingNode == null) throw new Exception(exceptionSubactionIDStr() + " has no node " + node);
             };
-            XmlNodeList fxList = SubactionNode.SelectNodes("//fxPackage");
+            XmlNodeList fxList = SubactionNode.SelectNodes("fxPackage");
             BattleAction.Subaction.FXPackage[] fx = new BattleAction.Subaction.FXPackage[fxList.Count];
             sbyte thisSubactionDamageTiedToSubactionAtIndex = -1;
             sbyte thisSubactionSuccessTiedToSubactionAtIndex = -1;
@@ -160,27 +160,27 @@ namespace CnfBattleSys
                     fx[f] = XmlNodeToFXPackage(fxNode, workingNode, exceptionFXPackageIDStr, f);
                 }
             }
-            actOnNode("//baseDamage");
+            actOnNode("baseDamage");
             int baseDamage = int.Parse(workingNode.InnerText);
-            actOnNode("//baseAccuracy");
+            actOnNode("baseAccuracy");
             float baseAccuracy = float.Parse(workingNode.InnerText);
-            actOnNode("//useAlternateTargetSet");
+            actOnNode("useAlternateTargetSet");
             bool useAlternateTargetSet = bool.Parse(workingNode.InnerText);
-            actOnNode("//onSubactionHitTargetAnim");
+            actOnNode("onSubactionHitTargetAnim");
             AnimEventType onSubactionHitTargetAnim = DBTools.ParseAnimEventType(workingNode.InnerText);
-            actOnNode("//onSubactionExecuteUserAnim");
+            actOnNode("onSubactionExecuteUserAnim");
             AnimEventType onSubactionExecuteUserAnim = DBTools.ParseAnimEventType(workingNode.InnerText);
-            actOnNode("//atkStat");
+            actOnNode("atkStat");
             LogicalStatType atkStat = DBTools.ParseLogicalStatType(workingNode.InnerText);
-            actOnNode("//defStat");
+            actOnNode("defStat");
             LogicalStatType defStat = DBTools.ParseLogicalStatType(workingNode.InnerText);
-            actOnNode("//hitStat");
+            actOnNode("hitStat");
             LogicalStatType hitStat = DBTools.ParseLogicalStatType(workingNode.InnerText);
-            actOnNode("//evadeStat");
+            actOnNode("evadeStat");
             LogicalStatType evadeStat = DBTools.ParseLogicalStatType(workingNode.InnerText);
-            actOnNode("//damageTypes");
+            actOnNode("damageTypes");
             DamageTypeFlags damageTypes = DBTools.ParseDamageTypeFlags(workingNode.InnerText);
-            actOnNode("//categoryFlags");
+            actOnNode("categoryFlags");
             BattleActionCategoryFlags categoryFlags = DBTools.ParseBattleActionCategoryFlags(workingNode.InnerText);
             workingNode = SubactionNode.SelectSingleNode("//thisSubactionDamageTiedToSubactionAtIndex");
             if (workingNode != null)
@@ -215,34 +215,34 @@ namespace CnfBattleSys
                 workingNode = fxNode.SelectSingleNode(node);
                 if (workingNode == null) throw new Exception(exceptionFXPackageIDStr() + " has no node " + node);
             };
-            actOnNode("//fxType");
+            actOnNode("fxType");
             SubactionFXType fxType = DBTools.ParseSubactionFXType(workingNode.InnerText);
-            actOnNode("//fxHitStat");
+            actOnNode("fxHitStat");
             LogicalStatType fxHitStat = DBTools.ParseLogicalStatType(workingNode.InnerText);
-            actOnNode("//fxEvadeStat");
+            actOnNode("fxEvadeStat");
             LogicalStatType fxEvadeStat = DBTools.ParseLogicalStatType(workingNode.InnerText);
             bool applyEvenIfSubactionMisses = true;
-            workingNode = fxNode.SelectSingleNode("//applyEvenIfSubactionMisses");
+            workingNode = fxNode.SelectSingleNode("applyEvenIfSubactionMisses");
             if (workingNode != null) applyEvenIfSubactionMisses = bool.Parse(workingNode.InnerText);
-            actOnNode("//baseSuccessRate");
+            actOnNode("baseSuccessRate");
             float baseSuccessRate = float.Parse(workingNode.InnerText);
             if (baseSuccessRate > 1.0f) baseSuccessRate = 1.0f;
             else if (baseSuccessRate < 0.0f) baseSuccessRate = 0.0f;
-            workingNode = fxNode.SelectSingleNode("//fxLength_Float");
+            workingNode = fxNode.SelectSingleNode("fxLength_Float");
             if (workingNode != null) fxLengthFloat = float.Parse(workingNode.InnerText);
             else
             {
-                actOnNode("//fxLength_Int");
+                actOnNode("fxLength_Int");
                 fxLengthByte = byte.Parse(workingNode.InnerText);
             }
-            workingNode = fxNode.SelectSingleNode("//fxStrength_Float");
+            workingNode = fxNode.SelectSingleNode("fxStrength_Float");
             if (workingNode != null) fxStrengthFloat = float.Parse(workingNode.InnerText);
             else
             {
-                actOnNode("//fxStrength_Int");
+                actOnNode("fxStrength_Int");
                 fxStrengthInt = int.Parse(workingNode.InnerText);
             }
-            workingNode = fxNode.SelectSingleNode("//thisFXSuccessTiedToFXAtIndex");
+            workingNode = fxNode.SelectSingleNode("thisFXSuccessTiedToFXAtIndex");
             if (workingNode != null)
             {
                 thisFXSuccessTiedToFXAtIndex = sbyte.Parse(workingNode.InnerText);

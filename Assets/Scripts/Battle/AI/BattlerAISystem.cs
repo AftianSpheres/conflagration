@@ -191,6 +191,10 @@ namespace CnfBattleSys
         private static ScoredActionTargets GetOptimumTargets (BattlerAIFlags flags, Battler user, BattleAction action, Battler[][] jointPotentialTargets)
         {
             float[] scores = new float[0];
+            Func<ActionTargetType, Battler[], Battler[]> forNone = (targetingType, potentialTargets) =>
+            {
+                return new Battler[0];
+            };
             Func<ActionTargetType, Battler[], Battler[]> forSingle = (targetingType, potentialTargets) =>
             {
                 if (potentialTargets.Length < 1) throw new Exception("Can't pick optimum target unless you actually provide some targets.");
@@ -252,7 +256,7 @@ namespace CnfBattleSys
             {
                 return potentialTargets; // if we're acting on all potential targets, we don't need to do any processing, we just immediately spit the potentialTargets back
             };
-            Func<ActionTargetType, Func<ActionTargetType, Battler[], Battler[]>> setTargetAcquisitionFunc = (targetingType) =>
+            Func<ActionTargetType, bool, Func<ActionTargetType, Battler[], Battler[]>> setTargetAcquisitionFunc = (targetingType, failGracefully) =>
             {
                 switch (targetingType)
                 {
@@ -265,13 +269,14 @@ namespace CnfBattleSys
                     case ActionTargetType.CircularAOE:
                         return forAOE;
                     case ActionTargetType.None:
-                        throw new Exception("Tried to find targets for an action that doesn't take targets. Wut factor: at least 8 or 9.");
+                        if (failGracefully) return forNone;
+                        else throw new Exception("Tried to find targets for an action that doesn't take targets. Wut factor: at least 8 or 9.");
                     default:
                         throw new Exception("Tried to acquire targets for invalid targeting type: " + targetingType);
                 }
             };
-            Func<ActionTargetType, Battler[], Battler[]> primaryTargetsAcquisition = setTargetAcquisitionFunc(action.targetingType);
-            Func<ActionTargetType, Battler[], Battler[]> secondaryTargetsAcquisition = setTargetAcquisitionFunc(action.alternateTargetType);
+            Func<ActionTargetType, Battler[], Battler[]> primaryTargetsAcquisition = setTargetAcquisitionFunc(action.targetingType, false);
+            Func<ActionTargetType, Battler[], Battler[]> secondaryTargetsAcquisition = setTargetAcquisitionFunc(action.alternateTargetType, true);
             Battler[] primaryTargets = primaryTargetsAcquisition(action.targetingType, jointPotentialTargets[0]);
             float[] primaryScores = scores;
             Battler[] secondaryTarget = secondaryTargetsAcquisition(action.alternateTargetType, jointPotentialTargets[1]);

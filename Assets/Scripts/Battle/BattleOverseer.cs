@@ -129,7 +129,7 @@ namespace CnfBattleSys
                     subactions_FinalDamageFigures.Clear();
                     subactions_TargetHitArrays.Clear();
                     subactionExecutionIndex = subactionFXExecutionIndex = 0;
-                    for (int i = 0; i < _targets.Length && i < _alternateTargets.Length; i++)
+                    for (int i = 0; i < _targets.Length || i < _alternateTargets.Length; i++)
                     {
                         if (i < _targets.Length) targets.Add(_targets[i]);
                         if (i < _alternateTargets.Length) alternateTargets.Add(_targets[i]);
@@ -231,7 +231,7 @@ namespace CnfBattleSys
                 }
                 else executionSuccess = t[targetIndex].TryToLandAttackAgainstMe(currentActingBattler, subaction);
                 if (executionSuccess)
-                {                   
+                {
                     subactions_FinalDamageFigures[subactionExecutionIndex][targetIndex] = t[targetIndex].CalcDamageAgainstMe(currentActingBattler, subaction, true, true, true);
                     t[targetIndex].DealOrHealDamage(subactions_FinalDamageFigures[subactionExecutionIndex][targetIndex]);
                 }
@@ -691,6 +691,8 @@ namespace CnfBattleSys
                     if (radius >= fieldRadius * 2) return battlersToCheck; // if you cover a wider range than the battlefield (usually infinite range for hit-all shit) then ofc there's no point in going further
                     for (int b = 0; b < battlersToCheck.Length; b++)
                     {
+                        tmpBattlersListBuffer.Add(battlersToCheck[b]);
+                        break; // the code below this point only makes sense once movement and collision are a thing
                         RaycastHit r;
                         target.capsuleCollider.Raycast(new Ray(battlersToCheck[b].capsuleCollider.center, battlersToCheck[b].logicalPosition - target.logicalPosition), out r, fieldRadius);
                         if (r.collider != null && r.distance < radius + battlersToCheck[b].footprintRadius + target.footprintRadius) tmpBattlersListBuffer.Add(battlersToCheck[b]);

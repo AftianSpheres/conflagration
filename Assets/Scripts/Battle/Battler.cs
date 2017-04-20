@@ -979,7 +979,8 @@ namespace CnfBattleSys
                 ApplyStatus(StatusType.StanceBroken_Forced, StatusPacket_CancelationCondition.None, 0, 0, new Resistances_Raw(1), 0, DamageTypeFlags.None, MiscStatusEffectFlags.None,
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, penalty, 1, penalty, 1, penalty, 1, 1, 1);
             }
-            puppet.DispatchAnimEvent(AnimEventType.StanceBreak);
+            if (puppet == null) return;
+            else puppet.DispatchAnimEvent(AnimEventType.StanceBreak);
         }
 
         /// <summary>
@@ -1054,9 +1055,10 @@ namespace CnfBattleSys
         /// </summary>
         public void DealOrHealDamage (int dmg)
         {
-            currentHP += dmg;
+            currentHP -= dmg;
             if (currentHP > stats.maxHP) currentHP = stats.maxHP;
             if (currentHP <= 0) Die();
+            if (puppet == null) return;
             else if (dmg > 0) puppet.DispatchAnimEvent(AnimEventType.Hit);
             else if (dmg < 0) puppet.DispatchAnimEvent(AnimEventType.Heal);
         }
@@ -1072,7 +1074,8 @@ namespace CnfBattleSys
             currentDelay = float.PositiveInfinity;
             statusPackets.Clear();
             isDead = true;
-            puppet.DispatchAnimEvent(AnimEventType.Die);
+            if (puppet == null) return;
+            else puppet.DispatchAnimEvent(AnimEventType.Die);
             BattleOverseer.BattlerIsDead(this);
         }
 
@@ -1233,7 +1236,7 @@ namespace CnfBattleSys
         /// </summary>
         public bool IsValidTargetFor (Battler targeter, BattleAction action)
         {
-            Debug.Log("Please implement Battler.IsValidTargetFor()");
+            //Debug.Log("Please implement Battler.IsValidTargetFor()");
             return true;
         }
 

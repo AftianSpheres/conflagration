@@ -17,5 +17,12 @@
         <startStance>TestStance</startStance>
       </battler>
     </GenericEnemySide>
+    <PlayerSide>
+      <battler>
+        <battlerType>TestPCUnit</battlerType>
+        <position>6, 5</position>
+        <startStance>TestStance</startStance>
+      </battler>
+    </PlayerSide>
   </battlers>
 </formation>
