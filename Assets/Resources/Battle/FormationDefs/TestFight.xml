@@ -19,7 +19,7 @@
     </GenericEnemySide>
     <PlayerSide>
       <battler>
-        <battlerType>TestPCUnit</battlerType>
+        <battlerType>TestAIUnit</battlerType>
         <position>6, 5</position>
         <startStance>TestStance</startStance>
       </battler>

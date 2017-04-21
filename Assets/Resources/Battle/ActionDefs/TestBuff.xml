@@ -6,7 +6,7 @@
   <baseMinimumTargetingDistance>0</baseMinimumTargetingDistance>
   <baseTargetingRange>0</baseTargetingRange>
   <baseSPCost>10</baseSPCost>
-  <targetingSideFlags>MySide</targetingSideFlags>
+  <targetingSideFlags>MySide, MyFriends</targetingSideFlags>
   <targetingType>Self</targetingType>
   <animSkipTargetHitAnim>None</animSkipTargetHitAnim>
   <onActionEndTargetAnim>None</onActionEndTargetAnim>

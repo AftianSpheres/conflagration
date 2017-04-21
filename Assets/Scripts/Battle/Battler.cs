@@ -847,6 +847,7 @@ namespace CnfBattleSys
 
         // Magic
         public float speedFactor { get { return stats.Spe / BattleOverseer.normalizedSpeed; } }
+        public int index { get { return BattleOverseer.allBattlers.IndexOf(this); } }
 
         public Battler (BattleFormation.FormationMember fm)
         {
@@ -1195,12 +1196,12 @@ namespace CnfBattleSys
         }
 
         /// <summary>
-        /// Gives this Battler control over the specified capsule collider. This collider will be conformed to the Battler's footprint radius and logical position, and may be disjointed from 
-        /// its physical representation if needed as a result.
+        /// Gives this Battler control over the specified puppet.
         /// </summary>
-        public void GiveCollider (CapsuleCollider _collider)
+        public void GivePuppet (BattlerPuppet _puppet)
         {
-            capsuleCollider = _collider;
+            puppet = _puppet;
+            capsuleCollider = puppet.capsuleCollider;
             capsuleCollider.radius = footprintRadius;
         }
 

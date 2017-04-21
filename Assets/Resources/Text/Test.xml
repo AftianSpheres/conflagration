@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<textBank>   <!-------This is a test textbank to illustrate the schema----->
-	<page no = "0">
+<textBank>   <!--This is a test textbank to illustrate the schema-->
+	<page name = "test0">
 		<eng>English text</eng>
 		<jpn>日本語を少し話します。</jpn>
 		<spn>I don't even speak a little shitty Spanish, but if you were going to have Spanish text it'd go here.</spn>
@@ -8,7 +8,7 @@
 		<ger>Note that this language set was just sorta pulled out of my ass. I'm not seriously looking at localizations right now, to say the least - but having the schema defined is handy.</ger>
 		<heb>You don't need to define translations in a particular order, either. If we want the German version of textbank "foo" line 4, we get that regardless of where the 'ger' tag is in the sequence.</heb>
 	</page>
-	<page no = "1">
+	<page name = "test1">
 		<eng>
 			A "page" here, it should be noted, doesn't mean "one line of text." Pages can have newlines and control codes and shit!
 			Pages are, essentially, the smallest blocks of text it makes sense to talk about independent of each other.

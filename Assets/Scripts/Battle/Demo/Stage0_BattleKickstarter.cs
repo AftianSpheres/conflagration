@@ -6,7 +6,6 @@ using CnfBattleSys;
 /// </summary>
 public class Stage0_BattleKickstarter : MonoBehaviour
 {
-    public GameObject bObj;
     int ctr = 0;
     	
 	// Update is called once per frame
@@ -15,7 +14,7 @@ public class Stage0_BattleKickstarter : MonoBehaviour
         if (BattleOverseer.overseerState == BattleOverseer.OverseerState.Offline && ctr > 20)
         {
             BattleOverseer.StartBattle(FormationDatabase.Get(FormationType.TestFight));
-            bObj.SetActive(true);
+            Destroy(gameObject);
         }
         else ctr++;
 	}

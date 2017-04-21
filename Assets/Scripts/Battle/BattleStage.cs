@@ -90,6 +90,8 @@ public class BattleStage : MonoBehaviour
     /// This is used FIFO, generally speaking, but it can't be a queue because we need to be able to break strict FIFO for handling priority.
     /// </summary>
     private List<AnimEvent> unhandledAnimEvents;
+    private List<BattlerPuppet> attachedPuppets;
+    private Queue<BattlerPuppet> unattachedPuppets;
     private List<StageEvent> allActiveStageEvents;
     private List<StageEvent> stageEventsBuffer;
 
@@ -99,6 +101,8 @@ public class BattleStage : MonoBehaviour
     /// BattleStage. There should never be more than one of these in a scene at a time, anyway.
     /// </summary>
     public static BattleStage instance;
+
+    public GameObject battlerPuppetPrefab;
 
 	/// <summary>
     /// MonoBehaviour.Awake
@@ -110,6 +114,8 @@ public class BattleStage : MonoBehaviour
         unhandledAnimEvents = new List<AnimEvent>();
         allActiveStageEvents = new List<StageEvent>();
         stageEventsBuffer = new List<StageEvent>();
+        attachedPuppets = new List<BattlerPuppet>();
+        unattachedPuppets = new Queue<BattlerPuppet>();
 	}
 	
 	/// <summary>
@@ -119,11 +125,9 @@ public class BattleStage : MonoBehaviour
     {
 	    switch (localState)
         {
-            case LocalState.Offline:
-                Initialize();
-                break;
             case LocalState.ReadyToAdvanceBattle:
-                if (BattleOverseer.overseerState != BattleOverseer.OverseerState.WaitingForInput && BattleOverseer.overseerState != BattleOverseer.OverseerState.Paused) BattleOverseer.BattleStep();
+                if (BattleOverseer.overseerState == BattleOverseer.OverseerState.BattleWon || BattleOverseer.overseerState == BattleOverseer.OverseerState.BattleLost) gameObject.SetActive(false);
+                else if (BattleOverseer.overseerState != BattleOverseer.OverseerState.WaitingForInput && BattleOverseer.overseerState != BattleOverseer.OverseerState.Paused) BattleOverseer.BattleStep();
                 break;
             case LocalState.HandlingAnimEvent:
                 if (activeAnimEvents.Count == 0)
@@ -140,7 +144,15 @@ public class BattleStage : MonoBehaviour
 	}
 
     /// <summary>
-    /// Called when BattleStage is offline, the first time it enters the update loop.
+    /// Called by BattleOverseer at start of battle.
+    /// </summary>
+    public void StartOfBattle ()
+    {
+        if (localState == LocalState.Offline) Initialize();
+    }
+
+    /// <summary>
+    /// Called when BattleStage is offline if starting a new battle.
     /// Will eventually do setup things for stage model, etc.
     /// Right now it just sets the state to ReadyToAdvanceBattle.
     /// </summary>
@@ -150,11 +162,23 @@ public class BattleStage : MonoBehaviour
     } 
 
     /// <summary>
+    /// Gets a puppet from the pool if there are any to be had, or creates a new one if there aren't.
+    /// </summary>
+    public BattlerPuppet GetAPuppet ()
+    {
+        BattlerPuppet puppet;
+        if (unattachedPuppets.Count > 0) puppet = unattachedPuppets.Dequeue();
+        else puppet = Instantiate(battlerPuppetPrefab).GetComponent<BattlerPuppet>();
+        attachedPuppets.Add(puppet);
+        return puppet;
+    }
+
+    /// <summary>
     /// Called by the BattleOverseer each time it starts a turn.
     /// </summary>
     public void StartOfTurn ()
     {
-        LogBattleState();
+        if (BattleOverseer.overseerState != BattleOverseer.OverseerState.Offline) LogBattleState();
     }
 
     /// <summary>

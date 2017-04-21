@@ -10,7 +10,8 @@ using CnfBattleSys;
 /// </summary>
 public class BattlerPuppet : MonoBehaviour
 {
-    public Battler battler;
+    public Battler battler { get; private set; }
+    public CapsuleCollider capsuleCollider;
     public Animator animator;
     public MeshRenderer meshRenderer;
     public MeshFilter meshFilter;
@@ -28,6 +29,17 @@ public class BattlerPuppet : MonoBehaviour
     void Update()
     {
 
+    }
+
+    /// <summary>
+    /// Attaches this puppet to the specified Battler.
+    /// </summary>
+    public void AttachBattler (Battler _battler)
+    {
+        battler = _battler;
+        battler.GivePuppet(this);
+        SyncPosition();
+        gameObject.name = "BattlerPuppet " + _battler.battlerType.ToString() + ": " + _battler.index;
     }
 
     /// <summary>

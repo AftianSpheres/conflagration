@@ -114,7 +114,14 @@ namespace CnfBattleSys
             /// </summary>
             internal static void BeginProcessingAction (BattleAction action, Battler user, Battler[] _targets, Battler[] _alternateTargets)
             {
-                overseerState = OverseerState.ExecutingAction;
+                string targetStr = string.Empty;
+                for (int i = 0; i < _targets.Length; i++)
+                {
+                    targetStr += _targets[i].puppet.gameObject.name;
+                    if (i + 1 < _targets.Length) targetStr += ", ";
+                }
+                Debug.Log(user.puppet.gameObject.name + " is executing action " + action.actionID + "against " + targetStr);
+                ChangeState(OverseerState.ExecutingAction);
                 user.CommitCurrentChosenActions();
                 if (action == ActionDatabase.SpecialActions.selfStanceBreakAction)
                 {
@@ -354,7 +361,7 @@ namespace CnfBattleSys
             /// </summary>
             private static IEnumerator<float> _WaitUntilBattlerReadyToAct (Battler b)
             {
-                overseerState = OverseerState.WaitingForInput;
+                ChangeState(OverseerState.WaitingForInput);
                 b.GetAction();
                 while (b.turnActions.action == ActionDatabase.SpecialActions.defaultBattleAction) yield return 0; // wait until b decides what to do
                 ActionExecutionSubsystem.BeginProcessingAction(b.turnActions.action, b, b.turnActions.targets, b.turnActions.alternateTargets);
@@ -388,7 +395,7 @@ namespace CnfBattleSys
             {
                 ActionExecutionSubsystem.FinishCurrentAction();
                 currentTurnBattler = null;
-                overseerState = OverseerState.BetweenTurns;
+                ChangeState(OverseerState.BetweenTurns);
                 DeriveNormalizedSpeed();
             }
         }
@@ -443,16 +450,46 @@ namespace CnfBattleSys
             activeFormation = formation;
             for (int b = 0; b < activeFormation.battlers.Length; b++)
             {
-                Battler bat = new Battler(activeFormation.battlers[b]);
-                allBattlers.Add(bat);
-                battlersBySide[bat.side].Add(bat);
+                GenerateBattlerFromFormationMember(activeFormation.battlers[b]);
             }
             DeriveNormalizedSpeed();
             for (int b = 0; b < allBattlers.Count; b++)
             {
                 allBattlers[b].ApplyDelay(1.0f);
             }
-            overseerState = OverseerState.BetweenTurns;
+            ChangeState(OverseerState.BetweenTurns);
+            Timing.RunCoroutine(_WaitForPuppets());
+        }
+
+        /// <summary>
+        /// Coroutine: Wait for all battler puppets to exist before first communication with BattleStage.
+        /// </summary>
+        static IEnumerator<float> _WaitForPuppets ()
+        {
+            bool allPuppetsExist = false;
+            while (!allPuppetsExist)
+            {
+                allPuppetsExist = true;
+                for (int i = 0; i < allBattlers.Count; i++)
+                {
+                    if (allBattlers[i].puppet == null) allPuppetsExist = false;
+                }
+                yield return 0;
+            }
+            BattleStage.instance.StartOfBattle();
+        }
+
+        /// <summary>
+        /// Generates a Battler based on the given formation member and attaches a puppet gameobject to it.
+        /// </summary>
+        public static Battler GenerateBattlerFromFormationMember (BattleFormation.FormationMember formationMember)
+        {
+            Battler battler = new Battler(formationMember);
+            allBattlers.Add(battler);
+            battlersBySide[battler.side].Add(battler);
+            BattlerPuppet puppet = BattleStage.instance.GetAPuppet();
+            puppet.AttachBattler(battler);
+            return battler;
         }
 
         /// <summary>
@@ -462,7 +499,7 @@ namespace CnfBattleSys
         /// </summary>
         public static void BattleStep ()
         {
-            switch (overseerState)
+            if (!CheckIfBattleAlreadyOver()) switch (overseerState)
             {
                 case OverseerState.Paused:
                     throw new System.Exception("Can't advance battle state: battle is paused.");
@@ -494,12 +531,35 @@ namespace CnfBattleSys
         /// Executes steps subactions from the current action's subaction set, or however many are left.
         /// Returns true if any of the subactions we step through do anything at all.
         /// </summary>
-        //public static bool StepSubactions (int steps = 1)
-        //{
-        //    return ActionExecutionSubsystem.StepSubactions(steps);
-        //}
+        public static bool StepSubactions (int steps = 1)
+        {
+            return ActionExecutionSubsystem.StepSubactions(steps);
+        }
 
         // BattleOverseer state management
+
+        /// <summary>
+        /// Change overseer state, if allowed.
+        /// </summary>
+        private static void ChangeState (OverseerState _state)
+        {
+            switch (overseerState)
+            {
+                case OverseerState.Offline:
+                case OverseerState.BetweenTurns:
+                case OverseerState.ExecutingAction:
+                case OverseerState.WaitingForInput:
+                    if (_state == OverseerState.Offline) throw new System.Exception("Can't change state back to offline!");
+                    break;
+                case OverseerState.BattleWon:
+                case OverseerState.BattleLost:
+                    if (_state != OverseerState.Offline) throw new System.Exception("Can only change state to offline after end of battle");
+                    break;
+                default:
+                    break;
+            }
+            overseerState = _state;
+        }
 
         /// <summary>
         /// Initializes the BattleOverseer and loads in the various datasets the battle system uses.
@@ -558,19 +618,31 @@ namespace CnfBattleSys
         // Bits and pieces for use within the battle loop
 
         /// <summary>
+        /// Returns true if we've either won or lost.
+        /// </summary>
+        private static bool CheckIfBattleAlreadyOver ()
+        {
+            if (CheckIfBattleWon())
+            {
+                Debug.Log("You're winner!");
+                ChangeState(OverseerState.BattleWon);
+                return true;
+            }
+            else if (CheckIfBattleLost())
+            {
+                Debug.Log("You're loser!");
+                ChangeState(OverseerState.BattleLost);
+                return true;
+            }
+            else return false;
+        }
+
+        /// <summary>
         /// Called between turns - handles delay logic and updates battlers so that they can request turns.
         /// </summary>
         private static void BetweenTurns ()
         {
-            if (CheckIfBattleWon())
-            {
-                throw new System.Exception("You won! Your prize: an unhandled exception");
-            }
-            else if (CheckIfBattleLost())
-            {
-                throw new System.Exception("Battle lost, but that isn't implemented yet");
-            }
-            else
+            if (!CheckIfBattleAlreadyOver())
             {
                 float lowestDelay = float.MaxValue;
                 for (int i = 0; i < allBattlers.Count; i++)
