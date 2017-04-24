@@ -9,6 +9,9 @@ public class TextBankManager : Manager<TextBankManager>
 {
     public TextLangType textLangType { get; private set; }
     private Dictionary<string, TextBank> textBanks;
+    private Dictionary<Type, TextBank> commonTextBanks;
+    readonly static string[] commonTextBanks_FilePaths = new string[] { "Common/BattlerName" };
+    readonly static Type[] commonTextBanks_AssociatedEnums = new Type[] { typeof(CnfBattleSys.BattlerType) };
 
     /// <summary>
     /// MonoBehaviour.Awake
@@ -20,12 +23,45 @@ public class TextBankManager : Manager<TextBankManager>
     }
 
     /// <summary>
+    /// Loads in all common textbanks and binds them to their types.
+    /// </summary>
+    private void LoadAllCommonTextBanks ()
+    {
+        if (commonTextBanks == null) commonTextBanks = new Dictionary<Type, TextBank>(commonTextBanks_FilePaths.Length);
+        else commonTextBanks.Clear();
+        for (int i = 0; i < commonTextBanks_FilePaths.Length; i++)
+        {
+            LoadCommonTextBank(commonTextBanks_FilePaths[i], commonTextBanks_AssociatedEnums[i]);
+        }
+    }
+
+    /// <summary>
+    /// Loads in the specified common textbank and binds it to the given Type.
+    /// </summary>
+    private void LoadCommonTextBank (string xmlFilePath, Type enumType)
+    {
+        TextBank textBank = new TextBank(xmlFilePath, enumType);
+        textBanks.Add(xmlFilePath, textBank);
+        commonTextBanks.Add(enumType, textBank);
+    }
+
+    /// <summary>
     /// Loads in the specified TextBank.
     /// </summary>
     private void LoadTextBank (string xmlFilePath)
     {
         TextBank textBank = new TextBank(xmlFilePath);
         textBanks.Add(xmlFilePath, textBank);
+    }
+
+    /// <summary>
+    /// Returns the common textbank associated with the given type.
+    /// </summary>
+    public TextBank GetCommonTextBank (Type enumType)
+    {
+        if (commonTextBanks == null) LoadAllCommonTextBanks();
+        if (!commonTextBanks.ContainsKey(enumType)) throw new Exception("No common textbank associated with type " + enumType.Name);
+        return commonTextBanks[enumType];
     }
 
     /// <summary>

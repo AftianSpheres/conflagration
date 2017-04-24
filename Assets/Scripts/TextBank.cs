@@ -8,6 +8,8 @@ using System.Xml;
 /// </summary>
 public class TextBank
 {
+    const string textBanksResourcePath = "Text/";
+
     /// <summary>
     /// Contains a block of text and associated metadata for control codes, etc. None of that actually exists right now,
     /// but encapsulating the string in a stub Page implementation means less work down the line when I actually get to this.
@@ -30,6 +32,14 @@ public class TextBank
     }
 
     /// <summary>
+    /// Dictionary that stores string:page associations.
+    /// We use this if (and only if) we're an enum-backed textbank.
+    /// This dict isn't exposed - basically, we want to take an enum value
+    /// and invisibly return the Page associated with the name
+    /// </summary>
+    private Dictionary<string, Page> backingDict_ForEnumAssociatedBank;
+
+    /// <summary>
     /// Dictionary containing pages that are given names within the xml file.
     /// This actually stores indices in the main pages array, not pages, so
     /// keep that in mind. (Page is a value type, so we don't want to store duplicates here
@@ -50,6 +60,14 @@ public class TextBank
     private TextLangType textLangType;
 
     /// <summary>
+    /// Type of the associated enum.
+    /// If enumBackingType != null, this is an enum-associated textbank,
+    /// which results in some different behavior at the loading stage
+    /// in order to facilitate direct enum-value-to-Page transactions.
+    /// </summary>
+    private Type enumBackingType;
+
+    /// <summary>
     /// The original filename the textbank was loaded from.
     /// </summary>
     public readonly string fileName;
@@ -59,19 +77,30 @@ public class TextBank
     /// </summary>
     public TextBank(string xmlFilePath)
     {
-        const string textBanksResourcePath = "Text/";
         fileName = textBanksResourcePath + xmlFilePath;
         namedPageIndices = new Dictionary<string, int>();
         LoadIn();
     }
 
     /// <summary>
+    /// Special constructor for textbanks that are associated with specific enumerated types.
+    /// </summary>
+    public TextBank(string xmlFilePath, Type _enumBackingType)
+    {
+        fileName = textBanksResourcePath + xmlFilePath;
+        backingDict_ForEnumAssociatedBank = new Dictionary<string, Page>();
+        enumBackingType = _enumBackingType;
+    }
+
+    /// <summary>
     /// Loads strings from the xml file at fileName.
+    /// If associatedEnumType != null, we'll make sure to match the indices to the enum entries.
     /// </summary>
     public void LoadIn ()
     {
         textLangType = TextBankManager.Instance.textLangType;
-        namedPageIndices.Clear();
+        if (namedPageIndices != null) namedPageIndices.Clear();
+        if (backingDict_ForEnumAssociatedBank != null) backingDict_ForEnumAssociatedBank.Clear();
         TextAsset xmlFile = Resources.Load<TextAsset>(fileName);
         if (xmlFile == null) throw new Exception("Tried to import text bank at bad filepath: " + fileName);
         XmlDocument doc = new XmlDocument();
@@ -88,12 +117,14 @@ public class TextBank
                 throw new Exception("Invalid language type: " + TextBankManager.Instance.textLangType.ToString());
         }
         XmlNodeList pageNodes = rootNode.SelectNodes("//page");
-        Page[] _pages = new Page[pageNodes.Count];
-        for (int i = 0; i < _pages.Length; i++)
+        Page[] _pages;
+        if (enumBackingType == null) _pages = new Page[pageNodes.Count];
+        else _pages = default(Page[]);
+        for (int i = 0; i < pageNodes.Count; i++)
         {
             XmlNode pageNode = pageNodes[i].SelectSingleNode(langNode);
             XmlAttribute nameAttribute = pageNodes[i].Attributes.GetNamedItem("name") as XmlAttribute;
-            if (nameAttribute != null)
+            if (nameAttribute != null && enumBackingType == null)
             {
                 string name = nameAttribute.Value;
                 if (namedPageIndices.ContainsKey(name)) throw new Exception("Page name collision in " + fileName + " for name " + name);
@@ -102,9 +133,17 @@ public class TextBank
             string text;
             if (pageNode != null) text = pageNode.InnerText;
             else text = "No " + textLangType.ToString() + " entry for textbank " + fileName + ", line " + i;
-            _pages[i] = new Page(text);
+            if (enumBackingType != null)
+            {
+                if (nameAttribute == null) throw new Exception("Page " + i.ToString() + " in " + fileName + " has no page name. Every page in a textBank tied to an enum needs to be named with the associated enum value.");
+                if (!Enum.IsDefined(enumBackingType, nameAttribute.InnerText)) throw new Exception("No item of name " + nameAttribute.InnerText + " in enumeration " + enumBackingType.Name);
+                backingDict_ForEnumAssociatedBank[nameAttribute.InnerText] = new Page(text);
+            }
+            else _pages[i] = new Page(text);
+
         }
-        pages = _pages;
+        if (enumBackingType == null) pages = _pages;
+        Resources.UnloadAsset(xmlFile);
     }
 
     /// <summary>
@@ -113,6 +152,10 @@ public class TextBank
     public Page GetPage (int index)
     {
         if (textLangType != TextBankManager.Instance.textLangType) LoadIn();
+        if (backingDict_ForEnumAssociatedBank != null)
+        {
+            throw new Exception("Can't get enum-associated textbanks with page indices!");
+        }
         if (index >= pages.Length) return new Page("Bad textbank / page index combination: " + fileName + ", page " + index);
         return pages[index];
     }
@@ -123,7 +166,22 @@ public class TextBank
     public Page GetPage (string name)
     {
         if (textLangType != TextBankManager.Instance.textLangType) LoadIn();
+        if (backingDict_ForEnumAssociatedBank != null)
+        {
+            if (!backingDict_ForEnumAssociatedBank.ContainsKey(name)) return new Page("Bad common textbank / page name combination: " + fileName + ", named page " + name);
+            return backingDict_ForEnumAssociatedBank[name];
+        }
         if (!namedPageIndices.ContainsKey(name)) return new Page("Bad textbank / page name combination: " + fileName + ", named page " + name);
         return pages[namedPageIndices[name]];
+    }
+
+    /// <summary>
+    /// Generic functionality for getting pages based on enum values,
+    /// where appropriate.
+    /// </summary>
+    public Page GetPage<T> (T enumName)
+    {
+        string s = Enum.GetName(enumBackingType, enumName);
+        return GetPage(s);
     }
 }

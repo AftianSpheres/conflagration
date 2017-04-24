@@ -23,4 +23,9 @@ public class UniverseStage_DataLoader : MonoBehaviour
             Debug.Log("UniverseStage_DataLoader tried to run, but it already had???");
         }
     }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.A)) Debug.Log(TextBankManager.Instance.GetCommonTextBank(typeof(BattlerType)).GetPage(BattlerType.TestAIUnit).text);
+    }
 }

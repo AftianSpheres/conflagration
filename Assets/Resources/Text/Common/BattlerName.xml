@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<textBank>  <!--BattlerData real names-->
+  <page name = "InvalidUnit">
+    <eng>[INVALID BATTLER DATA/]</eng>
+  </page>
+  <page name = "None">
+    <eng>-</eng>
+  </page>
+  <page name = "TestAIUnit">
+    <eng>Test AI Unit [0]</eng>
+  </page>
+  <page name = "TestPCUnit">
+    <eng>Test Player Unit [0]</eng>
+  </page>
+</textBank>
