@@ -281,7 +281,7 @@ public class BattleStage : MonoBehaviour
         {
             Battler bat = BattleOverseer.allBattlers[b];
             // This might actually be the single worst line of code in the world but idgaf given what the usage case is.
-            string battlerString = b.ToString() + ": " + bat.battlerType.ToString() + "|" + bat.currentStance.ToString() + " (HP: " + bat.currentHP + " / " + bat.stats.maxHP + ") (Stamina: " + bat.currentSP.ToString() + ") [" + bat.side.ToString() + "]";
+            string battlerString = b.ToString() + ": " + bat.battlerType.ToString() + "|" + bat.currentStance.ToString() + " (HP: " + bat.currentHP + " / " + bat.stats.maxHP + ") (Stamina: " + bat.currentStamina.ToString() + ") [" + bat.side.ToString() + "]";
             o += battlerString + Environment.NewLine;
         }
         o += "<Hit spacebar to advance battle>";

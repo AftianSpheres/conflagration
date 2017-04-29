@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System;
 using System.Collections.Generic;
 using MovementEffects;
 using CnfBattleSys;
@@ -17,19 +18,10 @@ public class BattlerPuppet : MonoBehaviour
     public MeshFilter meshFilter;
     private BattlerModelType modelType;
     private Vector3 offset;
+    private bUI_ResourceBar hpBar;
+    private bUI_ResourceBar staminaBar;
+    private bUI_EnemyInfobox enemyInfobox;
     private float stepTime;
-
-    // Use this for initialization
-    void Start()
-    {
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
 
     /// <summary>
     /// Attaches this puppet to the specified Battler.
@@ -40,6 +32,26 @@ public class BattlerPuppet : MonoBehaviour
         battler.GivePuppet(this);
         SyncPosition();
         gameObject.name = "BattlerPuppet " + _battler.battlerType.ToString() + ": " + _battler.index;
+    }
+
+    /// <summary>
+    /// Attaches specified resource bar to this puppet as HP bar.
+    /// </summary>
+    public void AttachHPBar (bUI_ResourceBar _hpBar)
+    {
+        if (_hpBar.resourceType != bUI_ResourceBar.ResourceType.HP) throw new Exception(gameObject.name + " tried to attach a non-HP resource bar as HP bar");
+        hpBar = _hpBar;
+        hpBar.HandleValueChanges();
+    }
+
+    /// <summary>
+    /// Attaches specified resource bar to this puppet as stamina bar.
+    /// </summary>
+    public void AttachStaminaBar (bUI_ResourceBar _staminaBar)
+    {
+        if (_staminaBar.resourceType != bUI_ResourceBar.ResourceType.Stamina) throw new Exception(gameObject.name + " tried to attach a non-stamina resource bar as stamina bar");
+        staminaBar = _staminaBar;
+        staminaBar.HandleValueChanges();
     }
 
     /// <summary>
@@ -76,8 +88,13 @@ public class BattlerPuppet : MonoBehaviour
     /// <summary>
     /// Stubbed. This just forwards the animEvent straight to the BattleStage right now.
     /// </summary>
-    public void DispatchAnimEvent (AnimEventType animEventType)
+    public void DispatchAnimEvent(AnimEventType animEventType)
     {
+        if (animEventType == AnimEventType.Hit || animEventType == AnimEventType.Heal)
+        {
+            if (hpBar != null) hpBar.HandleValueChanges();
+            if (staminaBar != null) staminaBar.HandleValueChanges();
+        }
         BattleStage.instance.PrepareAnimEvent(animEventType, battler);
     }
 

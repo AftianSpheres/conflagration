@@ -1,7 +1,8 @@
 <?xml version="1.0"?>
-<textBank>  <!--BattlerData real names-->
+<textBank>  
+  <!--BattlerData real names-->
   <page name = "InvalidUnit">
-    <eng>[INVALID BATTLER DATA/]</eng>
+    <eng>[Invalid battler data!]</eng>
   </page>
   <page name = "None">
     <eng>-</eng>

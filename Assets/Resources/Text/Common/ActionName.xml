@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<textBank>
+  <!--Action real names-->
+  <page name = "INTERNAL_BreakOwnStance">
+    <eng>Self Stance Break [this string should never appear]</eng>
+  </page>
+  <page name = "InvalidAction">
+    <eng>[Invalid action data!]</eng>
+  </page>
+  <page name = "None">
+    <eng>-</eng>
+  </page>
+  <page name = "TestMeleeAtk">
+    <eng>Test Melee Attack [0]</eng>
+  </page>
+  <page name = "TestRangedAOEAtk">
+    <eng>Test Ranged Attack (AOE) [0]</eng>
+  </page>
+  <page name = "TestHeal">
+    <eng>Test Heal [0]</eng>
+  </page>
+  <page name = "TestBuff">
+    <eng>Test Buff (atk+) [0]</eng>
+  </page>
+  <page name = "TestCounter">
+    <eng>Counterattack! (Test) [0]</eng>
+  </page>
+</textBank>

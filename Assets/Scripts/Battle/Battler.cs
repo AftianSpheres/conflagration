@@ -833,7 +833,7 @@ namespace CnfBattleSys
         public BattleStance currentStance { get; private set; }
         public float currentDelay { get; private set; }
         public int currentHP { get; private set; }
-        public int currentSP { get; private set; }
+        public int currentStamina { get; private set; }
         public Vector3 logicalPosition { get; private set; } // This is what we use for determining targeting ranges, etc. When we get a move action, we set logicalPosition immediately, and the puppet moves there. z-axis doesn't matter - battlefield is 2D.
         public readonly Dictionary<StatusType, StatusPacket> statusPackets;
         public TurnActions turnActions { get; private set; }
@@ -892,7 +892,7 @@ namespace CnfBattleSys
             isDead = false;
             currentDelay = 0;
             currentHP = stats.maxHP;
-            currentSP = currentStance.maxSP;
+            currentStamina = currentStance.maxStamina;
             turnActions = defaultTurnActions;
         }
 
@@ -1070,7 +1070,7 @@ namespace CnfBattleSys
         public void Die ()
         {
             currentHP = 0;
-            currentSP = 0;
+            currentStamina = 0;
             currentStance = StanceDatabase.Get(StanceType.None);
             currentDelay = float.PositiveInfinity;
             statusPackets.Clear();
@@ -1121,7 +1121,7 @@ namespace CnfBattleSys
                 case LogicalStatType.Stat_MaxHP:
                     return stats.maxHP;
                 case LogicalStatType.Stat_CurrentSP:
-                    return currentSP;
+                    return currentStamina;
                 case LogicalStatType.Stat_ATK:
                     return stats.ATK;
                 case LogicalStatType.Stat_DEF:

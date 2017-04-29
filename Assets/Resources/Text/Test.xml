@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
-<textBank>   <!--This is a test textbank to illustrate the schema-->
+<textBank>   
+  <!--This is a test textbank to illustrate the schema-->
 	<page name = "test0">
 		<eng>English text</eng>
 		<jpn>日本語を少し話します。</jpn>

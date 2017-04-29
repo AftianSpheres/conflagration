@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<textBank>
+  <!--BattleStance real names-->
+  <page name = "InvalidStance">
+    <eng>[Invalid stance data!]</eng>
+  </page>
+  <page name = "None">
+    <eng>-</eng>
+  </page>
+  <page name = "TestStance">
+    <eng>Test Stance [0]</eng>
+  </page>
+</textBank>

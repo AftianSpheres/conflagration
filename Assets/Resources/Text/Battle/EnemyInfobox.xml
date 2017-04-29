@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<textBank>
+  <!--Enemy infobox-->
+  <page name = "level_abbr">
+    <eng>LV. </eng>
+  </page>
+  <page name = "level_long">
+    <eng>Level </eng>
+  </page>
+</textBank>

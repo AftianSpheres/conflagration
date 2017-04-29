@@ -40,7 +40,7 @@ namespace CnfBattleSys
         public readonly short statBonus_SPE;
         public readonly short statBonus_HIT;
         public readonly short statBonus_EVA;
-        public readonly byte maxSP; // this is almost always 100 but I might wanna fudge it for enemies or something? idk
+        public readonly byte maxStamina; // this is almost always 100 but I might wanna fudge it for enemies or something? idk
 
         /// <summary>
         /// Constructor. Shouldn't be called by anything outside of Datasets.LoadStances().
@@ -83,7 +83,7 @@ namespace CnfBattleSys
             statBonus_SPE = _statBonus_SPE;
             statBonus_HIT = _statBonus_HIT;
             statBonus_EVA = _statBonus_EVA;
-            maxSP = _maxSP;
+            maxStamina = _maxSP;
             resistances = _resistances;
         }
     }

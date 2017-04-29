@@ -10,8 +10,8 @@ public class TextBankManager : Manager<TextBankManager>
     public TextLangType textLangType { get; private set; }
     private Dictionary<string, TextBank> textBanks;
     private Dictionary<Type, TextBank> commonTextBanks;
-    readonly static string[] commonTextBanks_FilePaths = new string[] { "Common/BattlerName" };
-    readonly static Type[] commonTextBanks_AssociatedEnums = new Type[] { typeof(CnfBattleSys.BattlerType) };
+    readonly static string[] commonTextBanks_FilePaths = new string[] { "Common/BattlerName", "Common/ActionName", "Common/StanceName" };
+    readonly static Type[] commonTextBanks_AssociatedEnums = new Type[] { typeof(CnfBattleSys.BattlerType), typeof(CnfBattleSys.ActionType), typeof(CnfBattleSys.StanceType) };
 
     /// <summary>
     /// MonoBehaviour.Awake
