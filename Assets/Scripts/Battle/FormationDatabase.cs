@@ -89,11 +89,11 @@ namespace CnfBattleSys
                 if (sideNode == null) return false; // formation doesn't have battlers on this side
                 else return true; // able to get battlers from this side
             };
-            for (int i = 0; i < sideNodes.Length; i++)
+            for (int s = 0; s < sideNodes.Length; s++)
             {
-                if (actOnSideNode(sideNodes[i]))
+                if (actOnSideNode(sideNodes[s]))
                 {
-                    BattlerSideFlags side = DBTools.ParseBattlerSideFlags(sideNames[i]);
+                    BattlerSideFlags side = DBTools.ParseBattlerSideFlags(sideNames[s]);
                     XmlNodeList battlers = sideNode.SelectNodes("battler");
                     for (int b = 0; b < battlers.Count; b++)
                     {
@@ -101,7 +101,7 @@ namespace CnfBattleSys
                         BattlerData battler = BattlerDatabase.Get(DBTools.ParseBattlerType(battlerNode.SelectSingleNode("battlerType").InnerText));
                         Vector2 pos = DBTools.ParseVector2(battlerNode.SelectSingleNode("position").InnerText);
                         BattleStance startStance = StanceDatabase.Get(DBTools.ParseStanceType(battlerNode.SelectSingleNode("startStance").InnerText));
-                        listBuffer.Add(new BattleFormation.FormationMember(battler, pos, startStance, side));
+                        listBuffer.Add(new BattleFormation.FormationMember(battler, pos, startStance, side, b));
                     }
                 }
             }

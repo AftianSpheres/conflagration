@@ -120,7 +120,7 @@ namespace CnfBattleSys
                     targetStr += _targets[i].puppet.gameObject.name;
                     if (i + 1 < _targets.Length) targetStr += ", ";
                 }
-                Debug.Log(user.puppet.gameObject.name + " is executing action " + action.actionID + "against " + targetStr);
+                Debug.Log(user.puppet.gameObject.name + " is executing action " + action.actionID + " against " + targetStr);
                 ChangeState(OverseerState.ExecutingAction);
                 user.CommitCurrentChosenActions();
                 if (action == ActionDatabase.SpecialActions.selfStanceBreakAction)

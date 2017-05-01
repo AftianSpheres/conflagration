@@ -152,7 +152,7 @@ namespace CnfBattleSys
             for (int s = 0; s < user.stances.Length; s++)
             {
                 ScoredActionTargets[] scoresForStance;
-                user.ChangeStance_Immediate(user.stances[s]); // guve the battker a provisional stance so its stats are right when we're running damage calcs, etc.
+                user.ChangeStance_ImmediateProvisional(user.stances[s]); // guve the battker a provisional stance so its stats are right when we're running damage calcs, etc.
                 if (user.stances[s] == originalStance) scoresForStance = GetScoresAndOptimumTargetSets(flags, user, currentStanceActions);
                 else scoresForStance = GetScoresAndOptimumTargetSets(flags, user, user.stances[s].actionSet);
                 float thisStanceHighestScore = float.MinValue;
@@ -167,7 +167,7 @@ namespace CnfBattleSys
                 }
                 if (thisStanceBestAction.action != ActionDatabase.SpecialActions.defaultBattleAction) output[s] = thisStanceBestAction;
             }
-            user.ChangeStance_Immediate(originalStance);
+            user.ChangeStance_ImmediateProvisional(originalStance);
             return output;
         }
 

@@ -10,7 +10,7 @@ public class TextBankManager : Manager<TextBankManager>
     public TextLangType textLangType { get; private set; }
     private Dictionary<string, TextBank> textBanks;
     private Dictionary<Type, TextBank> commonTextBanks;
-    readonly static string[] commonTextBanks_FilePaths = new string[] { "Common/BattlerName", "Common/ActionName", "Common/StanceName" };
+    readonly static string[] commonTextBanks_FilePaths = new string[] { "System/Common/BattlerName", "System/Common/ActionName", "System/Common/StanceName" };
     readonly static Type[] commonTextBanks_AssociatedEnums = new Type[] { typeof(CnfBattleSys.BattlerType), typeof(CnfBattleSys.ActionType), typeof(CnfBattleSys.StanceType) };
 
     /// <summary>
@@ -37,6 +37,7 @@ public class TextBankManager : Manager<TextBankManager>
 
     /// <summary>
     /// Loads in the specified common textbank and binds it to the given Type.
+    /// Note that you can only bind one textbank to each type.
     /// </summary>
     private void LoadCommonTextBank (string xmlFilePath, Type enumType)
     {

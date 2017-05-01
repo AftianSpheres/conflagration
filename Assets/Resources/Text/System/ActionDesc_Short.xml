@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<textBank>
+  <!--Action descriptions-->
+  <page name = "INTERNAL_BreakOwnStance">
+    <eng>Desc: Self Stance Break [this string should never appear]</eng>
+  </page>
+  <page name = "InvalidAction">
+    <eng>Desc: [Invalid action data!]</eng>
+  </page>
+  <page name = "None">
+    <eng>-</eng>
+  </page>
+  <page name = "TestMeleeAtk">
+    <eng>A very basic melee attack for testing.</eng>
+  </page>
+  <page name = "TestRangedAOEAtk">
+    <eng>An AOE attack that deals split magic and fire damage.</eng>
+  </page>
+  <page name = "TestHeal">
+    <eng>Heal something.</eng>
+  </page>
+  <page name = "TestBuff">
+    <eng>Buff a target's ATK.</eng>
+  </page>
+  <page name = "TestCounter">
+    <eng>You cannot describe counterattacks. Report this.</eng>
+  </page>
+</textBank>

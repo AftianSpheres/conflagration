@@ -103,6 +103,7 @@ public class BattleStage : MonoBehaviour
     public static BattleStage instance;
 
     public GameObject battlerPuppetPrefab;
+    public Camera battleViewportCamera;
 
 	/// <summary>
     /// MonoBehaviour.Awake
@@ -158,6 +159,7 @@ public class BattleStage : MonoBehaviour
     /// </summary>
     private void Initialize()
     {
+        bUI_ElementsGenerator.instance.AssignInfoboxesToBattlers();
         localState = LocalState.ReadyToAdvanceBattle;
     } 
 

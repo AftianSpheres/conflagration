@@ -15,5 +15,6 @@
         Die,
         TestAnim_OnHit,
         TestAnim_OnUse,
+        NoSell
     }
 }

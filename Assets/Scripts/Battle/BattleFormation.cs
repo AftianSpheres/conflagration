@@ -18,16 +18,18 @@ namespace CnfBattleSys
             public readonly Vector2 fieldPosition;
             public readonly BattleStance startStance;
             public readonly BattlerSideFlags side;
+            public readonly int asSideIndex;
 
             /// <summary>
             /// Constructor. Should only be called by FormationDatabase.Load()
             /// </summary>
-            public FormationMember(BattlerData _battler, Vector2 _fieldPosition, BattleStance _startStance, BattlerSideFlags _side)
+            public FormationMember(BattlerData _battler, Vector2 _fieldPosition, BattleStance _startStance, BattlerSideFlags _side, int _asSideIndex)
             {
                 battlerData = _battler;
                 fieldPosition = _fieldPosition;
                 startStance = _startStance;
                 side = _side;
+                asSideIndex = _asSideIndex;
                 if (!BattleUtility.IsSingleSide(side)) throw new System.Exception("Created a FormationMember with multiple sides. Fix that!");
             }
         }

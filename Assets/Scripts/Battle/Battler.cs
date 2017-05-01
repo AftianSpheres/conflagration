@@ -827,6 +827,7 @@ namespace CnfBattleSys
 
         // Things derived from a specific formation instance
         public BattlerSideFlags side { get; private set; } // This is a bitflag, but it should never do bitflaggy things here because that'd be weird.
+        public readonly int asSideIndex; // This is just the index of battler within side, and is mainly used to quickly identify which player party infobox a player-side battler should use.
 
         // Transients
         public bool isDead { get; private set; }
@@ -887,6 +888,7 @@ namespace CnfBattleSys
             currentStance = fm.startStance;
             logicalPosition = fm.fieldPosition;
             side = fm.side;
+            asSideIndex = fm.asSideIndex;
 
             // Initialize transients
             isDead = false;
@@ -1019,7 +1021,7 @@ namespace CnfBattleSys
         /// and you should be very careful to make sure you set the stance back
         /// to what it was originally when you're done.
         /// </summary>
-        public void ChangeStance_Immediate(BattleStance stance)
+        public void ChangeStance_ImmediateProvisional(BattleStance stance)
         {
             currentStance = stance;
         }
@@ -1032,8 +1034,10 @@ namespace CnfBattleSys
             if (stance == lockedStance) throw new System.Exception("Can't change stances to locked stance!");
             lockedStance = currentStance;
             currentStance = stance;
+            currentStamina = stance.maxStamina;
             statusPackets.Remove(StatusType.StanceBroken_Voluntary);
             statusPackets.Remove(StatusType.StanceBroken_Forced);
+            puppet.DispatchBattlerUIEvent(BattlerUIEventType.StanceChange);
         }
 
         /// <summary>
@@ -1047,6 +1051,7 @@ namespace CnfBattleSys
             // stance break is a special case - it doesn't have its own base delay value; the delay incurred by breaking your own stance is determined by the followthrough stance change delay of the last action you used
             if (turnActions.action.actionID == ActionType.INTERNAL_BreakOwnStance) ApplyDelay(turnActions.action.baseFollowthroughStanceChangeDelay);
             else ApplyDelay(turnActions.action.baseDelay);
+            DealOrHealStaminaDamage(turnActions.action.baseSPCost);
             lastActionExecuted = turnActions.action;
             turnActions = defaultTurnActions;
         }
@@ -1056,12 +1061,35 @@ namespace CnfBattleSys
         /// </summary>
         public void DealOrHealDamage (int dmg)
         {
-            currentHP -= dmg;
-            if (currentHP > stats.maxHP) currentHP = stats.maxHP;
-            if (currentHP <= 0) Die();
-            if (puppet == null) return;
-            else if (dmg > 0) puppet.DispatchAnimEvent(AnimEventType.Hit);
-            else if (dmg < 0) puppet.DispatchAnimEvent(AnimEventType.Heal);
+            if (dmg != 0)
+            {
+                currentHP -= dmg;
+                if (currentHP > stats.maxHP) currentHP = stats.maxHP;
+                if (currentHP <= 0) Die();
+                puppet.DispatchBattlerUIEvent(BattlerUIEventType.HPValueChange);
+                if (dmg > 0) puppet.DispatchAnimEvent(AnimEventType.Hit);
+                else if (dmg < 0) puppet.DispatchAnimEvent(AnimEventType.Heal);
+            }
+            else puppet.DispatchAnimEvent(AnimEventType.NoSell);
+
+        }
+
+        /// <summary>
+        /// Deals/heals stamina damage.
+        /// Immediately breaks stance if we're in the red.
+        /// </summary>
+        public void DealOrHealStaminaDamage (int dmg)
+        {
+            if (dmg != 0)
+            {
+                currentStamina -= dmg;
+                if (currentStamina > currentStance.maxStamina) currentStamina = currentStance.maxStamina;
+                else if (currentStamina < 0)
+                {
+                    BreakStance(-currentStamina);
+                }
+                puppet.DispatchBattlerUIEvent(BattlerUIEventType.StaminaValueChange);
+            }
         }
 
         /// <summary>
@@ -1216,6 +1244,7 @@ namespace CnfBattleSys
         /// <param name="turnActions"></param>
         public void ReceiveAThought (TurnActions _turnActions, BattlerAIMessageFlags messageFlags)
         {
+            if (_turnActions.action.actionID == ActionType.INTERNAL_BreakOwnStance && StanceBroken()) throw new System.Exception("u wot m8");
             turnActions = _turnActions;
             if ((messageFlags & BattlerAIMessageFlags.ExtendTurn) == BattlerAIMessageFlags.ExtendTurn)
                 BattleOverseer.ExtendCurrentTurn();

@@ -20,7 +20,7 @@ public class BattlerPuppet : MonoBehaviour
     private Vector3 offset;
     private bUI_ResourceBar hpBar;
     private bUI_ResourceBar staminaBar;
-    private bUI_EnemyInfobox enemyInfobox;
+    private bUI_BattlerInfobox battlerInfobox;
     private float stepTime;
 
     /// <summary>
@@ -90,12 +90,28 @@ public class BattlerPuppet : MonoBehaviour
     /// </summary>
     public void DispatchAnimEvent(AnimEventType animEventType)
     {
-        if (animEventType == AnimEventType.Hit || animEventType == AnimEventType.Heal)
-        {
-            if (hpBar != null) hpBar.HandleValueChanges();
-            if (staminaBar != null) staminaBar.HandleValueChanges();
-        }
         BattleStage.instance.PrepareAnimEvent(animEventType, battler);
+    }
+
+    /// <summary>
+    /// Processes the given battler UI event.
+    /// </summary>
+    public void DispatchBattlerUIEvent (BattlerUIEventType battlerUIEventType)
+    {
+        switch (battlerUIEventType)
+        {
+            case BattlerUIEventType.HPValueChange:
+                if (hpBar != null) hpBar.HandleValueChanges();
+                break;
+            case BattlerUIEventType.StaminaValueChange:
+                if (staminaBar != null) staminaBar.HandleValueChanges();
+                break;
+            case BattlerUIEventType.StanceChange:
+                if (battlerInfobox != null) battlerInfobox.DisplayStanceName();
+                break;
+            default:
+                throw new Exception("Bad battler UI event: " + battlerUIEventType.ToString());
+        }
     }
 
     /// <summary>
