@@ -159,7 +159,7 @@ public class BattleStage : MonoBehaviour
     /// </summary>
     private void Initialize()
     {
-        bUI_ElementsGenerator.instance.AssignInfoboxesToBattlers();
+        bUI_BattleUIController.instance.elementsGen.AssignInfoboxesToBattlers();
         localState = LocalState.ReadyToAdvanceBattle;
     } 
 

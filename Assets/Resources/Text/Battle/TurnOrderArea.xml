@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<textBank>
+  <!--Turn order whatsitmajig-->
+  <page name = "next">
+    <eng>NEXT</eng>
+  </page>
+  <page name = "now">
+    <eng>NOW</eng>
+  </page>
+</textBank>

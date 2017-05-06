@@ -305,12 +305,12 @@ namespace CnfBattleSys
             /// <summary>
             /// Battler that's currently taking a turn.
             /// </summary>
-            private static Battler currentTurnBattler;
+            internal static Battler currentTurnBattler;
             /// <summary>
             /// Battlers to give turns when that next becomes possible. Normally there should only actually be one Battler here at a time... but ties are a thing,
             /// and having multiple members in this list gives us an easy way to say "these guys need a tiebreaker."
             /// </summary>
-            private static List<Battler> battlersReadyToTakeTurns;
+            internal static List<Battler> battlersReadyToTakeTurns;
 
             /// <summary>
             /// First-run setup for turn management subsystem.
@@ -867,6 +867,64 @@ namespace CnfBattleSys
                     throw new System.Exception("Tried to find allies of side " + side + ", but it wasn't in the table.");
             }
             for (int i = 0; i < tmpBattlersListBuffer.Count; i++) if (!outputList.Contains(tmpBattlersListBuffer[i])) outputList.Add(tmpBattlersListBuffer[i]);
+        }
+
+        /// <summary>
+        /// Gets all battlers by the order they're going to take their turns in.
+        /// This is actually just a more readable shortcut for GetBattlersBySimulatedTurnOrder(-1)
+        /// </summary>
+        public static Battler[] GetBattlersByTurnOrder()
+        {
+            return GetBattlersBySimulatedTurnOrder(-1);
+        }
+
+        /// <summary>
+        /// Gets all battlers by the order they're going to take their turns in,
+        /// plus an additional entry representing the next turn of the current acting battler
+        /// if it has a delay of prospectiveDelay.
+        /// If prospectiveDelay is less than 0, returns just the current turn order.
+        /// </summary>
+        public static Battler[] GetBattlersBySimulatedTurnOrder(float prospectiveDelay)
+        {
+            tmpBattlersListBuffer.Clear();
+            if (TurnManagementSubsystem.currentTurnBattler != null) tmpBattlersListBuffer.Add(TurnManagementSubsystem.currentTurnBattler);
+            else if (prospectiveDelay >= 0) throw new System.Exception("Can't get turn order with prospective delay value: no battler is acting");
+            if (TurnManagementSubsystem.battlersReadyToTakeTurns.Count > 0)
+            {
+                for (int i = 0; i < TurnManagementSubsystem.battlersReadyToTakeTurns.Count; i++) tmpBattlersListBuffer.Add(TurnManagementSubsystem.battlersReadyToTakeTurns[i]);
+            }
+            int skippedBattlers = 0;
+            int cnt = allBattlers.Count;
+            if (prospectiveDelay >= 0) cnt++;
+            while (tmpBattlersListBuffer.Count + skippedBattlers < cnt)
+            {
+                float lowestRemainingDelay = float.MaxValue;
+                int thisIterationBattlerIndex = -1;
+                for (int i = 0; i < allBattlers.Count; i++)
+                {
+                    if (tmpBattlersListBuffer.Contains(allBattlers[i])) continue; // battler already in the list
+                    else if (allBattlers[i].isDead)
+                    {
+                        skippedBattlers++; // don't hang
+                        continue; // it's dead so it ain't gonna get no more turns
+                    }
+                    else
+                    {
+                        if (allBattlers[i].currentDelay < lowestRemainingDelay)
+                        {
+                            lowestRemainingDelay = allBattlers[i].currentDelay;
+                            thisIterationBattlerIndex = i;
+                        }
+                    }
+                }
+                if (prospectiveDelay >= 0 && prospectiveDelay < lowestRemainingDelay)
+                {
+                    tmpBattlersListBuffer.Add(TurnManagementSubsystem.currentTurnBattler);
+                    continue;            
+                }
+                if (thisIterationBattlerIndex > -1) tmpBattlersListBuffer.Add(allBattlers[thisIterationBattlerIndex]);
+            }
+            return tmpBattlersListBuffer.ToArray();
         }
 
         /// <summary>

@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<textBank>
+  <!--Action description box-->
+  <page name = "warning">
+    <eng>Using this action will break your stance!</eng>
+  </page>
+  <page name = "details">
+    <eng>[spCost] stamina | [delay] delay</eng>
+  </page>
+</textBank>
