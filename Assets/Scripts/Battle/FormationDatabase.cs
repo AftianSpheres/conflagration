@@ -112,9 +112,22 @@ namespace CnfBattleSys
         /// <summary>
         /// Gets a BattleFormation corresponding to formationID from the dataset.
         /// </summary>
-        public static BattleFormation Get(FormationType formationID)
+        public static BattleFormation Get (FormationType formationID)
         {
             return _formations[(int)formationID];
+        }
+
+        /// <summary>
+        /// Gets all non-special battle formations.
+        /// </summary>
+        public static BattleFormation[] GetAll ()
+        {
+            BattleFormation[] returnArray = new BattleFormation[_formations.Length - 1]; // all but the empty formation
+            for (int i = 0; i < returnArray.Length; i++)
+            {
+                returnArray[i] = _formations[i + 1];
+            }
+            return returnArray;
         }
     }
 }

@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<!--Misc. global ui strings-->
+<textBank>
+  <page name ="loading">
+    <eng>Now loading...</eng>
+  </page>
+</textBank>

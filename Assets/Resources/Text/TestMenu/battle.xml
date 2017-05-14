@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!--Battle test menu-->
+<textBank>
+  <page name = "infoString">
+    <eng>cnfbattlesys testmenu | build [#buildstring]</eng>
+  </page>
+  <page name = "selectFormation">
+    <eng>Select formation to start battle</eng>
+  </page>
+  <page name = "btn_line0">
+    <eng>[#formationNo], [#formationID], venue [#venueID], bgm [#bgmID]</eng>
+  </page>
+  <page name = "btn_battler">
+    <eng>[#enemyID]|[[#sideID]]</eng>
+  </page>
+</textBank>

@@ -112,6 +112,6 @@ public class bUI_BattlerInfobox : MonoBehaviour
     /// </summary>
     public void SyncPositionWithPuppet ()
     {
-        transform.position = BattleStage.instance.battleViewportCamera.WorldToScreenPoint(puppet.transform.position);
+        transform.position = bUI_BattleUIController.instance.cameraHarness.viewportCam.WorldToScreenPoint(puppet.transform.position);
     }
 }

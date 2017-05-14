@@ -8,6 +8,7 @@ public class bUI_BattleUIController : MonoBehaviour
 {
     public static bUI_BattleUIController instance { get; private set; }
     public bUI_ActionInfoArea actionInfoArea { get; private set; }
+    public bUI_CameraHarness cameraHarness { get; private set; }
     public bUI_ElementsGenerator elementsGen { get; private set; }
     public bUI_TurnOrderArea turnOrderArea { get; private set; }
     public GameObject enemyInfoboxGroup { get; private set; }
@@ -27,6 +28,14 @@ public class bUI_BattleUIController : MonoBehaviour
     public void RegisterActionInfoArea (bUI_ActionInfoArea _actionInfoArea)
     {
         actionInfoArea = _actionInfoArea;
+    }
+
+    /// <summary>
+    /// Registers camera harness w/ battle ui controller
+    /// </summary>
+    public void RegisterCameraHarness (bUI_CameraHarness _cameraHarness)
+    {
+        cameraHarness = _cameraHarness;
     }
 
     /// <summary>

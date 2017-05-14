@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 using System;
 using System.Collections.Generic;
 using CnfBattleSys;
@@ -94,16 +95,13 @@ public class BattleStage : MonoBehaviour
     private Queue<BattlerPuppet> unattachedPuppets;
     private List<StageEvent> allActiveStageEvents;
     private List<StageEvent> stageEventsBuffer;
-
     /// <summary>
     /// BattleStage isn't actually a singleton, but it interacts with a lot of static classes on a message-passing basis,
     /// so it's useful for those to be able to address the current instance without being given a reference to a specific
     /// BattleStage. There should never be more than one of these in a scene at a time, anyway.
     /// </summary>
     public static BattleStage instance;
-
     public GameObject battlerPuppetPrefab;
-    public Camera battleViewportCamera;
 
 	/// <summary>
     /// MonoBehaviour.Awake
@@ -154,14 +152,12 @@ public class BattleStage : MonoBehaviour
 
     /// <summary>
     /// Called when BattleStage is offline if starting a new battle.
-    /// Will eventually do setup things for stage model, etc.
-    /// Right now it just sets the state to ReadyToAdvanceBattle.
     /// </summary>
     private void Initialize()
     {
         bUI_BattleUIController.instance.elementsGen.AssignInfoboxesToBattlers();
         localState = LocalState.ReadyToAdvanceBattle;
-    } 
+    }
 
     /// <summary>
     /// Gets a puppet from the pool if there are any to be had, or creates a new one if there aren't.
