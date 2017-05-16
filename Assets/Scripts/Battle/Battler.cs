@@ -1015,6 +1015,23 @@ namespace CnfBattleSys
         }
 
         /// <summary>
+        /// Applies any necessary modifiers to an action's base stamina cost and returns the final value.
+        /// </summary>
+        public int CalcActionStaminaCost (int baseStaminaCost)
+        {
+            return baseStaminaCost; // No status effects currently exist that would modify stamina cost.
+        }
+
+        /// <summary>
+        /// Returns true if the battler is allowed to execute this action,
+        /// false if one or more active statuses prevents it.
+        /// </summary>
+        public bool CanExecuteAction (BattleAction action)
+        {
+            return true; // No status effects that would preclude action execution presently exist, so this will always return true until we can give it something to do.
+        }
+
+        /// <summary>
         /// Sets battler stance immediately. Doesn't do any of the normal
         /// stance break behavior. This should only be used to let the AI
         /// system test a Battler's prospective actions in multiple stances,
@@ -1051,7 +1068,7 @@ namespace CnfBattleSys
             // stance break is a special case - it doesn't have its own base delay value; the delay incurred by breaking your own stance is determined by the followthrough stance change delay of the last action you used
             if (turnActions.action.actionID == ActionType.INTERNAL_BreakOwnStance) ApplyDelay(turnActions.action.baseFollowthroughStanceChangeDelay);
             else ApplyDelay(turnActions.action.baseDelay);
-            DealOrHealStaminaDamage(turnActions.action.baseSPCost);
+            DealOrHealStaminaDamage(CalcActionStaminaCost(turnActions.action.baseSPCost));
             lastActionExecuted = turnActions.action;
             turnActions = defaultTurnActions;
         }

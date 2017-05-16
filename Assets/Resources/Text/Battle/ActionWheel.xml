@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<textBank>
+  <!--Action wheel-->
+  <page name = "cmd_Attack">
+    <eng>Attack</eng>
+  </page>
+  <page name = "cmd_Break">
+    <eng>Break</eng>
+  </page>
+  <page name = "cmd_Move">
+    <eng>Move</eng>
+  </page>
+  <page name = "cmd_Run">
+    <eng>Run</eng>
+  </page>
+  <page name = "error">
+    <eng>Error!</eng>
+  </page>
+</textBank>

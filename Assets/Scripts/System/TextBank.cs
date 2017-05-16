@@ -20,14 +20,19 @@ public class TextBank
         /// The text associated with this TextBank.Page.
         /// </summary>
         public readonly string text;
+        /// <summary>
+        /// Is this a valid page?
+        /// </summary>
+        public readonly bool isValid;
 
         /// <summary>
         /// Constructor for a Page. Takes an unformatted string.
         /// Once we have control codes and shit, this needs to parse those out and set up the appropriate metadata.
         /// </summary>
-        public Page(string _text)
+        public Page(string _text, bool _isValid = true)
         {
             text = _text;
+            isValid = _isValid;
         }
     }
 
@@ -156,7 +161,7 @@ public class TextBank
         {
             throw new Exception("Can't get enum-associated textbanks with page indices!");
         }
-        if (index >= pages.Length) return new Page("Bad textbank / page index combination: " + fileName + ", page " + index);
+        if (index >= pages.Length) return new Page("Bad textbank / page index combination: " + fileName + ", page " + index, false);
         return pages[index];
     }
 
@@ -168,10 +173,10 @@ public class TextBank
         if (textLangType != TextBankManager.Instance.textLangType) LoadIn();
         if (backingDict_ForEnumAssociatedBank != null)
         {
-            if (!backingDict_ForEnumAssociatedBank.ContainsKey(name)) return new Page("Bad common textbank / page name combination: " + fileName + ", named page " + name);
+            if (!backingDict_ForEnumAssociatedBank.ContainsKey(name)) return new Page("Bad common textbank / page name combination: " + fileName + ", named page " + name, false);
             return backingDict_ForEnumAssociatedBank[name];
         }
-        if (!namedPageIndices.ContainsKey(name)) return new Page("Bad textbank / page name combination: " + fileName + ", named page " + name);
+        if (!namedPageIndices.ContainsKey(name)) return new Page("Bad textbank / page name combination: " + fileName + ", named page " + name, false);
         return pages[namedPageIndices[name]];
     }
 

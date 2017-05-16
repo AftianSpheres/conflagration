@@ -6,6 +6,20 @@ using System.Collections;
 /// </summary>
 public class bUI_BattleUIController : MonoBehaviour
 {
+    /// <summary>
+    /// Commands that other parts of the battle UI can pass to BattleUIController.
+    /// </summary>
+    public enum Command
+    {
+        None,
+        Back,
+        Attack,
+        Break,
+        Move,
+        Run,
+        CloseAttackMenu
+    }
+
     public static bUI_BattleUIController instance { get; private set; }
     public bUI_ActionInfoArea actionInfoArea { get; private set; }
     public bUI_CameraHarness cameraHarness { get; private set; }

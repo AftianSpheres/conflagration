@@ -420,6 +420,7 @@ namespace CnfBattleSys
         /// </summary>
         public static float normalizedSpeed { get; private set; }
         public static BattleFormation activeFormation { get; private set; }
+        public static Battler currentTurnBattler { get { return TurnManagementSubsystem.currentTurnBattler; } }
         public static OverseerState overseerState { get; private set; }
 
         public static List<Battler> allBattlers { get; private set; }

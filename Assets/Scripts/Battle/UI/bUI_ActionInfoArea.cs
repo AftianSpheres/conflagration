@@ -67,10 +67,11 @@ public class bUI_ActionInfoArea : MonoBehaviour
         actionName.text = actionNamesBank.GetPage(actionType).text;
         actionDescription.text = actionDescsBank.GetPage(actionType.ToString()).text;
         string detailsString = localBank.GetPage("details").text;
+        int finalStaminaCost = user.CalcActionStaminaCost(battleAction.baseSPCost);
         detailsString = detailsString.Replace(delayPlaceholder, (battleAction.baseDelay * user.speedFactor).ToString());
-        detailsString = detailsString.Replace(staminaCostPlaceholder, battleAction.baseSPCost.ToString());
+        detailsString = detailsString.Replace(staminaCostPlaceholder, finalStaminaCost.ToString());
         actionDetails.text = detailsString;
-        staminaWarning.gameObject.SetActive(user.currentStamina <= battleAction.baseSPCost);
+        staminaWarning.gameObject.SetActive(user.currentStamina <= finalStaminaCost);
     }
 
     /// <summary>
