@@ -18,6 +18,49 @@ using MovementEffects;
 public class ExtendedSceneManager : Manager<ExtendedSceneManager>
 {
     /// <summary>
+    /// Contains scene load/unload rule generators.
+    /// </summary>
+    private static class Rules
+    {
+        /// <summary>
+        /// Produce a method that compares to the given SceneRing bitmask.
+        /// If extendedScene.metadata.sceneRing is in that bitmask, fire off the given action.
+        /// </summary>
+        public static Action<ExtendedScene> InRings (SceneRing comparison, Action<ExtendedScene> action)
+        {
+            return (extendedScene) =>
+            {
+                if ((comparison & extendedScene.metadata.sceneRing) == comparison) action(extendedScene);
+            };
+        }
+
+        /// <summary>
+        /// Produce a method that compares to the given SceneRing bitmask.
+        /// If extendedScene.metadata.sceneRing is in that bitmask and is the active scene in its ring,
+        /// fire off the given action.
+        /// </summary>
+        public static Action<ExtendedScene> InRingsAndActive (SceneRing comparison, Action<ExtendedScene> action)
+        {
+            return (extendedScene) =>
+            {
+                if ((comparison & extendedScene.metadata.sceneRing) == comparison && Instance.GetActiveSceneInRing(extendedScene.metadata.sceneRing) == extendedScene) action(extendedScene);
+            };
+        }
+
+        /// <summary>
+        /// Produce a method that compares to the given SceneRing bitmask.
+        /// If extendedScene.metadata.sceneRing is in that bitmask and isn't the active scene in its ring,
+        /// fire off the given action.
+        /// </summary>
+        public static Action<ExtendedScene> InRingsAndInactive(SceneRing comparison, Action<ExtendedScene> action)
+        {
+            return (extendedScene) =>
+            {
+                if ((comparison & extendedScene.metadata.sceneRing) == comparison && Instance.GetActiveSceneInRing(extendedScene.metadata.sceneRing) != extendedScene) action(extendedScene);
+            };
+        }
+    }
+    /// <summary>
     /// Stages of the batch load/unload process.
     /// </summary>
     public enum LoadPhase
@@ -25,16 +68,6 @@ public class ExtendedSceneManager : Manager<ExtendedSceneManager>
         None,
         LoadIn,
         Unload
-    }
-    /// <summary>
-    /// Results a load/unload rule can return.
-    /// </summary>
-    private enum LoadRuleResult
-    {
-        DoNothing,
-        Unload,
-        Suspend,
-        Unsuspend
     }
     /// <summary>
     /// Enables detailed log output from the ExtendedSceneManager,
@@ -47,12 +80,13 @@ public class ExtendedSceneManager : Manager<ExtendedSceneManager>
     private Dictionary<SceneRing, ExtendedScene> lastScenesActiveInRings;
     private Dictionary<SceneRing, List<int>> sceneIndicesBySceneRings;
     private ExtendedScene[] extendedScenesArray;
-    private Func<ExtendedScene, LoadRuleResult>[] systemScenesRules;
-    private Func<ExtendedScene, LoadRuleResult>[] venueScenesRules;
     private List<AsyncOperation> currentLoadingOps;
     private List<ExtendedScene> loadedScenes;
     private List<ExtendedScene> scenesToUnload;
     private Timing myTiming;
+    private Action<ExtendedScene>[] systemScenesRules = { Rules.InRings(SceneRing.SystemScenes, scene => { scene.StageForUnloading(); }) };
+    private Action<ExtendedScene>[] venueScenesRules =  { Rules.InRingsAndInactive(SceneRing.WorldScenes, scene => { scene.StageForUnloading(); }),
+                                                          Rules.InRingsAndActive(SceneRing.WorldScenes, scene => { scene.SuspendScene(); }) };
 
     /// <summary>
     /// MonoBehaviour.Awake()
@@ -60,7 +94,6 @@ public class ExtendedSceneManager : Manager<ExtendedSceneManager>
     void Awake ()
     {
         SceneRing[] rings = (SceneRing[])Enum.GetValues(typeof(SceneRing));
-        InitializeRulesets();
         SceneDatatable.Bootstrap();
         BattleOverseer.FirstRunSetup();
         currentLoadingOps = new List<AsyncOperation>();
@@ -99,9 +132,9 @@ public class ExtendedSceneManager : Manager<ExtendedSceneManager>
     /// <summary>
     /// Fetch the appropriate ruleset for the given ExtendedScene to use when loading in.
     /// </summary>
-    private Func<ExtendedScene, LoadRuleResult>[] AcquireSceneRingRules (ExtendedScene loadingScene)
+    private Action<ExtendedScene>[] AcquireSceneRingRules (ExtendedScene loadingScene)
     {
-        Func<ExtendedScene, LoadRuleResult>[] ruleset = new Func<ExtendedScene, LoadRuleResult>[0];
+        Action<ExtendedScene>[] ruleset = new Action<ExtendedScene>[0];
         switch (loadingScene.metadata.sceneRing)
         {
             case SceneRing.None:
@@ -130,29 +163,12 @@ public class ExtendedSceneManager : Manager<ExtendedSceneManager>
     /// </summary>
     public void ApplySceneRingRules (ExtendedScene loadingScene)
     {
-        Func<ExtendedScene, LoadRuleResult>[] ruleset = AcquireSceneRingRules(loadingScene);
+        Action<ExtendedScene>[] ruleset = AcquireSceneRingRules(loadingScene);
         for (int r = 0; r < ruleset.Length; r++)
         {
             for (int s = 0; s < loadedScenes.Count; s++)
             {
-                if (loadedScenes[s] == loadingScene) continue;
-                switch (ruleset[r](loadedScenes[s]))
-                {
-                    case LoadRuleResult.DoNothing:
-                        break;
-                    case LoadRuleResult.Unload:
-                        loadedScenes[s].StageForUnloading();
-                        break;
-                    case LoadRuleResult.Suspend:
-                        loadedScenes[s].SuspendScene();
-                        break;
-                    case LoadRuleResult.Unsuspend:
-                        loadedScenes[s].UnsuspendScene();
-                        break;
-                    default:
-                        Util.Crash(new Exception("Bad LoadRuleResult: " + ruleset[r](loadedScenes[s]).ToString()));
-                        break;
-                }
+                if (loadedScenes[s] != loadingScene) ruleset[r](loadedScenes[s]);
             }
         }
     }
@@ -295,39 +311,6 @@ public class ExtendedSceneManager : Manager<ExtendedSceneManager>
     {
         extendedScenesArray[extendedScene.buildIndex] = extendedScene;
         sceneIndicesBySceneRings[extendedScene.metadata.sceneRing].Add(extendedScene.buildIndex);
-    }
-
-    /// <summary>
-    /// Sets up the scene unload/suspend rulesets.
-    /// </summary>
-    private void InitializeRulesets()
-    {
-        Func<SceneRing, LoadRuleResult, Func<ExtendedScene, LoadRuleResult>> inRings = (checkRings, desiredResult) =>
-        {
-            return (existingScene) =>
-            {
-                if ((checkRings & existingScene.metadata.sceneRing) == existingScene.metadata.sceneRing) return desiredResult;
-                else return LoadRuleResult.DoNothing;
-            };
-        };
-        Func<SceneRing, LoadRuleResult, Func<ExtendedScene, LoadRuleResult>> inRingsAndActive = (checkRings, desiredResult) =>
-        {
-            return (existingScene) =>
-            {
-                if ((checkRings & existingScene.metadata.sceneRing) == existingScene.metadata.sceneRing && lastScenesActiveInRings[existingScene.metadata.sceneRing] == existingScene) return desiredResult;
-                else return LoadRuleResult.DoNothing;
-            };
-        };
-        Func<SceneRing, LoadRuleResult, Func<ExtendedScene, LoadRuleResult>> inRingsAndInactive = (checkRings, desiredResult) =>
-        {
-            return (existingScene) =>
-            {
-                if ((checkRings & existingScene.metadata.sceneRing) == existingScene.metadata.sceneRing && lastScenesActiveInRings[existingScene.metadata.sceneRing] != existingScene) return desiredResult;
-                else return LoadRuleResult.DoNothing;
-            };
-        };
-        systemScenesRules = new Func<ExtendedScene, LoadRuleResult>[] { inRings(SceneRing.SystemScenes, LoadRuleResult.Unload) };
-        venueScenesRules = new Func<ExtendedScene, LoadRuleResult>[] { inRingsAndActive(SceneRing.WorldScenes, LoadRuleResult.Suspend), inRingsAndInactive(SceneRing.WorldScenes, LoadRuleResult.Unload) };
     }
 
     /// <summary>

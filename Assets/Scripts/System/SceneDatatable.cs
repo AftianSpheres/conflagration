@@ -75,12 +75,17 @@ public static class SceneDatatable
     /// <summary>
     /// HACK: We need to force the scene datatable to load before ExtendedSceneManager does anything
     /// so this function just exists to poke at its children and get them to initialize their static fields.
+    /// The compiler will tell us this value isn't used. It's right - we don't do anything with this value. 
+    /// But we have to run this code to prompt the field initializers to run before the metadata table
+    /// is used, since the SceneMetadata structs those create get compied into the scene metadata table.
     /// </summary>
     public static void Bootstrap ()
     {
+#pragma warning disable CS0219 // because this is the worst function
         SceneRing throwaway = GlobalScenes.loadingScreen.sceneRing;
         throwaway = SystemScenes.battleSystem.sceneRing;
         throwaway = VenueScenes.Get(VenueType.TestVenue).sceneRing;
         // you're worthless and idgaf what happens to you.
+#pragma warning restore
     }
 }
