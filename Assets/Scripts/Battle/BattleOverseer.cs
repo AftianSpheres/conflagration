@@ -16,6 +16,7 @@ namespace CnfBattleSys
         /// </summary>
         public enum OverseerState 
         {
+            None,
             Offline,
             BetweenTurns,
             WaitingForInput,
@@ -333,7 +334,7 @@ namespace CnfBattleSys
             /// </summary>
             internal static void ExtendCurrentTurn ()
             {
-                if (currentTurnBattler == null) throw new System.Exception("Can't extend current turn because there _isn't_ a current turn.");
+                if (currentTurnBattler == null) Util.Crash(new System.Exception("Can't extend current turn because there _isn't_ a current turn."));
                 battlersReadyToTakeTurns.Insert(0, currentTurnBattler);
             }
 
@@ -448,6 +449,8 @@ namespace CnfBattleSys
         /// </summary>
         public static void StartBattle (BattleFormation formation)
         {
+            if (overseerState != OverseerState.Offline) Util.Crash(new System.Exception("Can't start a battle while the battle overseer isn't offline!"));
+            Cleanup();
             activeFormation = formation;
             for (int b = 0; b < activeFormation.battlers.Length; b++)
             {
@@ -503,9 +506,11 @@ namespace CnfBattleSys
             if (!CheckIfBattleAlreadyOver()) switch (overseerState)
             {
                 case OverseerState.Paused:
-                    throw new System.Exception("Can't advance battle state: battle is paused.");
+                    Util.Crash(new System.Exception("Can't advance battle state: battle is paused."));
+                    break;
                 case OverseerState.Offline:
-                    throw new System.Exception("Can't advance battle state: battle system is offline.");
+                    Util.Crash(new System.Exception("Can't advance battle state: battle system is offline."));
+                    break;
                 case OverseerState.BetweenTurns:
                     BetweenTurns();
                     if (TurnManagementSubsystem.ReadyToTakeATurn())
@@ -514,16 +519,20 @@ namespace CnfBattleSys
                     }
                     break;
                 case OverseerState.WaitingForInput:
-                    throw new System.Exception("Can't advance battle state: waiting for player input.");
+                    Util.Crash(new System.Exception("Can't advance battle state: waiting for player input."));
+                    break;
                 case OverseerState.ExecutingAction:
                     ActionExecutionSubsystem.StepSubactions(1);
                     break;
                 case OverseerState.BattleWon:
-                    throw new System.Exception("Can't advance battle state: battle is already won.");
+                    Util.Crash(new System.Exception("Can't advance battle state: battle is already won."));
+                    break;
                 case OverseerState.BattleLost:
-                    throw new System.Exception("Can't advance battle state: battle is already lost.");
+                    Util.Crash(new System.Exception("Can't advance battle state: battle is already lost."));
+                    break;
                 default:
-                    throw new System.Exception("Can't advance battle state: invalid overseer state " + overseerState.ToString());
+                    Util.Crash(new System.Exception("Can't advance battle state: invalid overseer state " + overseerState.ToString()));
+                    break;
             }
         }
 
@@ -550,11 +559,11 @@ namespace CnfBattleSys
                 case OverseerState.BetweenTurns:
                 case OverseerState.ExecutingAction:
                 case OverseerState.WaitingForInput:
-                    if (_state == OverseerState.Offline) throw new System.Exception("Can't change state back to offline!");
+                    if (_state == OverseerState.Offline) Util.Crash(new System.Exception("Can't change state back to offline!"));
                     break;
                 case OverseerState.BattleWon:
                 case OverseerState.BattleLost:
-                    if (_state != OverseerState.Offline) throw new System.Exception("Can only change state to offline after end of battle");
+                    if (_state != OverseerState.Offline) Util.Crash(new System.Exception("Can only change state to offline after end of battle"));
                     break;
                 default:
                     break;
@@ -567,7 +576,8 @@ namespace CnfBattleSys
         /// </summary>
         public static void FirstRunSetup ()
         {
-            if (allBattlers != null) throw new System.Exception("BattleOverseer.FirstRunSetup can't be called more than once!");
+            if (allBattlers != null) Util.Crash(new System.Exception("BattleOverseer.FirstRunSetup can't be called more than once!"));
+            overseerState = OverseerState.Offline;
             ActionDatabase.Load();
             StanceDatabase.Load(); // stances reference actions
             BattlerDatabase.Load(); // battlers reference stances
@@ -602,6 +612,7 @@ namespace CnfBattleSys
         /// </summary>
         private static void Cleanup()
         {
+            overseerState = OverseerState.Offline;
             activeFormation = null;
             normalizedSpeed = 0;
             allBattlers.Clear();
@@ -660,7 +671,7 @@ namespace CnfBattleSys
         /// </summary>
         private static Battler BreakTie (Battler[] tiedBattlers)
         {
-            if (tiedBattlers.Length == 0) throw new System.Exception("You're trying to break a tie between no battlers. Protip: ain't nobody gonna win that one."); 
+            if (tiedBattlers.Length == 0) Util.Crash(new System.Exception("You're trying to break a tie between no battlers. Protip: ain't nobody gonna win that one.")); 
             while (battlerTiebreakerStack.Count > 0)
             {
                 Battler b = battlerTiebreakerStack.Pop();
@@ -669,7 +680,8 @@ namespace CnfBattleSys
                     if (tiedBattlers[i] == b) return b;
                 }
             }
-            throw new System.Exception("Tried to break a tie, but none of the tiedBattlers were in the battlerTiebreakerStack. That... shouldn't happen.");
+            Util.Crash(new System.Exception("Tried to break a tie, but none of the tiedBattlers were in the battlerTiebreakerStack. That... shouldn't happen."));
+            return default(Battler);
         }
 
         /// <summary>
@@ -838,7 +850,8 @@ namespace CnfBattleSys
                     tmpBattlersListBuffer.AddRange(battlersBySide[BattlerSideFlags.GenericNeutralSide]);
                     break;
                 default:
-                    throw new System.Exception("Tried to find allies of side " + side + ", but it wasn't in the table.");
+                    Util.Crash(new System.Exception("Tried to find allies of side " + side + ", but it wasn't in the table."));
+                    break;
             }
             for (int i = 0; i < tmpBattlersListBuffer.Count; i++) if (!outputList.Contains(tmpBattlersListBuffer[i])) outputList.Add(tmpBattlersListBuffer[i]);
         }
@@ -865,7 +878,8 @@ namespace CnfBattleSys
                     tmpBattlersListBuffer.AddRange(battlersBySide[BattlerSideFlags.GenericNeutralSide]);
                     break;
                 default:
-                    throw new System.Exception("Tried to find allies of side " + side + ", but it wasn't in the table.");
+                    Util.Crash(new System.Exception("Tried to find allies of side " + side + ", but it wasn't in the table."));
+                    break;
             }
             for (int i = 0; i < tmpBattlersListBuffer.Count; i++) if (!outputList.Contains(tmpBattlersListBuffer[i])) outputList.Add(tmpBattlersListBuffer[i]);
         }
@@ -889,7 +903,7 @@ namespace CnfBattleSys
         {
             tmpBattlersListBuffer.Clear();
             if (TurnManagementSubsystem.currentTurnBattler != null) tmpBattlersListBuffer.Add(TurnManagementSubsystem.currentTurnBattler);
-            else if (prospectiveDelay >= 0) throw new System.Exception("Can't get turn order with prospective delay value: no battler is acting");
+            else if (prospectiveDelay >= 0) Util.Crash(new System.Exception("Can't get turn order with prospective delay value: no battler is acting"));
             if (TurnManagementSubsystem.battlersReadyToTakeTurns.Count > 0)
             {
                 for (int i = 0; i < TurnManagementSubsystem.battlersReadyToTakeTurns.Count; i++) tmpBattlersListBuffer.Add(TurnManagementSubsystem.battlersReadyToTakeTurns[i]);
@@ -947,7 +961,8 @@ namespace CnfBattleSys
                 case BattlerSideFlags.GenericNeutralSide:
                     break;
                 default:
-                    throw new System.Exception("Tried to find enemies of side " + side + ", but it wasn't in the table.");
+                    Util.Crash(new System.Exception("Tried to find enemies of side " + side + ", but it wasn't in the table."));
+                    break;
             }
             for (int i = 0; i < tmpBattlersListBuffer.Count; i++) if (!outputList.Contains(tmpBattlersListBuffer[i])) outputList.Add(tmpBattlersListBuffer[i]);
         }
@@ -971,7 +986,8 @@ namespace CnfBattleSys
                     tmpBattlersListBuffer.AddRange(battlersBySide[BattlerSideFlags.GenericEnemySide]);
                     break;
                 default:
-                    throw new System.Exception("Tried to find neutrals for side " + side + ", but it wasn't in the table.");
+                    Util.Crash(new System.Exception("Tried to find neutrals for side " + side + ", but it wasn't in the table."));
+                    break;
             }
             for (int i = 0; i < tmpBattlersListBuffer.Count; i++) if (!outputList.Contains(tmpBattlersListBuffer[i])) outputList.Add(tmpBattlersListBuffer[i]);
         }

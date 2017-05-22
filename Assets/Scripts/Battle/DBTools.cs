@@ -151,7 +151,7 @@ namespace CnfBattleSys
         public static Vector2 ParseVector2 (string s)
         {
             string[] substrings = s.Split(',');
-            if (substrings.Length > 2) throw new Exception("Unrecognized vector2-as-string encoding: " + s);
+            if (substrings.Length > 2) Util.Crash(new Exception("Unrecognized vector2-as-string encoding: " + s));
             return new Vector2(float.Parse(substrings[0]), float.Parse(substrings[1]));
         }
 
@@ -160,11 +160,11 @@ namespace CnfBattleSys
         /// </summary>
         public static BattlerData.Growths GetGrowthsFromXML (XmlNode growthsNode, XmlNode workingNode)
         {
-            if (growthsNode == null) throw new Exception("No growths node!");
+            if (growthsNode == null) Util.Crash(new Exception("No growths node!"));
             Action<string> actOnNode = (node) =>
             {
                 workingNode = growthsNode.SelectSingleNode(node);
-                if (workingNode == null) throw new Exception("Malformed growths set in xml file - missing node  " + node);
+                if (workingNode == null) Util.Crash(new Exception("Malformed growths set in xml file - missing node  " + node));
             };
             actOnNode("MaxHP");
             float HP = float.Parse(workingNode.InnerText);

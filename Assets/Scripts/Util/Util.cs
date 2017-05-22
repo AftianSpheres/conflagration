@@ -1,5 +1,8 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Collections.Generic;
+using UnityEngine;
 using CnfBattleSys;
+using MovementEffects;
 
 /// <summary>
 /// Misc. helper functions.
@@ -19,9 +22,9 @@ public static class Util
     private static void GetBuildNumber ()
     {
         TextAsset buildNumberFile = Resources.Load<TextAsset>(buildNumberPath);
-        if (buildNumberFile == null) throw new System.Exception("Couldn't load build number file!");
+        if (buildNumberFile == null) Crash(new Exception("Couldn't load build number file!"));
         _buildNumber = ulong.Parse(buildNumberFile.text);
-        if (_buildNumber == 0) throw new System.Exception("Build number of 0 should never happen - check the incrementer");
+        if (_buildNumber == 0) Crash(new Exception("Build number of 0 should never happen - check the incrementer"));
     }
 
     /// <summary>
@@ -43,17 +46,14 @@ public static class Util
     }
 
     /// <summary>
-    /// Calculate damage given attacker level, attack stat, defense stat, base damage, and deviation.
-    /// Deviation is the amount of randomness permitted in the calculation, and generally should be between 0 and 1.
-    /// More deviation = more random.
+    /// Gets the total progress of an array of AsyncOperations by arithmetic mean.
     /// </summary>
-    public static int DamageCalc (int attackerLevel, int atkStat, int defStat, int baseDamage, float deviation)
+    public static float AverageCompletionOfOps(AsyncOperation[] ops)
     {
-        const float magic = (Battler.maxLevel / 6f);
-        float randomElement = 1 + Random.Range(-deviation, deviation);
-        float lvMod = (attackerLevel / magic) + 1;
-        float statMod = atkStat / (float)defStat;
-        return Mathf.RoundToInt(baseDamage * statMod * lvMod * randomElement);
+        float r = 0;
+        for (int i = 0; i < ops.Length; i++) r += ops[i].progress;
+        r /= ops.Length;
+        return r;
     }
 
     /// <summary>
@@ -61,13 +61,27 @@ public static class Util
     /// </summary>
     public static string BatchReplace (string input, string[] oldSubstrings, string[] newSubstrings)
     {
-        if (oldSubstrings.Length != newSubstrings.Length) throw new System.Exception("Can't batch replace substrings unless the same number of replacement strings are provided");
+        if (oldSubstrings.Length != newSubstrings.Length) Crash(new Exception("Can't batch replace substrings unless the same number of replacement strings are provided"));
         string output = input;
         for (int i = 0; i < oldSubstrings.Length; i++)
         {
             output = output.Replace(oldSubstrings[i], newSubstrings[i]);
         }
         return output;
+    }
+
+    /// <summary>
+    /// Calculate damage given attacker level, attack stat, defense stat, base damage, and deviation.
+    /// Deviation is the amount of randomness permitted in the calculation, and generally should be between 0 and 1.
+    /// More deviation = more random.
+    /// </summary>
+    public static int DamageCalc(int attackerLevel, int atkStat, int defStat, int baseDamage, float deviation)
+    {
+        const float magic = (Battler.maxLevel / 6f);
+        float randomElement = 1 + UnityEngine.Random.Range(-deviation, deviation);
+        float lvMod = (attackerLevel / magic) + 1;
+        float statMod = atkStat / (float)defStat;
+        return Mathf.RoundToInt(baseDamage * statMod * lvMod * randomElement);
     }
 
     /// <summary>
@@ -83,7 +97,7 @@ public static class Util
     /// </summary>
     public static string[] GetLinesFrom(TextAsset a)
     {
-        return a.text.Split(new string[] { "\r\n", "\n" }, System.StringSplitOptions.None);
+        return a.text.Split(new string[] { "\r\n", "\n" }, StringSplitOptions.None);
     }
 
     /// <summary>
@@ -91,7 +105,7 @@ public static class Util
     /// </summary>
     public static float Mean (float[] vals)
     {
-        if (vals.Length == 0) throw new System.Exception("Can't get the mean of a zero-length array of values!");
+        if (vals.Length == 0) Crash(new Exception("Can't get the mean of a zero-length array of values!"));
         float r = 0;
         for (int i = 0; i < vals.Length; i++) r += vals[i];
         r /= vals.Length;
@@ -103,10 +117,49 @@ public static class Util
     /// </summary>
     public static int Mean (int[] vals)
     {
-        if (vals.Length == 0) throw new System.Exception("Can't get the mean of a zero-length array of values!");
+        if (vals.Length == 0) Crash(new Exception("Can't get the mean of a zero-length array of values!"));
         int r = 0;
         for (int i = 0; i < vals.Length; i++) r += vals[i];
         r /= vals.Length;
         return r;
+    }
+
+    /// <summary>
+    /// Coroutine: Waits until all ops have finished,
+    /// then calls onCompletion.
+    /// </summary>
+    public static IEnumerator<float> _CallActionAfterOpsFinish(AsyncOperation[] ops, Action onCompletion)
+    {
+        float progress = AverageCompletionOfOps(ops);
+        while (progress < 1.0f) yield return progress;
+        onCompletion();
+    }
+
+    /// <summary>
+    /// Throws the exception, then crashes.
+    /// Crashing is generally better than doing something
+    /// nonsensical, which Unity'll happily do if you just
+    /// throw an unhandled exception...
+    /// </summary>
+    public static void Crash (Exception exception)
+    {
+        Timing.RunCoroutine(_DieInOneFrame());
+        throw exception;
+    }
+
+    /// <summary>
+    /// Waits one frame, then crashes.
+    /// If the editor resumes after crashing we'll Debug.Break() once every frame until
+    /// it's shut off. If you call Crash () it's assumed that you do in fact want to crash.
+    /// </summary>
+    private static IEnumerator<float> _DieInOneFrame ()
+    {
+        yield return 0;
+        while (true)
+        {
+            if (Application.isEditor) Debug.Break();
+            else Application.Quit();
+            yield return 0;
+        }
     }
 }

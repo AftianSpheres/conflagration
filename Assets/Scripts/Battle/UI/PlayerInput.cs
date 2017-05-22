@@ -69,7 +69,8 @@ public class PlayerInput : MonoBehaviour
                 }
                 break;
             default:
-                throw new Exception("Invalid player input system state: " + localState.ToString());
+                Util.Crash(new Exception("Invalid player input system state: " + localState.ToString()));
+                break;
         }
 	}
 
@@ -86,14 +87,14 @@ public class PlayerInput : MonoBehaviour
         originalIndicesForBattleActions.Clear();
         for (int i = 0; i < AIModule_PlayerSide_ManualControl.waitingActionSet_ForStance.Length; i++)
         {
-            if (selectableBattleActions.Count == 10) throw new Exception("You can't give the shitty console UI more than 10 actions, don't be a shithead");
+            if (selectableBattleActions.Count == 10) Util.Crash(new Exception("You can't give the shitty console UI more than 10 actions, don't be a shithead"));
             selectableBattleActions.Add(AIModule_PlayerSide_ManualControl.waitingActionSet_ForStance[i]);
             originalIndicesForBattleActions.Add(i);
         }
         int metaStanceSplitIndex = selectableBattleActions.Count;
         for (int i = 0; i < AIModule_PlayerSide_ManualControl.waitingActionSet_ForMetaStance.Length; i++)
         {
-            if (selectableBattleActions.Count == 10) throw new Exception("You can't give the shitty console UI more than 10 actions, don't be a shithead");
+            if (selectableBattleActions.Count == 10) Util.Crash(new Exception("You can't give the shitty console UI more than 10 actions, don't be a shithead"));
             selectableBattleActions.Add(AIModule_PlayerSide_ManualControl.waitingActionSet_ForMetaStance[i]);
             originalIndicesForBattleActions.Add(i);
         }
@@ -176,7 +177,7 @@ public class PlayerInput : MonoBehaviour
         Battler[] mainTargets;
         BattleOverseer.GetBattlersEnemiesTo(BattlerSideFlags.PlayerSide, ref battlersListBuffer);
         Battler[] enemies = battlersListBuffer.ToArray();
-        if (enemies.Length > 10) throw new Exception("Please don't ask me to target more than 10 enemies. I am not a real UI.");
+        if (enemies.Length > 10) Util.Crash(new Exception("Please don't ask me to target more than 10 enemies. I am not a real UI."));
         if (asSecondary)
         {
             Debug.Log("Secondary targets: ");

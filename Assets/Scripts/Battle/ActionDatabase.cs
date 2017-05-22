@@ -4,10 +4,14 @@ using System.Xml;
 
 namespace CnfBattleSys
 {
+    /// <summary>
+    /// Static class that stores and handles the action datatable, plus utilities for getting icons and etc. based on action ID.
+    /// </summary>
     public static class ActionDatabase
     {
         private static BattleAction[] _actions;
         private static readonly BattleAction.Subaction[] defaultSubactionArray = { new BattleAction.Subaction(0, 0, false, AnimEventType.None, AnimEventType.None, LogicalStatType.None, LogicalStatType.None, LogicalStatType.None, LogicalStatType.None, -1, -1, BattleActionCategoryFlags.None,new BattleAction.Subaction.FXPackage[0], DamageTypeFlags.None) };
+        const string actionIconsResourcePath = "Battle/2D/UI/AWIcon/Action/";
 
         /// <summary>
         /// Contains special-case action defs that exust outside of the main table we populate from the XML files.
@@ -71,7 +75,7 @@ namespace CnfBattleSys
             Action<string> actOnNode = (node) =>
             {
                 workingNode = rootNode.SelectSingleNode(node);
-                if (workingNode == null) throw new Exception(actionID.ToString() + " has no node " + node);
+                if (workingNode == null) Util.Crash(new Exception(actionID.ToString() + " has no node " + node));
             };
             actOnNode("baseAOERadius");
             float baseAOERadius = float.Parse(workingNode.InnerText);
@@ -95,14 +99,14 @@ namespace CnfBattleSys
             if (workingNode != null)
             {
                 XmlNode subNode = workingNode.SelectSingleNode("targetingType");
-                if (subNode == null) throw new Exception("Malformed action def: has alternate targets, but no alternate targeting type.");
+                if (subNode == null) Util.Crash(new Exception("Malformed action def: has alternate targets, but no alternate targeting type."));
                 alternateTargetType = DBTools.ParseActionTargetType(subNode.InnerText);
                 subNode = workingNode.SelectSingleNode("targetingSideFlags");
-                if (subNode == null) throw new Exception("Malformed action def: has alternate targets, but no alternate targeting side flags.");
+                if (subNode == null) Util.Crash(new Exception("Malformed action def: has alternate targets, but no alternate targeting side flags."));
                 alternateTargetingSideFlags = DBTools.ParseTargetSideFlags(subNode.InnerText);
             }
             XmlNodeList SubactionsList = rootNode.SelectNodes("subaction");
-            if (SubactionsList.Count < 1) throw new Exception("Battle action " + actionID.ToString() + " has no defined Subactions!");
+            if (SubactionsList.Count < 1) Util.Crash(new Exception("Battle action " + actionID.ToString() + " has no defined Subactions!"));
             BattleAction.Subaction[] Subactions = new BattleAction.Subaction[SubactionsList.Count];
             for (int s = 0; s < Subactions.Length; s++)
             {
@@ -113,7 +117,7 @@ namespace CnfBattleSys
                     if (Subactions[s].useAlternateTargetSet != Subactions[Subactions[s].thisSubactionSuccessTiedToSubactionAtIndex].useAlternateTargetSet)
                     {
                         if (alternateTargetType != ActionTargetType.Self && targetingType != ActionTargetType.Self) // we have a special case for tying multiple action successes to one on yourself or vice verse
-                            throw new Exception("Illegal subaction config: tried to tie subaction " + s + " to subaction " + Subactions[s].thisSubactionSuccessTiedToSubactionAtIndex + ", but their target sets are mismatched.");
+                            Util.Crash(new Exception("Illegal subaction config: tried to tie subaction " + s + " to subaction " + Subactions[s].thisSubactionSuccessTiedToSubactionAtIndex + ", but their target sets are mismatched."));
                             // but if that's not true this will break horribly, so we crash to keep that from happening
                     }
                 }
@@ -145,7 +149,7 @@ namespace CnfBattleSys
             Action<string> actOnNode = (node) =>
             {
                 workingNode = SubactionNode.SelectSingleNode(node);
-                if (workingNode == null) throw new Exception(exceptionSubactionIDStr() + " has no node " + node);
+                if (workingNode == null) Util.Crash(new Exception(exceptionSubactionIDStr() + " has no node " + node));
             };
             XmlNodeList fxList = SubactionNode.SelectNodes("fxPackage");
             BattleAction.Subaction.FXPackage[] fx = new BattleAction.Subaction.FXPackage[fxList.Count];
@@ -186,15 +190,15 @@ namespace CnfBattleSys
             if (workingNode != null)
             {
                 thisSubactionDamageTiedToSubactionAtIndex = sbyte.Parse(workingNode.InnerText);
-                if (thisSubactionDamageTiedToSubactionAtIndex < 0) throw new Exception(exceptionSubactionIDStr() + " tries to tie itself to an invalid Subaction index!");
-                else if (thisSubactionDamageTiedToSubactionAtIndex >= index) throw new Exception(exceptionSubactionIDStr() + " tries to tie itself to a Subaction index that doesn't precede it!");
+                if (thisSubactionDamageTiedToSubactionAtIndex < 0) Util.Crash(new Exception(exceptionSubactionIDStr() + " tries to tie itself to an invalid Subaction index!"));
+                else if (thisSubactionDamageTiedToSubactionAtIndex >= index) Util.Crash(new Exception(exceptionSubactionIDStr() + " tries to tie itself to a Subaction index that doesn't precede it!"));
             }
             workingNode = SubactionNode.SelectSingleNode("//thisSubactionSuccessTiedToSubactionAtIndex");
             if (workingNode != null)
             {
                 thisSubactionSuccessTiedToSubactionAtIndex = sbyte.Parse(workingNode.InnerText);
-                if (thisSubactionSuccessTiedToSubactionAtIndex < 0) throw new Exception(exceptionSubactionIDStr() + " tries to tie itself to an invalid Subaction index!");
-                else if (thisSubactionSuccessTiedToSubactionAtIndex >= index) throw new Exception(exceptionSubactionIDStr() + " tries to tie itself to a Subaction index that doesn't precede it!");
+                if (thisSubactionSuccessTiedToSubactionAtIndex < 0) Util.Crash(new Exception(exceptionSubactionIDStr() + " tries to tie itself to an invalid Subaction index!"));
+                else if (thisSubactionSuccessTiedToSubactionAtIndex >= index) Util.Crash(new Exception(exceptionSubactionIDStr() + " tries to tie itself to a Subaction index that doesn't precede it!"));
             }
             return new BattleAction.Subaction(baseDamage, baseAccuracy, useAlternateTargetSet, onSubactionHitTargetAnim, onSubactionExecuteUserAnim, atkStat, defStat, hitStat, evadeStat,
                 thisSubactionDamageTiedToSubactionAtIndex, thisSubactionSuccessTiedToSubactionAtIndex, categoryFlags ,fx, damageTypes);
@@ -213,7 +217,7 @@ namespace CnfBattleSys
             Action<string> actOnNode = (node) =>
             {
                 workingNode = fxNode.SelectSingleNode(node);
-                if (workingNode == null) throw new Exception(exceptionFXPackageIDStr() + " has no node " + node);
+                if (workingNode == null) Util.Crash(new Exception(exceptionFXPackageIDStr() + " has no node " + node));
             };
             actOnNode("fxType");
             SubactionFXType fxType = DBTools.ParseSubactionFXType(workingNode.InnerText);
@@ -246,8 +250,8 @@ namespace CnfBattleSys
             if (workingNode != null)
             {
                 thisFXSuccessTiedToFXAtIndex = sbyte.Parse(workingNode.InnerText);
-                if (thisFXSuccessTiedToFXAtIndex < 0) throw new Exception(exceptionFXPackageIDStr() + " tries to tie itself to an invalid FX index!");
-                else if (thisFXSuccessTiedToFXAtIndex >= index) throw new Exception(exceptionFXPackageIDStr() + " tries to tie itself to an FX index that doesn't precede it!");
+                if (thisFXSuccessTiedToFXAtIndex < 0) Util.Crash(new Exception(exceptionFXPackageIDStr() + " tries to tie itself to an invalid FX index!"));
+                else if (thisFXSuccessTiedToFXAtIndex >= index) Util.Crash(new Exception(exceptionFXPackageIDStr() + " tries to tie itself to an FX index that doesn't precede it!"));
             }
             return new BattleAction.Subaction.FXPackage(fxType, fxHitStat, fxEvadeStat, applyEvenIfSubactionMisses, baseSuccessRate, fxLengthFloat, fxStrengthFloat, fxLengthByte, fxStrengthInt, thisFXSuccessTiedToFXAtIndex, 0);
         }
@@ -258,6 +262,18 @@ namespace CnfBattleSys
         public static BattleAction Get(ActionType actionID)
         {
             return _actions[(int)actionID];
+        }
+
+        /// <summary>
+        /// Returns the Sprite from Resources/Battle/2D/UI/AWIcon/Action corresponding to this ID, if one exists,
+        /// or the placeholder graphic otherwise.
+        /// </summary>
+        public static Sprite GetIconForActionID (ActionType actionID)
+        {
+            Sprite iconSprite = Resources.Load<Sprite>(actionIconsResourcePath + actionID.ToString());
+            if (iconSprite == null) iconSprite = Resources.Load<Sprite>(actionIconsResourcePath + ActionType.InvalidAction.ToString());
+            if (iconSprite == null) Util.Crash(new Exception("Couldn't get invalid action icon placeholder"));
+            return iconSprite;
         }
     }
 }

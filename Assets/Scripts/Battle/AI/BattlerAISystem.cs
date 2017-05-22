@@ -100,7 +100,8 @@ namespace CnfBattleSys
                     AIModule_TestAI.DecideTurnActions_AndStanceIfApplicable(b, changeStances, out turnActions, out messageFlags);
                     break;
                 default:
-                    throw new Exception("No entry in AI function jump table for AI type of: " + b.aiType.ToString());
+                    Util.Crash(new Exception("No entry in AI function jump table for AI type of: " + b.aiType.ToString()));
+                    break;
             }
             if (!outputIsDelayed) b.ReceiveAThought(turnActions, messageFlags);
             // If the AI module delays output, it needs to assume responsibility for passing a thought onto the Battler itself; keep that in mind.
@@ -197,7 +198,7 @@ namespace CnfBattleSys
             };
             Func<ActionTargetType, Battler[], Battler[]> forSingle = (targetingType, potentialTargets) =>
             {
-                if (potentialTargets.Length < 1) throw new Exception("Can't pick optimum target unless you actually provide some targets.");
+                if (potentialTargets.Length < 1) Util.Crash(new Exception("Can't pick optimum target unless you actually provide some targets."));
                 scores = ScoreTargets(flags, user, action, potentialTargets);
                 // Since this is a single-target action, we don't need to do any additional processing to the scores
                 float highestScoreBuffer = float.MinValue;
@@ -214,7 +215,7 @@ namespace CnfBattleSys
             };
             Func<ActionTargetType, Battler[], Battler[]> forAOE = (targetingType, potentialTargets) =>
             {
-                if (potentialTargets.Length < 1) throw new Exception("Can't pick optimum target unless you actually provide some targets.");
+                if (potentialTargets.Length < 1) Util.Crash(new Exception("Can't pick optimum target unless you actually provide some targets."));
                 scores = ScoreTargets(flags, user, action, potentialTargets);
                 Battler[][] subtargetsForAOE = new Battler[potentialTargets.Length][];
                 for (int t = 0; t < potentialTargets.Length; t++)
@@ -270,9 +271,11 @@ namespace CnfBattleSys
                         return forAOE;
                     case ActionTargetType.None:
                         if (failGracefully) return forNone;
-                        else throw new Exception("Tried to find targets for an action that doesn't take targets. Wut factor: at least 8 or 9.");
+                        else Util.Crash(new Exception("Tried to find targets for an action that doesn't take targets. Wut factor: at least 8 or 9."));
+                        return default(Func<ActionTargetType, Battler[], Battler[]>);
                     default:
-                        throw new Exception("Tried to acquire targets for invalid targeting type: " + targetingType);
+                        Util.Crash(new Exception("Tried to acquire targets for invalid targeting type: " + targetingType));
+                        return default(Func<ActionTargetType, Battler[], Battler[]>);
                 }
             };
             Func<ActionTargetType, Battler[], Battler[]> primaryTargetsAcquisition = setTargetAcquisitionFunc(action.targetingType, false);
@@ -428,7 +431,7 @@ namespace CnfBattleSys
             {
                 battlersListBuffer.Clear();
                 alsoBattlersListBuffer.Clear();
-                if (targetSideFlags == TargetSideFlags.None) throw new Exception("Can't find legal targets for action " + battleAction.actionID.ToString() + " because it doesn't _have_ legal targets. This is either a special case that shouldn't go through normal target acquisition, something that just shouldn't _be_ executed, or completely broken.");
+                if (targetSideFlags == TargetSideFlags.None) Util.Crash(new Exception("Can't find legal targets for action " + battleAction.actionID.ToString() + " because it doesn't _have_ legal targets. This is either a special case that shouldn't go through normal target acquisition, something that just shouldn't _be_ executed, or completely broken."));
                 if ((targetSideFlags & TargetSideFlags.MySide) == TargetSideFlags.MySide)
                 {
                     BattleOverseer.GetBattlersSameSideAs(b.side, ref battlersListBuffer);

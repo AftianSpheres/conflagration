@@ -149,7 +149,7 @@ public class bUI_TurnOrderArea : MonoBehaviour
                 }
                 Sprite iconSprite = Resources.Load<Sprite>(iconsResourcePath + battlersArray[i].battlerType.ToString());
                 if (iconSprite == null) iconSprite = Resources.Load<Sprite>(iconsResourcePath + "noIcon"); // we do this silently because there are valid cases for a "unit" with no icon to need to display itself in the turn order
-                if (iconSprite == null) throw new Exception("Couldn't find the no-icon icon placeholder whatsit!");
+                if (iconSprite == null) Util.Crash(new Exception("Couldn't find the no-icon icon placeholder whatsit!"));
                 turnIndicators[i].icon.sprite = iconSprite;
             }
         }

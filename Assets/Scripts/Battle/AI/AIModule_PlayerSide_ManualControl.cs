@@ -145,7 +145,7 @@ namespace CnfBattleSys.AI
         /// </summary>
         public static void GetTurnActionsFromPlayer (Battler b, bool changeStances)
         {
-            if ((stateFlags & StateFlags.Online) == StateFlags.Online) throw new Exception("Tried to get input for a second player-controlled unit while still waiting on the first!");
+            if ((stateFlags & StateFlags.Online) == StateFlags.Online) Util.Crash(new Exception("Tried to get input for a second player-controlled unit while still waiting on the first!"));
             Cleanup();
             stateFlags |= StateFlags.Online;
             EstablishPlayerPresentedData(b);
@@ -255,7 +255,7 @@ namespace CnfBattleSys.AI
         /// </summary>
         public static void InputAction (BattleAction action)
         {
-            if (selectedAction != null) throw new Exception("Input another action after obtaining action input!");
+            if (selectedAction != null) Util.Crash(new Exception("Input another action after obtaining action input!"));
             selectedAction = action;
         }
 
@@ -264,7 +264,7 @@ namespace CnfBattleSys.AI
         /// </summary>
         public static void InputStance (BattleStance stance)
         {
-            if (selectedStance != null) throw new Exception("Input another stance after obtaining stance input!");
+            if (selectedStance != null) Util.Crash(new Exception("Input another stance after obtaining stance input!"));
             selectedStance = stance;
         }
 
@@ -275,12 +275,12 @@ namespace CnfBattleSys.AI
         {
             if (asSecondary)
             {
-                if (selectedSecondaryTargets != null) throw new Exception("Input another secondary target set after obtaining secondary targets!");
+                if (selectedSecondaryTargets != null) Util.Crash(new Exception("Input another secondary target set after obtaining secondary targets!"));
                 selectedSecondaryTargets = targets;
             }
             else
             {
-                if (selectedPrimaryTargets != null) throw new Exception("Input another primary target set after obtaining primary targets!");
+                if (selectedPrimaryTargets != null) Util.Crash(new Exception("Input another primary target set after obtaining primary targets!"));
                 selectedPrimaryTargets = targets;
             }
         }

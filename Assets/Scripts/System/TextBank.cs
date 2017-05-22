@@ -107,7 +107,7 @@ public class TextBank
         if (namedPageIndices != null) namedPageIndices.Clear();
         if (backingDict_ForEnumAssociatedBank != null) backingDict_ForEnumAssociatedBank.Clear();
         TextAsset xmlFile = Resources.Load<TextAsset>(fileName);
-        if (xmlFile == null) throw new Exception("Tried to import text bank at bad filepath: " + fileName);
+        if (xmlFile == null) Util.Crash(new Exception("Tried to import text bank at bad filepath: " + fileName));
         XmlDocument doc = new XmlDocument();
         doc.LoadXml(xmlFile.text);
         XmlNode rootNode = doc.DocumentElement;
@@ -119,7 +119,9 @@ public class TextBank
                 langNode = langNode_English;
                 break;
             default:
-                throw new Exception("Invalid language type: " + TextBankManager.Instance.textLangType.ToString());
+                Util.Crash(new Exception("Invalid language type: " + TextBankManager.Instance.textLangType.ToString()));
+                langNode = string.Empty;
+                break;
         }
         XmlNodeList pageNodes = rootNode.SelectNodes("//page");
         Page[] _pages;
@@ -132,7 +134,7 @@ public class TextBank
             if (nameAttribute != null && enumBackingType == null)
             {
                 string name = nameAttribute.Value;
-                if (namedPageIndices.ContainsKey(name)) throw new Exception("Page name collision in " + fileName + " for name " + name);
+                if (namedPageIndices.ContainsKey(name)) Util.Crash(new Exception("Page name collision in " + fileName + " for name " + name));
                 namedPageIndices[name] = i;
             }
             string text;
@@ -140,8 +142,8 @@ public class TextBank
             else text = "No " + textLangType.ToString() + " entry for textbank " + fileName + ", line " + i;
             if (enumBackingType != null)
             {
-                if (nameAttribute == null) throw new Exception("Page " + i.ToString() + " in " + fileName + " has no page name. Every page in a textBank tied to an enum needs to be named with the associated enum value.");
-                if (!Enum.IsDefined(enumBackingType, nameAttribute.InnerText)) throw new Exception("No item of name " + nameAttribute.InnerText + " in enumeration " + enumBackingType.Name);
+                if (nameAttribute == null) Util.Crash(new Exception("Page " + i.ToString() + " in " + fileName + " has no page name. Every page in a textBank tied to an enum needs to be named with the associated enum value."));
+                if (!Enum.IsDefined(enumBackingType, nameAttribute.InnerText)) Util.Crash(new Exception("No item of name " + nameAttribute.InnerText + " in enumeration " + enumBackingType.Name));
                 backingDict_ForEnumAssociatedBank[nameAttribute.InnerText] = new Page(text);
             }
             else _pages[i] = new Page(text);
@@ -159,7 +161,7 @@ public class TextBank
         if (textLangType != TextBankManager.Instance.textLangType) LoadIn();
         if (backingDict_ForEnumAssociatedBank != null)
         {
-            throw new Exception("Can't get enum-associated textbanks with page indices!");
+            Util.Crash(new Exception("Can't get enum-associated textbanks with page indices!"));
         }
         if (index >= pages.Length) return new Page("Bad textbank / page index combination: " + fileName + ", page " + index, false);
         return pages[index];

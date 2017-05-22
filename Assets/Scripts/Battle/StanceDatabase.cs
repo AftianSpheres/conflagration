@@ -10,6 +10,7 @@ namespace CnfBattleSys
     public static class StanceDatabase
     {
         private static BattleStance[] _stances;
+        const string stanceIconsResourcePath = "Battle/2D/UI/AWIcon/Stance/";
 
         /// <summary>
         /// Special-case stance defs.
@@ -70,7 +71,7 @@ namespace CnfBattleSys
             Action<string> actOnNode = (node) =>
             {
                 workingNode = rootNode.SelectSingleNode(node);
-                if (workingNode == null) throw new Exception(stanceID.ToString() + " has no node " + node);
+                if (workingNode == null) Util.Crash(new Exception(stanceID.ToString() + " has no node " + node));
             };
             actOnNode("animNames/break");
             string animName_Break = workingNode.InnerText;
@@ -154,6 +155,18 @@ namespace CnfBattleSys
         public static BattleStance Get (StanceType stanceID)
         {
             return _stances[(int)stanceID];
+        }
+
+        /// <summary>
+        /// Returns the Sprite from Resources/Battle/2D/UI/AWIcon/Stance corresponding to this ID, if one exists,
+        /// or the placeholder graphic otherwise.
+        /// </summary>
+        public static Sprite GetIconForStanceID(StanceType stanceID)
+        {
+            Sprite iconSprite = Resources.Load<Sprite>(stanceIconsResourcePath + stanceID.ToString());
+            if (iconSprite == null) iconSprite = Resources.Load<Sprite>(stanceIconsResourcePath + StanceType.InvalidStance.ToString());
+            if (iconSprite == null) Util.Crash(new Exception("Couldn't get invalid stance icon placeholder"));
+            return iconSprite;
         }
     }
 }

@@ -1,5 +1,8 @@
-﻿using UnityEngine;
-using System.Collections;
+﻿using System;
+using System.Collections.Generic;
+using UnityEngine;
+using CnfBattleSys;
+using CnfBattleSys.AI;
 
 /// <summary>
 /// Handles storing references to various battle UI elements and (eventually) communication between them.
@@ -13,15 +16,17 @@ public class bUI_BattleUIController : MonoBehaviour
     {
         None,
         Back,
-        Attack,
+        AttackPrimary,
+        AttackSecondary,
         Break,
         Move,
         Run,
-        CloseAttackMenu
+        CloseWheel
     }
 
     public static bUI_BattleUIController instance { get; private set; }
     public bUI_ActionInfoArea actionInfoArea { get; private set; }
+    public bUI_ActionWheel actionWheel { get; private set; }
     public bUI_CameraHarness cameraHarness { get; private set; }
     public bUI_ElementsGenerator elementsGen { get; private set; }
     public bUI_TurnOrderArea turnOrderArea { get; private set; }
@@ -36,12 +41,28 @@ public class bUI_BattleUIController : MonoBehaviour
         instance = this;
     }
 
+    private void Update()
+    {
+        if (BattleOverseer.currentTurnBattler != null && actionWheel.isOpen == false)
+        {
+            actionWheel.PushDecision(new Command[] { Command.AttackPrimary, Command.AttackSecondary, Command.Back, Command.Break, Command.CloseWheel, Command.Move, Command.Run });
+        }
+    }
+
     /// <summary>
     /// Registers an action info area with the battle UI controller.
     /// </summary>
     public void RegisterActionInfoArea (bUI_ActionInfoArea _actionInfoArea)
     {
         actionInfoArea = _actionInfoArea;
+    }
+
+    /// <summary>
+    /// Registers action wheel w/ battle ui controller.
+    /// </summary>
+    public void RegisterActionWheel (bUI_ActionWheel _actionWheel)
+    {
+        actionWheel = _actionWheel;
     }
 
     /// <summary>
@@ -82,5 +103,40 @@ public class bUI_BattleUIController : MonoBehaviour
     public void RegisterTurnOrderArea (bUI_TurnOrderArea _turnOrderArea)
     {
         turnOrderArea = _turnOrderArea;
+    }
+
+    /// <summary>
+    /// Submit a command to the battle UI controller.
+    /// </summary>
+    public void SubmitCommand (Command command)
+    {
+        switch (command)
+        {
+            case Command.AttackPrimary:
+                actionWheel.PushDecision(AIModule_PlayerSide_ManualControl.waitingBattler.currentStance);
+                break;
+            case Command.AttackSecondary:
+                actionWheel.PushDecision(AIModule_PlayerSide_ManualControl.waitingBattler.metaStance);
+                break;
+            case Command.Break:
+                break;
+            case Command.Back:
+                if (actionWheel.isOpen) actionWheel.DisposeOfTopDecision();
+                break;
+            case Command.CloseWheel:
+                actionWheel.Close();
+                break;
+            case Command.Move:
+                Debug.Log("Movement: not implemented");
+                break;
+            case Command.Run:
+                Debug.Log("Running: not implemented");
+                break;
+        }
+    }
+
+    private void PushStanceBreakTurnPacketToWaitingBattler ()
+    {
+
     }
 }

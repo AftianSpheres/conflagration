@@ -28,7 +28,7 @@ public class bUI_ElementsGenerator : MonoBehaviour
             GameObject go = playerInfoboxesParent.transform.Find("Player Infobox " + i.ToString()).gameObject;
             if (go == null) break; // if there are more children than player infoboxes, it's because there are ui widgets or whatever, so we can quit looking instead of going through all of those
             bUI_BattlerInfobox playerInfobox = go.GetComponent<bUI_BattlerInfobox>();
-            if (playerInfobox == null) throw new Exception("No battler infobox behavior on player infobox no. " + i.ToString());
+            if (playerInfobox == null) Util.Crash(new Exception("No battler infobox behavior on player infobox no. " + i.ToString()));
             playerPartyInfoboxes.Add(playerInfobox);
         }
     }

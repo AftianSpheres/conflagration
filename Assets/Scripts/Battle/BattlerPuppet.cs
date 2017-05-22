@@ -39,7 +39,7 @@ public class BattlerPuppet : MonoBehaviour
     /// </summary>
     public void AttachHPBar (bUI_ResourceBar _hpBar)
     {
-        if (_hpBar.resourceType != bUI_ResourceBar.ResourceType.HP) throw new Exception(gameObject.name + " tried to attach a non-HP resource bar as HP bar");
+        if (_hpBar.resourceType != bUI_ResourceBar.ResourceType.HP) Util.Crash(new Exception(gameObject.name + " tried to attach a non-HP resource bar as HP bar"));
         hpBar = _hpBar;
         hpBar.HandleValueChanges();
     }
@@ -49,7 +49,7 @@ public class BattlerPuppet : MonoBehaviour
     /// </summary>
     public void AttachStaminaBar (bUI_ResourceBar _staminaBar)
     {
-        if (_staminaBar.resourceType != bUI_ResourceBar.ResourceType.Stamina) throw new Exception(gameObject.name + " tried to attach a non-stamina resource bar as stamina bar");
+        if (_staminaBar.resourceType != bUI_ResourceBar.ResourceType.Stamina) Util.Crash(new Exception(gameObject.name + " tried to attach a non-stamina resource bar as stamina bar"));
         staminaBar = _staminaBar;
         staminaBar.HandleValueChanges();
     }
@@ -110,7 +110,8 @@ public class BattlerPuppet : MonoBehaviour
                 if (battlerInfobox != null) battlerInfobox.DisplayStanceName();
                 break;
             default:
-                throw new Exception("Bad battler UI event: " + battlerUIEventType.ToString());
+                Util.Crash(new Exception("Bad battler UI event: " + battlerUIEventType.ToString()));
+                break;
         }
     }
 
@@ -151,7 +152,7 @@ public class BattlerPuppet : MonoBehaviour
         const string meshPath = "/mesh";
         string myPath = modelType.ToString();
         Mesh mesh = Resources.Load<Mesh>(bmPath + myPath + meshPath);
-        if (mesh == null) throw new System.Exception("Couldn't load battle model mesh: " + myPath + meshPath);
+        if (mesh == null) Util.Crash(new System.Exception("Couldn't load battle model mesh: " + myPath + meshPath));
         meshFilter.mesh = mesh;
     }
 }

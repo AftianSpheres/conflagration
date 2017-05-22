@@ -61,7 +61,7 @@ public class TextBankManager : Manager<TextBankManager>
     public TextBank GetCommonTextBank (Type enumType)
     {
         if (commonTextBanks == null) LoadAllCommonTextBanks();
-        if (!commonTextBanks.ContainsKey(enumType)) throw new Exception("No common textbank associated with type " + enumType.Name);
+        if (!commonTextBanks.ContainsKey(enumType)) Util.Crash(new Exception("No common textbank associated with type " + enumType.Name));
         return commonTextBanks[enumType];
     }
 
@@ -80,8 +80,8 @@ public class TextBankManager : Manager<TextBankManager>
     /// </summary>
     public void ChangeLanguage (TextLangType _textLangType)
     {
-        if (!Enum.IsDefined(typeof(TextLangType), _textLangType)) throw new Exception("Tried to change language to undefined value: " + _textLangType.ToString());
-        else if (_textLangType == TextLangType.None) throw new Exception("Tried to change language to TextLangType.None.");
+        if (!Enum.IsDefined(typeof(TextLangType), _textLangType)) Util.Crash(new Exception("Tried to change language to undefined value: " + _textLangType.ToString()));
+        else if (_textLangType == TextLangType.None) Util.Crash(new Exception("Tried to change language to TextLangType.None."));
         else
         {
             textLangType = _textLangType;

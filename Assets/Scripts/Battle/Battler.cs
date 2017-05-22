@@ -937,7 +937,8 @@ namespace CnfBattleSys
                         MiscStatusEffectFlags.None, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, fxPackage.fxStrength_Float, 1, 1, 1, 1, 1, 1, 1, 1);
                     break;
                 default:
-                    throw new System.Exception("Unregognized FXtype: " + fxPackage.fxType);
+                    Util.Crash(new System.Exception("Unregognized FXtype: " + fxPackage.fxType));
+                    break;
             }
         }
 
@@ -1048,7 +1049,7 @@ namespace CnfBattleSys
         /// </summary>
         public void ChangeStanceTo (BattleStance stance)
         {
-            if (stance == lockedStance) throw new System.Exception("Can't change stances to locked stance!");
+            if (stance == lockedStance) Util.Crash(new System.Exception("Can't change stances to locked stance!"));
             lockedStance = currentStance;
             currentStance = stance;
             currentStamina = stance.maxStamina;
@@ -1204,7 +1205,8 @@ namespace CnfBattleSys
                 case LogicalStatType.Stats_All:
                     return Util.Mean(new int[] { stats.ATK, stats.DEF, stats.MATK, stats.MDEF, stats.Spe, stats.EVA, stats.Hit });
                 default:
-                    throw new System.Exception("Can't return value logical stat value for LogicalStatType value of " + logicalStatType.ToString());
+                    Util.Crash(new System.Exception("Can't return value logical stat value for LogicalStatType value of " + logicalStatType.ToString()));
+                    return int.MinValue;
             }
         }
 
@@ -1261,7 +1263,7 @@ namespace CnfBattleSys
         /// <param name="turnActions"></param>
         public void ReceiveAThought (TurnActions _turnActions, BattlerAIMessageFlags messageFlags)
         {
-            if (_turnActions.action.actionID == ActionType.INTERNAL_BreakOwnStance && StanceBroken()) throw new System.Exception("u wot m8");
+            if (_turnActions.action.actionID == ActionType.INTERNAL_BreakOwnStance && StanceBroken()) Util.Crash(new System.Exception("u wot m8"));
             turnActions = _turnActions;
             if ((messageFlags & BattlerAIMessageFlags.ExtendTurn) == BattlerAIMessageFlags.ExtendTurn)
                 BattleOverseer.ExtendCurrentTurn();

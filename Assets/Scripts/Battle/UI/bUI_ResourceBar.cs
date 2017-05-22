@@ -73,9 +73,11 @@ public class bUI_ResourceBar : MonoBehaviour
                 puppet.AttachStaminaBar(this);
                 break;
             case ResourceType.SubweaponsCharge:
-                throw new NotImplementedException();
+                Util.Crash(new NotImplementedException());
+                break;
             default:
-                throw new Exception("Invalid resource type on resource bar " + gameObject.name + ": " + resourceType.ToString());
+                Util.Crash(new Exception("Invalid resource type on resource bar " + gameObject.name + ": " + resourceType.ToString()));
+                break;
         }
         UpdateValueImmediately();
     }
@@ -106,7 +108,7 @@ public class bUI_ResourceBar : MonoBehaviour
     /// <returns></returns>
     private int GetResourceMax ()
     {
-        int max;
+        int max = 0;
         switch (resourceType)
         {
             case ResourceType.HP:
@@ -116,9 +118,11 @@ public class bUI_ResourceBar : MonoBehaviour
                 max = puppet.battler.currentStance.maxStamina;
                 break;
             case ResourceType.SubweaponsCharge:
-                throw new NotImplementedException();
+                Util.Crash(new NotImplementedException());
+                break;
             default:
-                throw new Exception("Invalid resource type on resource bar " + gameObject.name + ": " + resourceType.ToString());
+                Util.Crash(new Exception("Invalid resource type on resource bar " + gameObject.name + ": " + resourceType.ToString()));
+                break;
         }
         return max;
     }
@@ -129,7 +133,7 @@ public class bUI_ResourceBar : MonoBehaviour
     /// </summary>
     private int GetResourceValue ()
     {
-        int value;
+        int value = 0;
         switch (resourceType)
         {
             case ResourceType.HP:
@@ -139,9 +143,11 @@ public class bUI_ResourceBar : MonoBehaviour
                 value = puppet.battler.currentStamina;
                 break;
             case ResourceType.SubweaponsCharge:
-                throw new NotImplementedException();
+                Util.Crash(new NotImplementedException());
+                break;
             default:
-                throw new Exception("Invalid resource type on resource bar " + gameObject.name + ": " + resourceType.ToString());
+                Util.Crash(new Exception("Invalid resource type on resource bar " + gameObject.name + ": " + resourceType.ToString()));
+                break;
         }
         return value;
     }

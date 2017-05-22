@@ -1,8 +1,11 @@
 <?xml version="1.0"?>
 <textBank>
   <!--Action wheel-->
-  <page name = "cmd_Attack">
-    <eng>Attack</eng>
+  <page name = "cmd_AttackPrimary">
+    <eng>Attack - this should never appear</eng>
+  </page>
+  <page name = "cmd_AttackSecondary">
+    <eng>Subweapons</eng>
   </page>
   <page name = "cmd_Break">
     <eng>Break</eng>
@@ -13,7 +16,13 @@
   <page name = "cmd_Run">
     <eng>Run</eng>
   </page>
+  <page name = "cmd_Back">
+    <eng>Back</eng>
+  </page>
   <page name = "error">
     <eng>Error!</eng>
+  </page>
+  <page name = "cemterText">
+    <eng>ACTION SELECT</eng>
   </page>
 </textBank>

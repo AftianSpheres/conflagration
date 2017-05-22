@@ -42,6 +42,7 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
     private bUI_ActionWheel wheel;
     private static TextBank actionsCommonBank;
     private static TextBank commandsBank;
+    private static TextBank stancesCommonBank;
     private SelectionType selectionType;
     private State state;
     private bool forbidden;
@@ -50,7 +51,6 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
     readonly static int idleAnimHash = Animator.StringToHash("Base Layer.Idle");
     readonly static int lockedAnimHash = Animator.StringToHash("Base Layer.Locked");
     readonly static int selectedAnimHash = Animator.StringToHash("Base Layer.Selected");
-    const string actionIconsResourcePath = "Battle/2D/UI/AWIcon/Action/";
     const string commandIconsResourcePath = "Battle/2D/UI/AWIcon/Command/";
 
     /// <summary>
@@ -64,6 +64,17 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
             else wheel.RotateToButton(this);
         }
         else Debug.Log("input forbidden");
+    }
+
+    /// <summary>
+    /// Called on all ActionWheelButtons when the wheel rotates.
+    /// Determines which state this button should be in for current wheel position.
+    /// </summary>
+    public void ConformStateToWheelPosition()
+    {
+        if (selectionType == SelectionType.FromActions) DetermineStateForBattleAction(wheel.GetActionForButton(this));
+        else if (selectionType == SelectionType.FromCommands) DetermineStateForCommand(wheel.GetCommandForButton(this));
+        ConformAnimatorToState();
     }
 
     /// <summary>
@@ -90,10 +101,20 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
         selectionType = SelectionType.FromCommands;
         DetermineStateForCommand(command);
         if (commandsBank == null) commandsBank = TextBankManager.Instance.GetTextBank("Battle/ActionWheel");
-        TextBank.Page thisPage = commandsBank.GetPage("cmd_" + command.ToString());
+        TextBank.Page thisPage;
+        if (command == bUI_BattleUIController.Command.AttackPrimary)
+        {
+            if (stancesCommonBank == null) stancesCommonBank = TextBankManager.Instance.GetCommonTextBank(typeof(StanceType));
+            thisPage = stancesCommonBank.GetPage(BattleOverseer.currentTurnBattler.currentStance.stanceID);
+            SetIconForStance(BattleOverseer.currentTurnBattler.currentStance);
+        }
+        else
+        {
+            thisPage = commandsBank.GetPage("cmd_" + command.ToString());
+            SetIconForCommand(command);
+        }
         if (thisPage.isValid) guiText_Label.text = thisPage.text;
         else guiText_Label.text = commandsBank.GetPage("error").text;
-        SetIconForCommand(command);
     }
 
     /// <summary>
@@ -127,17 +148,6 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
     }
 
     /// <summary>
-    /// Called on all ActionWheelButtons when the wheel rotates.
-    /// Determines which state this button should be in for current wheel position.
-    /// </summary>
-    public void OnWheelMove ()
-    {
-        if (selectionType == SelectionType.FromActions) DetermineStateForBattleAction(wheel.GetActionForButton(this));
-        else if (selectionType == SelectionType.FromCommands) DetermineStateForCommand(wheel.GetCommandForButton(this));
-        ConformAnimatorToState();
-    }
-
-    /// <summary>
     /// Pairs the button with the wheel and disables it.
     /// Call this when generating these in the first place, basically.
     /// </summary>
@@ -166,7 +176,8 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
                 if (hash != selectedAnimHash && hash != confirmAnimHash) animator.Play(selectedAnimHash);
                 break;
             default:
-                throw new Exception("Can't conform animator to button state: " + state.ToString());
+                Util.Crash(new Exception("Can't conform animator to button state: " + state.ToString()));
+                break;
         }
     }
 
@@ -175,7 +186,7 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
     /// </summary>
     private void DetermineStateForBattleAction (BattleAction action)
     {
-        if (BattleOverseer.currentTurnBattler == null) DetermineStateForCommand(bUI_BattleUIController.Command.Attack);
+        if (BattleOverseer.currentTurnBattler == null) DetermineStateForCommand(bUI_BattleUIController.Command.AttackPrimary);
         else if (!BattleOverseer.currentTurnBattler.CanExecuteAction(action)) state = State.Locked;
         else if (wheel.selectedButton == this)
         {
@@ -204,10 +215,7 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
     /// </summary>
     private void SetIconForBattleAction (BattleAction action)
     {
-        Sprite iconSprite = Resources.Load<Sprite>(actionIconsResourcePath + action.actionID.ToString());
-        if (iconSprite == null) iconSprite = Resources.Load<Sprite>(actionIconsResourcePath + ActionType.InvalidAction.ToString());
-        if (iconSprite == null) throw new Exception("Couldn't get invalid action icon placeholder");
-        commandIcon.sprite = iconSprite;
+        commandIcon.sprite = ActionDatabase.GetIconForActionID(action.actionID);
     }
 
     /// <summary>
@@ -217,8 +225,16 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
     {
         Sprite iconSprite = Resources.Load<Sprite>(commandIconsResourcePath + command.ToString());
         if (iconSprite == null) iconSprite = Resources.Load<Sprite>(commandIconsResourcePath + "Invalid");
-        if (iconSprite == null) throw new Exception("Couldn't get invalid command icon placeholder");
+        if (iconSprite == null) Util.Crash(new Exception("Couldn't get invalid command icon placeholder"));
         commandIcon.sprite = iconSprite;
+    }
+
+    /// <summary>
+    /// Loads icon sprite for given stance and sets icon to that sprite.
+    /// </summary>
+    private void SetIconForStance (BattleStance stance)
+    {
+        commandIcon.sprite = StanceDatabase.GetIconForStanceID(stance.stanceID);
     }
 
 }

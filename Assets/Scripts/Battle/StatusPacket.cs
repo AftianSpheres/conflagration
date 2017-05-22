@@ -102,7 +102,7 @@ namespace CnfBattleSys
         /// </summary>
         public StatusPacket CollideWith (StatusPacket _sp)
         {
-            if (_sp.statusType != statusType) throw new System.Exception("Can't merge two StatusPackets of different types");
+            if (_sp.statusType != statusType) Util.Crash(new System.Exception("Can't merge two StatusPackets of different types"));
             StatusPacket_CancelationCondition cc = cancelationCondition;
             if (_sp.cancelationCondition != cc)
             {

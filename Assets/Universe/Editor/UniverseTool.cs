@@ -3,10 +3,7 @@ using UnityEditor;
 using System;
 using System.IO;
 using System.Reflection;
-
-#if !UNITY_5_0 && !UNITY_5_1 && !UNITY_5_2
 using UnityEngine.SceneManagement;
-#endif
 
 namespace Universe
 {
@@ -50,15 +47,10 @@ namespace Universe
         {
             if (Application.isPlaying)
             {
-#if UNITY_5_0 || UNITY_5_1 || UNITY_5_2
-                if (Application.loadedLevel != 0)
-#else
-                if (SceneManager.GetActiveScene().buildIndex != 0) 
-#endif
+                if (SceneManager.GetActiveScene().buildIndex != 0)
                 {
                     GameObject go = new GameObject("Universe");
                     go.AddComponent<Universe>();
-                    go.AddComponent<UniverseStage_DataLoader>();
                 }
             }
         }

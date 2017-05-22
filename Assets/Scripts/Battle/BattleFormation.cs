@@ -30,7 +30,7 @@ namespace CnfBattleSys
                 startStance = _startStance;
                 side = _side;
                 asSideIndex = _asSideIndex;
-                if (!BattleUtility.IsSingleSide(side)) throw new System.Exception("Created a FormationMember with multiple sides. Fix that!");
+                if (!BattleUtility.IsSingleSide(side)) Util.Crash(new System.Exception("Created a FormationMember with multiple sides. Fix that!"));
             }
         }
 

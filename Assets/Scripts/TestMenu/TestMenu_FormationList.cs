@@ -76,6 +76,6 @@ public class TestMenu_FormationList : MonoBehaviour
     /// </summary>
     private void TransitionToBattle (BattleFormation formation)
     {
-        BattleSceneManager.Instance.EnterBattleScene(formation);
+        BattleTransitionManager.Instance.EnterBattleScene(formation);
     }
 }

@@ -168,7 +168,7 @@
             AnimEventType _onActionEndTargetAnim, AnimEventType _onActionEndUserAnim, AnimEventType _OnActionUseTargetAnim, AnimEventType _OnActionUseUserAnim,
             BattleActionCategoryFlags _categoryFlags, Subaction[] _Subactions)
         {
-            if (_Subactions.Length == 0) throw new System.Exception("Tried to create a battle Action with no Subactions, which should never happen.");
+            if (_Subactions.Length == 0) Util.Crash(new System.Exception("Tried to create a battle Action with no Subactions, which should never happen."));
             actionID = _actionID;
             baseAOERadius = _baseAOERadius;
             baseDelay = _baseDelay;

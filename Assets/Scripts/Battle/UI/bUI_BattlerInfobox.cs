@@ -77,7 +77,7 @@ public class bUI_BattlerInfobox : MonoBehaviour
         {
             Debug.Log("Warning: No mugshot for " + puppet.battler.battlerType.ToString());
             mugshotSprite = Resources.Load<Sprite>(mugshotsResourcePath + "badMugshot");
-            if (mugshotSprite == null) throw new Exception("...and the invalid mugshot placeholder couldn't be found, so we're gonna crash now.");
+            if (mugshotSprite == null) Util.Crash(new Exception("...and the invalid mugshot placeholder couldn't be found, so we're gonna crash now."));
         }
         mugshot.sprite = mugshotSprite;
     }

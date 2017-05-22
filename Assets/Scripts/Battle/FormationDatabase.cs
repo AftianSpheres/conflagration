@@ -71,7 +71,7 @@ namespace CnfBattleSys
             Action<string> actOnNode = (node) =>
             {
                 workingNode = rootNode.SelectSingleNode(node);
-                if (workingNode == null) throw new Exception(formationType.ToString() + " has no node " + node);
+                if (workingNode == null) Util.Crash(new Exception(formationType.ToString() + " has no node " + node));
             };
             actOnNode("venue");
             VenueType venue = DBTools.ParseVenueType(workingNode.InnerText);

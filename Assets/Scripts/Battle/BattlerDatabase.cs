@@ -66,13 +66,13 @@ namespace CnfBattleSys
             Action<string> actOnNode = (node) =>
             {
                 workingNode = rootNode.SelectSingleNode(node);
-                if (workingNode == null) throw new Exception(battlerType.ToString() + " has no node " + node);
+                if (workingNode == null) Util.Crash(new Exception(battlerType.ToString() + " has no node " + node));
             };
             bool isFixedStats;
             actOnNode("statsType");
             if (workingNode.InnerText == "fixed") isFixedStats = true;
             else if (workingNode.InnerText == "scaling") isFixedStats = false;
-            else throw new Exception(workingNode.InnerText + " isn't a valid statsType option");
+            else Util.Crash(new Exception(workingNode.InnerText + " isn't a valid statsType option"));
             actOnNode("aiType");
             BattlerAIType aiType = DBTools.ParseBattlerAIType(workingNode.InnerText);
             actOnNode("aiFlags");

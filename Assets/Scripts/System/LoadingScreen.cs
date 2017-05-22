@@ -53,10 +53,10 @@ public class LoadingScreen : MonoBehaviour
     /// Brings up the loading screen with the black shade we use to hide
     /// partially loaded/unloaded scenes.
     /// </summary>
-    public void DisplayWithShade (AsyncOperation[] ops)
+    public void DisplayWithShade ()
     {
         Timing.KillCoroutines(thisTag);
-        Timing.RunCoroutine(_Display(ops, true), thisTag);
+        Timing.RunCoroutine(_Display(true), thisTag);
     }
 
     /// <summary>
@@ -64,17 +64,17 @@ public class LoadingScreen : MonoBehaviour
     /// away with leaving what's onscreen visible.
     /// (Usually, the game won't stop responding to player input either.)
     /// </summary>
-    public void DisplayWithoutShade (AsyncOperation[] ops)
+    public void DisplayWithoutShade ()
     {
         Timing.KillCoroutines(thisTag);
-        Timing.RunCoroutine(_Display(ops, false), thisTag);
+        Timing.RunCoroutine(_Display(false), thisTag);
     }
 
     /// <summary>
     /// Coroutine: displays loading screen until ops have finished executing,
     /// with or without shade.
     /// </summary>
-    private IEnumerator<float> _Display (AsyncOperation[] ops, bool withShade)
+    private IEnumerator<float> _Display (bool withShade)
     {
         if (globalUIBank == null) globalUIBank = TextBankManager.Instance.GetTextBank("System/Global");
         loadingText.gameObject.SetActive(true);
@@ -96,7 +96,7 @@ public class LoadingScreen : MonoBehaviour
         bool isDone = false;
         while (!isDone)
         {
-            progress = AverageCompletionOfOps(ops);
+            progress = ExtendedSceneManager.Instance.GetProgressOfLoad();
             if (progress >= 1.0f) isDone = true;
             else
             {
@@ -104,16 +104,5 @@ public class LoadingScreen : MonoBehaviour
             }
         }
         Close();
-    }
-
-    /// <summary>
-    /// Gets the total progress of an array of AsyncOperations by arithmetic mean.
-    /// </summary>
-    private float AverageCompletionOfOps (AsyncOperation[] ops)
-    {
-        float r = 0;
-        for (int i = 0; i < ops.Length; i++) r += ops[i].progress;
-        r /= ops.Length;
-        return r;
     }
 }
