@@ -21,7 +21,7 @@ public class bUI_ResourceBar : MonoBehaviour
     public ResourceType resourceType;
     public Image barFill;
     public BattlerPuppet puppet;
-    new public TextMeshProUGUI guiText;
+    public TextMeshProUGUI uguiText;
     public Color fullResourceColor;
     public Color depletedResourceColor;
     public bool displayCurrentValueOverMaxValue;
@@ -177,7 +177,7 @@ public class bUI_ResourceBar : MonoBehaviour
     {
         Timing.KillCoroutines(updateValueTag);
         realValueAtLastUpdate = approachingValue;
-        if (guiText != null) SetGUITextBasedOnValue(realValueAtLastUpdate);
+        if (uguiText != null) SetGUITextBasedOnValue(realValueAtLastUpdate);
     }
 
     /// <summary>
@@ -222,8 +222,8 @@ public class bUI_ResourceBar : MonoBehaviour
     private void SetGUITextBasedOnValue (int value)
     {
         int max = GetResourceMax();
-        if (displayCurrentValueOverMaxValue) guiText.SetText(value.ToString() + " / " + max);
-        else guiText.SetText(value.ToString());
+        if (displayCurrentValueOverMaxValue) uguiText.SetText(value.ToString() + " / " + max);
+        else uguiText.SetText(value.ToString());
     }
 
     /// <summary>
@@ -234,7 +234,7 @@ public class bUI_ResourceBar : MonoBehaviour
         int max = GetResourceMax();
         int value = GetResourceValue();
         realValueAtLastUpdate = approachingValue = value;
-        if (guiText != null) SetGUITextBasedOnValue(realValueAtLastUpdate);
+        if (uguiText != null) SetGUITextBasedOnValue(realValueAtLastUpdate);
         float ratio = (float)value / max;
         if (ratio > 1) ratio = 1;
         else if (ratio < 0) ratio = 0;
@@ -282,10 +282,10 @@ public class bUI_ResourceBar : MonoBehaviour
             fakeValue = Mathf.Lerp(approachingValue, realValueAtLastUpdate, Timing.DeltaTime / duration);
             if ((valueRising && fakeValue > approachingValue) || (!valueRising && fakeValue < approachingValue)) fakeValue = approachingValue;
             realValueAtLastUpdate = Mathf.RoundToInt(fakeValue);
-            if (guiText != null) SetGUITextBasedOnValue(Mathf.RoundToInt(realValueAtLastUpdate));
+            if (uguiText != null) SetGUITextBasedOnValue(Mathf.RoundToInt(realValueAtLastUpdate));
             yield return 0;
         }
         realValueAtLastUpdate = approachingValue;
-        if (guiText != null) SetGUITextBasedOnValue(realValueAtLastUpdate);
+        if (uguiText != null) SetGUITextBasedOnValue(realValueAtLastUpdate);
     }
 }

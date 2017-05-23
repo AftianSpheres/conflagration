@@ -119,7 +119,6 @@ public class bUI_ActionWheel : MonoBehaviour
     private State state;
     private bool _allowInput;
     private float interval;
-    private readonly static bUI_BattleUIController.Command[] emptyCommandsArray = { };
     private readonly static int decisionConfirmHash = Animator.StringToHash("Base Layer.DecisionConfirm");
     private readonly static int decisionShowHash = Animator.StringToHash("Base Layer.DecisionShow");
     private readonly static int idleHash = Animator.StringToHash("Base Layer.Idle");

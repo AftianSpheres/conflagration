@@ -61,16 +61,6 @@ public class PlayerPartyDataManager : Manager<PlayerPartyDataManager>
             //partyMembers[i] = new PartyMember(partyMemberSpecies[i], partyMemberStartingLevels[i], GetExpForLevel(partyMemberStartingLevels[i]), stanceTypes, stanceTypes, StanceType.None,)
         }
     }
-
-    // Use this for initialization
-    void Start () {
-	
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
     
     /// <summary>
     /// Eventually this should actually run lv through an experience curve formula, but right now it just spits that right back out.

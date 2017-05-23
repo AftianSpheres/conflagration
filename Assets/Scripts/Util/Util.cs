@@ -136,6 +136,15 @@ public static class Util
     }
 
     /// <summary>
+    /// Coroutine: Wait one frame, then call onCompletion.
+    /// </summary>
+    public static IEnumerator<float> _WaitOneFrame (Action onCompletion)
+    {
+        yield return 0;
+        onCompletion();
+    }
+
+    /// <summary>
     /// Throws the exception, then crashes.
     /// Crashing is generally better than doing something
     /// nonsensical, which Unity'll happily do if you just
@@ -143,7 +152,7 @@ public static class Util
     /// </summary>
     public static void Crash (Exception exception)
     {
-        Timing.RunCoroutine(_DieInOneFrame());
+        Timing.RunCoroutine(_CrashLoop());
         throw exception;
     }
 
@@ -152,7 +161,7 @@ public static class Util
     /// If the editor resumes after crashing we'll Debug.Break() once every frame until
     /// it's shut off. If you call Crash () it's assumed that you do in fact want to crash.
     /// </summary>
-    private static IEnumerator<float> _DieInOneFrame ()
+    private static IEnumerator<float> _CrashLoop ()
     {
         yield return 0;
         while (true)

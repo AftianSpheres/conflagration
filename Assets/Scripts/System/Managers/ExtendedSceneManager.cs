@@ -7,7 +7,6 @@ using Universe;
 using CnfBattleSys;
 using MovementEffects;
 
-
 /// <summary>
 /// Manager that handles scene loading and unloading.
 /// Go through this to do anything that involves scene loading/unloading!
@@ -65,9 +64,9 @@ public class ExtendedSceneManager : Manager<ExtendedSceneManager>
     /// </summary>
     public enum LoadPhase
     {
-        None,
-        LoadIn,
-        Unload
+        NotLoading,
+        Loading,
+        Unloading
     }
     /// <summary>
     /// Enables detailed log output from the ExtendedSceneManager,
@@ -75,15 +74,16 @@ public class ExtendedSceneManager : Manager<ExtendedSceneManager>
     /// you can set verbose = false here instead to avoid polluting the log.)
     /// </summary>
     public const bool verbose = true;
-    public bool loading { get { return loadPhase == LoadPhase.LoadIn || loadPhase == LoadPhase.Unload; } }
+    public bool loading { get { return loadPhase == LoadPhase.Loading || loadPhase == LoadPhase.Unloading; } }
     public LoadPhase loadPhase { get; private set; }
     private Dictionary<SceneRing, ExtendedScene> lastScenesActiveInRings;
     private Dictionary<SceneRing, List<int>> sceneIndicesBySceneRings;
     private ExtendedScene[] extendedScenesArray;
     private List<AsyncOperation> currentLoadingOps;
     private List<ExtendedScene> loadedScenes;
-    private List<ExtendedScene> scenesToUnload;
-    private Timing myTiming;
+    private Queue<ExtendedScene> scenesToLoad;
+    private Queue<ExtendedScene> scenesToUnload;
+    private Timing timing;
     private Action<ExtendedScene>[] systemScenesRules = { Rules.InRings(SceneRing.SystemScenes, scene => { scene.StageForUnloading(); }) };
     private Action<ExtendedScene>[] venueScenesRules =  { Rules.InRingsAndInactive(SceneRing.WorldScenes, scene => { scene.StageForUnloading(); }),
                                                           Rules.InRingsAndActive(SceneRing.WorldScenes, scene => { scene.SuspendScene(); }) };
@@ -96,19 +96,26 @@ public class ExtendedSceneManager : Manager<ExtendedSceneManager>
         SceneRing[] rings = (SceneRing[])Enum.GetValues(typeof(SceneRing));
         SceneDatatable.Bootstrap();
         BattleOverseer.FirstRunSetup();
+        timing = gameObject.AddComponent<Timing>();
         currentLoadingOps = new List<AsyncOperation>();
         extendedScenesArray = new ExtendedScene[SceneManager.sceneCountInBuildSettings];
         loadedScenes = new List<ExtendedScene>();
-        scenesToUnload = new List<ExtendedScene>();
+        scenesToLoad = new Queue<ExtendedScene>();
+        scenesToUnload = new Queue<ExtendedScene>();
         lastScenesActiveInRings = new Dictionary<SceneRing, ExtendedScene>(rings.Length);     
         sceneIndicesBySceneRings = new Dictionary<SceneRing, List<int>>(rings.Length);
-        myTiming = gameObject.AddComponent<Timing>();
         for (int i = 0; i < rings.Length; i++)
         {
             sceneIndicesBySceneRings[rings[i]] = new List<int>();
             lastScenesActiveInRings[rings[i]] = null;
         }
         LoadGlobalScenes();
+
+        // Use these delegates to keep ExtendedSceneManager synchronized with the built-in scene manager.
+        // We don't actually care about the arguments in any of these cases (and we throw away GetActiveScene()'s return value)
+        // but we need the housekeeping to get done.
+
+        SceneManager.activeSceneChanged += (sceneA, sceneB) => { GetActiveScene(); };
     }
 
 #if UNITY_EDITOR
@@ -178,7 +185,9 @@ public class ExtendedSceneManager : Manager<ExtendedSceneManager>
     /// </summary>
     public ExtendedScene GetActiveScene ()
     {
-        return GetExtendedScene(SceneManager.GetActiveScene().buildIndex);
+        ExtendedScene extendedScene = GetExtendedScene(SceneManager.GetActiveScene().buildIndex);
+        if (GetActiveSceneInRing(extendedScene.metadata.sceneRing) != extendedScene) lastScenesActiveInRings[extendedScene.metadata.sceneRing] = extendedScene;
+        return extendedScene;
     }
 
     /// <summary>
@@ -211,17 +220,13 @@ public class ExtendedSceneManager : Manager<ExtendedSceneManager>
     /// </summary>
     public float GetProgressOfLoad ()
     {
-        switch (loadPhase)
+        if (loadPhase == LoadPhase.NotLoading) return 1.0f;
+        else
         {
-            case LoadPhase.LoadIn:
-                float r = 0;
-                for (int i = 0; i < currentLoadingOps.Count; i++) r += currentLoadingOps[i].progress;
-                r /= currentLoadingOps.Count + scenesToUnload.Count; // we haven't started unloading anything yet, but they're staged, so treat them like asyncoperations that just haven't made any progress
-                return r;
-            case LoadPhase.Unload:
-                return Util.AverageCompletionOfOps(currentLoadingOps.ToArray());
-            default:
-                return 1.0f;
+            float r = 0;
+            for (int i = 0; i < currentLoadingOps.Count; i++) r += currentLoadingOps[i].progress;
+            r /= currentLoadingOps.Count + scenesToLoad.Count + scenesToUnload.Count;
+            return r;
         }
     }
 
@@ -232,6 +237,7 @@ public class ExtendedSceneManager : Manager<ExtendedSceneManager>
     {
         if (loadedScenes.Contains(extendedScene)) Util.Crash(new Exception(extendedScene.path + " is already loaded!"));
         loadedScenes.Add(extendedScene);
+        timing.RunCoroutineOnInstance(Util._WaitOneFrame(LoadPhaseAdvance));
     }
 
     /// <summary>
@@ -241,6 +247,7 @@ public class ExtendedSceneManager : Manager<ExtendedSceneManager>
     {
         if (!loadedScenes.Contains(extendedScene)) Util.Crash(new Exception(extendedScene.path + " isn't loaded!"));
         loadedScenes.Remove(extendedScene);
+        timing.RunCoroutineOnInstance(Util._WaitOneFrame(LoadPhaseAdvance));
     }
 
     /// <summary>
@@ -257,11 +264,11 @@ public class ExtendedSceneManager : Manager<ExtendedSceneManager>
     /// </summary>
     public void StageForLoading (ExtendedScene extendedScene)
     {
-        if (loadPhase == LoadPhase.Unload) Util.Crash(new Exception("Can't stage " + extendedScene.path + " to load because ExtendedSceneManager is in the unload phase!"));
+        if (loadPhase == LoadPhase.Unloading) Util.Crash(new Exception("Can't stage " + extendedScene.path + " to load because ExtendedSceneManager is in the unload phase!"));
         if (extendedScene.isLoaded) Util.Crash(new Exception(extendedScene.metadata.path + " is already loaded!"));
         if (extendedScene.buildIndex == 0) Util.Crash(new Exception("Can't reload Universe start scene!"));
-        if (Debug.isDebugBuild && verbose) Debug.Log("Staged scene for loading: " + extendedScene.path);
-        currentLoadingOps.Add(SceneManager.LoadSceneAsync(extendedScene.buildIndex, LoadSceneMode.Additive));
+        if (Debug.isDebugBuild && verbose) Debug.Log("Staged scene for loading: " + extendedScene.path + " in phase " + loadPhase);
+        scenesToLoad.Enqueue(extendedScene);
         ApplySceneRingRules(extendedScene);
         if (!loading) LoadStarted();
     }
@@ -271,11 +278,10 @@ public class ExtendedSceneManager : Manager<ExtendedSceneManager>
     /// </summary>
     public void StageForUnloading (ExtendedScene extendedScene)
     {
-        if (Debug.isDebugBuild && verbose) Debug.Log("Staged scene for unloading: " + extendedScene.path + " in phase " + loadPhase.ToString());
         if (!extendedScene.isLoaded) Util.Crash(new Exception(extendedScene.metadata.path + " isn't loaded!"));
+        if (Debug.isDebugBuild && verbose) Debug.Log("Staged scene for unloading: " + extendedScene.path + " in phase " + loadPhase);
         if (extendedScene.hasRootHandle) extendedScene.SuspendScene();
-        if (loadPhase == LoadPhase.Unload) currentLoadingOps.Add(SceneManager.LoadSceneAsync(extendedScene.buildIndex));
-        else scenesToUnload.Add(extendedScene);
+        scenesToUnload.Enqueue(extendedScene);
         if (!loading) LoadStarted();
     }
 
@@ -315,27 +321,58 @@ public class ExtendedSceneManager : Manager<ExtendedSceneManager>
 
     /// <summary>
     /// Called once we've finished a batch of loading operations.
+    /// Either stages the next batch or marks us done, depending.
+    /// We don't actually care about the arguments, but the sceneLoaded
+    /// and sceneUnloaded delegates want this signature.
     /// </summary>
-    private void LoadCompleted ()
+    private void LoadPhaseAdvance ()
     {
-        loadPhase = LoadPhase.None;
-        if (Debug.isDebugBuild && verbose) Debug.Log("Completed batch scene load/unload operations.");
-        if (EventSystem.current != null) EventSystem.current.enabled = true;
-        currentLoadingOps.Clear();
-    }
-
-    /// <summary>
-    /// Called when we finish loading scenes in and can start unloading them.
-    /// </summary>
-    private void LoadTransitionsToUnload ()
-    {
-        loadPhase = LoadPhase.Unload;
-        for (int i = 0; i < scenesToUnload.Count; i++)
+        Action loadDone = () =>
         {
-            if (Debug.isDebugBuild && verbose) Debug.Log("Dispatching unload operation for " + scenesToUnload[i].path);
-            currentLoadingOps.Add(SceneManager.UnloadSceneAsync(scenesToUnload[i].buildIndex));
+            if (GetProgressOfLoad() < 1.0f) Util.Crash(new Exception());
+            if (loadPhase != LoadPhase.NotLoading)
+            {
+                loadPhase = LoadPhase.NotLoading;
+                if (Debug.isDebugBuild && verbose) Debug.Log("Completed batch scene load/unload operations.");
+                if (EventSystem.current != null) EventSystem.current.enabled = true;
+            }
+        };
+        Action<int> load = (count) =>
+        {
+            loadPhase = LoadPhase.Loading;
+            for (int i = 0; i < count; i++)
+            {
+                ExtendedScene extendedScene = scenesToLoad.Dequeue();
+                if (Debug.isDebugBuild && verbose) Debug.Log("Started loading: " + extendedScene.path);
+                currentLoadingOps.Add(SceneManager.LoadSceneAsync(extendedScene.buildIndex, LoadSceneMode.Additive));
+            }
+        };
+        Action<int> unload = (count) =>
+        {
+            loadPhase = LoadPhase.Unloading;
+            for (int i = 0; i < count; i++)
+            {
+                ExtendedScene extendedScene = scenesToUnload.Dequeue();
+                if (Debug.isDebugBuild && verbose) Debug.Log("Started unloading: " + extendedScene.path);
+                currentLoadingOps.Add(SceneManager.UnloadSceneAsync(extendedScene.buildIndex));
+            }
+        };
+        if (Debug.isDebugBuild && verbose) Debug.Log("Phase " + loadPhase + ", progress " + GetProgressOfLoad() + ", scenes in load queue " + scenesToLoad.Count +
+                                                     ", scenes in unload queue" + scenesToUnload.Count + " operations in progress" + currentLoadingOps.Count);
+        switch (loadPhase)
+        {
+            case LoadPhase.NotLoading:
+            case LoadPhase.Loading:
+                if (scenesToLoad.Count > 0 || Util.AverageCompletionOfOps(currentLoadingOps.ToArray()) < 1.0f) load(scenesToLoad.Count);
+                else if (scenesToUnload.Count > 0) unload(scenesToUnload.Count);
+                else if (GetProgressOfLoad() >= 1.0f) loadDone();
+                break;
+            case LoadPhase.Unloading:
+                if (scenesToUnload.Count > 0 || Util.AverageCompletionOfOps(currentLoadingOps.ToArray()) < 1.0f) unload(scenesToUnload.Count);
+                else if (scenesToLoad.Count > 0) load(scenesToLoad.Count);
+                else if (GetProgressOfLoad() >= 1.0f) loadDone();
+                break;
         }
-        scenesToUnload.Clear();
     }
 
     /// <summary>
@@ -343,11 +380,9 @@ public class ExtendedSceneManager : Manager<ExtendedSceneManager>
     /// </summary>
     private void LoadStarted ()
     {
-        loadPhase = LoadPhase.LoadIn;
         if (Debug.isDebugBuild && verbose) Debug.Log("Started batch scene load operations."); 
         if (EventSystem.current != null) EventSystem.current.enabled = false;
-        myTiming.RunCoroutineOnInstance(_WaitUntilPossibleThenStartUnloading());
-        myTiming.RunCoroutineOnInstance(_WaitUntilLoadComplete(LoadCompleted));
+        LoadPhaseAdvance();
     }
 
     /// <summary>
@@ -359,9 +394,14 @@ public class ExtendedSceneManager : Manager<ExtendedSceneManager>
         Action onCompletion = () =>
         {
             for (int i = 0; i < globalScenes.Length; i++) GetExtendedScene(globalScenes[i].path).StageForLoading();
+            if (SceneManager.GetSceneAt(0).buildIndex == 0)
+            {
+                StageForLoading(GetExtendedScene(1));
+                StageForUnloading(GetExtendedScene(0));
+            }
         };
-        myTiming.RunCoroutineOnInstance(_WaitUntilOnline(onCompletion));
-    }  
+        timing.RunCoroutineOnInstance(_WaitUntilOnline(onCompletion));
+    }
 
     /// <summary>
     /// Coroutine: Waits until ExtendedSceneManager.Instance is set, then calls onCompletion.
@@ -370,23 +410,5 @@ public class ExtendedSceneManager : Manager<ExtendedSceneManager>
     {
         while (Instance == null) yield return 0;
         onCompletion();
-    }
-
-    /// <summary>
-    /// Coroutine: wait until we finish the current set of loading ops, then call LoadTransitionsToUnload()
-    /// This specifically doesn't use GetProgressOfLoad because it's here
-    /// to let us start handling the load phase first, wait until those are done loading in, and only then
-    /// start unloading.
-    /// </summary>
-    private IEnumerator<float> _WaitUntilPossibleThenStartUnloading ()
-    {
-        float realProgress = 0;
-        while (realProgress < 1.0f)
-        {
-            realProgress = Util.AverageCompletionOfOps(currentLoadingOps.ToArray());
-            yield return 0;
-        }
-        if (loadPhase != LoadPhase.LoadIn) Util.Crash(new Exception("Was waiting to transition to unload phase, but wasn't in load phase when that became possible."));
-        LoadTransitionsToUnload();
     }
 }

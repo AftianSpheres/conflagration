@@ -90,15 +90,6 @@ namespace Universe
                     }
                 }
             }
-            if (SceneManager.GetSceneAt(0).buildIndex == 0)
-            {
-                Action onCompletion = () =>
-                {
-                    ExtendedSceneManager.Instance.StageForLoading(ExtendedSceneManager.Instance.GetExtendedScene(1));
-                    ExtendedSceneManager.Instance.StageForUnloading(ExtendedSceneManager.Instance.GetExtendedScene(0));
-                };
-                Timing.RunCoroutine(ExtendedSceneManager.Instance._WaitUntilLoadComplete(onCompletion));
-            }
         }
 
         /// <summary>
@@ -106,9 +97,7 @@ namespace Universe
         /// </summary>
         private static void RemoveExisting(Type type)
         {
-            for (int i = 0; i < managers.Count; i++)
-                if (managers[i].GetType() == type)
-                    managers.RemoveAt(i);
+            for (int i = 0; i < managers.Count; i++) if (managers[i].GetType() == type) managers.RemoveAt(i);
         }
     }
 }
