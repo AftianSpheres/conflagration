@@ -3,6 +3,7 @@ using UnityEngine;
 using Universe;
 using CnfBattleSys;
 using MovementEffects;
+using ExtendedSceneManagement;
 
 /// <summary>
 /// Manager that handles transitions between the battle scene
@@ -25,7 +26,6 @@ public class BattleTransitionManager : Manager<BattleTransitionManager>
     private ExtendedScene testMenuScene;
     private ExtendedScene venueScene;  
     private Timing myTiming;
-
 
     /// <summary>
     /// MonoBehaviour.Awake ()
@@ -50,9 +50,9 @@ public class BattleTransitionManager : Manager<BattleTransitionManager>
         };
         if (battleScene == null) GetSceneRefs();
         if (state != State.OutOfBattle) Util.Crash(new Exception("Can't enter battle scene: scenechangemanager state is " + state.ToString()));
-        prebattleScene = ExtendedSceneManager.Instance.GetActiveSceneInRing(SceneRing.WorldScenes);
+        prebattleScene = ExtendedSceneManager.Instance.GetActiveScene(SceneRing.WorldScenes);
         if (prebattleScene != null) prebattleScene.SuspendScene();
-        venueScene = ExtendedSceneManager.Instance.GetExtendedScene(SceneDatatable.VenueScenes.Get(formation.venue).path);
+        venueScene = GetSceneForVenue(formation.venue);
         battleScene.StageForLoading();
         venueScene.StageForLoading();
         state = State.TransitioningToBattle;
@@ -83,12 +83,27 @@ public class BattleTransitionManager : Manager<BattleTransitionManager>
     }
 
     /// <summary>
+    /// Returns the scene associated with the given VenueType.
+    /// </summary>
+    private ExtendedScene GetSceneForVenue(VenueType venue)
+    {
+        ExtendedScene[] venueScenes = ExtendedSceneManager.Instance.GetAllScenesInRings(SceneRing.VenueScenes);
+        for (int i = 0; i < venueScenes.Length; i++)
+        {
+            Debug.Log(venueScenes[i].metadata.path);
+            if (venueScenes[i].metadata.name == venue.ToString()) return venueScenes[i];
+        }
+        Util.Crash("No venue scene for venue type of " + venue);
+        return null;
+    }
+
+    /// <summary>
     /// Gets references to ExtendedScenes from the manager.
     /// </summary>
     private void GetSceneRefs ()
     {
-        battleScene = ExtendedSceneManager.Instance.GetExtendedScene(SceneDatatable.SystemScenes.battleSystem.path);
-        testMenuScene = ExtendedSceneManager.Instance.GetExtendedScene(SceneDatatable.SystemScenes.testMenu.path);
+        battleScene = ExtendedSceneManager.Instance.GetExtendedScene(SceneDatatable.BattleSystemScene.buildIndex);
+        testMenuScene = ExtendedSceneManager.Instance.GetExtendedScene(SceneDatatable.TestMenuScene.buildIndex);
     }
 
     /// <summary>

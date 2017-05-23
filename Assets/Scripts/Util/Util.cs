@@ -150,6 +150,17 @@ public static class Util
     /// nonsensical, which Unity'll happily do if you just
     /// throw an unhandled exception...
     /// </summary>
+    public static void Crash(string msg)
+    {
+        Crash(new Exception(msg));
+    }
+
+    /// <summary>
+    /// Throws the exception, then crashes.
+    /// Crashing is generally better than doing something
+    /// nonsensical, which Unity'll happily do if you just
+    /// throw an unhandled exception...
+    /// </summary>
     public static void Crash (Exception exception)
     {
         Timing.RunCoroutine(_CrashLoop());

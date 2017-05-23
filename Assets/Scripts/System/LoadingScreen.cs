@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 using TMPro;
 using MovementEffects;
+using ExtendedSceneManagement;
 
 /// <summary>
 /// Controls the loading screen.
