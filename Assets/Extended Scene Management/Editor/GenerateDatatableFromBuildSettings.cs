@@ -82,7 +82,7 @@ public class GenerateDatatableFromBuildSettings : IPreprocessBuild
     {
         if (!built)
         {
-            writer = new StringWriter(new StringBuilder(256 * SceneManager.sceneCountInBuildSettings));
+            writer = new StringWriter(new StringBuilder(512 * SceneManager.sceneCountInBuildSettings));
             options.VerbatimOrder = true;
             options.BlankLinesBetweenMembers = false;
             CodeNamespace thisNamespace = new CodeNamespace("ExtendedSceneManagement");
@@ -119,7 +119,7 @@ public class GenerateDatatableFromBuildSettings : IPreprocessBuild
             csProvider.GenerateCodeFromCompileUnit(cu, writer, options);
             File.WriteAllText(Application.dataPath + path + outputName, writer.ToString().Replace("public class SceneDatatable", "public static class SceneDatatable")); // I did it, I found the Most Hacks
             AssetDatabase.Refresh();
-            Debug.Log("Generated SceneDataTable.cs");
+            Debug.Log("Generated SceneDatatable.cs");
         }
     }
 }

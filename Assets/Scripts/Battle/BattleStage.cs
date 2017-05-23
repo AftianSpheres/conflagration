@@ -121,7 +121,12 @@ public class BattleStage : MonoBehaviour
     /// </summary>
 	void Update ()
     {
-	    switch (localState)
+        if (bUI_BattleUIController.instance.actionWheel.isOpen)
+        {
+            Debug.Log("Action wheel test!!!!");
+            return;
+        }
+        switch (localState)
         {
             case LocalState.ReadyToAdvanceBattle:
                 if (BattleOverseer.overseerState == BattleOverseer.OverseerState.BattleWon || BattleOverseer.overseerState == BattleOverseer.OverseerState.BattleLost) gameObject.SetActive(false);

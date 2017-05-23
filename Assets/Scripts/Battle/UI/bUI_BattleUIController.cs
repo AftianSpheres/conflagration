@@ -41,7 +41,10 @@ public class bUI_BattleUIController : MonoBehaviour
         instance = this;
     }
 
-    private void Update()
+    /// <summary>
+    /// MonoBehaviour.Update()
+    /// </summary>
+    void Update ()
     {
         if (BattleOverseer.currentTurnBattler != null && actionWheel.isOpen == false)
         {
@@ -134,7 +137,7 @@ public class bUI_BattleUIController : MonoBehaviour
                 break;
         }
     }
-
+    
     private void PushStanceBreakTurnPacketToWaitingBattler ()
     {
 

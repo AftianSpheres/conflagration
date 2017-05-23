@@ -245,6 +245,7 @@ public class bUI_ActionWheel : MonoBehaviour
     public void PushDecision (BattleStance stance)
     {
         decisionsStack.Push(new Decision(stance));
+        if (!isOpen) Open();
         ConformWheelToCurrentDecision();
     }
 
@@ -264,6 +265,7 @@ public class bUI_ActionWheel : MonoBehaviour
     public void PushDecision (bUI_BattleUIController.Command[] commands, bUI_BattleUIController.Command[] lockedCommands)
     {
         decisionsStack.Push(new Decision(commands, lockedCommands));
+        if (!isOpen) Open();
         ConformWheelToCurrentDecision();
     }
 

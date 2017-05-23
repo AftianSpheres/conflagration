@@ -1,7 +1,4 @@
-﻿using UnityEngine;
-using UnityEngine.SceneManagement;
-
-namespace ExtendedSceneManagement
+﻿namespace ExtendedSceneManagement
 {
     /// <summary>
     /// Path and ring metadata for one scene.
@@ -19,7 +16,6 @@ namespace ExtendedSceneManagement
             name = _name;
             path = _path;
             sceneRing = (SceneRing)_sceneRing;
-            int index = SceneUtility.GetBuildIndexByScenePath(ExtendedScene.ConvertPath(path));
         }
     }
 }

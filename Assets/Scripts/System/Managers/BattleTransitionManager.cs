@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using Universe;
 using CnfBattleSys;
@@ -90,7 +91,6 @@ public class BattleTransitionManager : Manager<BattleTransitionManager>
         ExtendedScene[] venueScenes = ExtendedSceneManager.Instance.GetAllScenesInRings(SceneRing.VenueScenes);
         for (int i = 0; i < venueScenes.Length; i++)
         {
-            Debug.Log(venueScenes[i].metadata.path);
             if (venueScenes[i].metadata.name == venue.ToString()) return venueScenes[i];
         }
         Util.Crash("No venue scene for venue type of " + venue);
@@ -111,7 +111,21 @@ public class BattleTransitionManager : Manager<BattleTransitionManager>
     /// </summary>
     private void ToLoadingScreen(Action onCompletion)
     {
-        LoadingScreen.instance.DisplayWithShade();
-        myTiming.RunCoroutineOnInstance(ExtendedSceneManager.Instance._WaitUntilLoadComplete(onCompletion));
+        Action loadingScreenReady = () =>
+        {
+            LoadingScreen.instance.DisplayWithShade();
+            myTiming.RunCoroutineOnInstance(ExtendedSceneManager.Instance._WaitUntilLoadComplete(onCompletion));
+        };
+        if (LoadingScreen.instance != null) loadingScreenReady();
+        else myTiming.RunCoroutineOnInstance(_WaitForLoadingScreenToComeUp(loadingScreenReady));
+    }
+
+    /// <summary>
+    /// Coroutine: Wait for loading screen to become available, then call onCompletion.
+    /// </summary>
+    private IEnumerator<float> _WaitForLoadingScreenToComeUp (Action onCompletion)
+    {
+        while (LoadingScreen.instance == null) yield return 0;
+        onCompletion();
     }
 }
