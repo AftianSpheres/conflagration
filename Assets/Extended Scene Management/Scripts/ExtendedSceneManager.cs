@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using Universe;
 using CnfBattleSys;
@@ -375,7 +374,6 @@ namespace ExtendedSceneManagement
                 {
                     loadPhase = LoadPhase.NotLoading;
                     if (Debug.isDebugBuild && verbose) Debug.Log("Completed batch scene load/unload operations.");
-                    if (EventSystem.current != null) EventSystem.current.enabled = true;
                 }
             };
             Action<int> load = (count) =>
@@ -422,7 +420,6 @@ namespace ExtendedSceneManagement
         private void LoadStarted()
         {
             if (Debug.isDebugBuild && verbose) Debug.Log("Started batch scene load operations.");
-            if (EventSystem.current != null) EventSystem.current.enabled = false;
             LoadPhaseAdvance();
         }
 

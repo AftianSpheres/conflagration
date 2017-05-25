@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using CnfBattleSys;
+using CnfBattleSys.AI;
 using MovementEffects;
 using TMPro;
 
@@ -19,13 +20,15 @@ public class bUI_ActionWheel : MonoBehaviour
         public readonly DecisionType decisionType;
         public int optionCount { get { if (commands != null) return commands.Length; else return decideableActions.Length; } }
         public int selectedOptionIndex = 0;
+        private readonly bUI_ActionWheel wheel;
         private readonly bUI_BattleUIController.Command[] lockedCommands;
 
         /// <summary>
         /// Constructor for a decision between bui controller commands.
         /// </summary>
-        public Decision (bUI_BattleUIController.Command[] _commands, bUI_BattleUIController.Command[] _lockedCommands)
+        public Decision (bUI_BattleUIController.Command[] _commands, bUI_BattleUIController.Command[] _lockedCommands, bUI_ActionWheel _wheel)
         {
+            wheel = _wheel;
             decisionType = DecisionType.BattleUI;
             commands = _commands;
             lockedCommands = _lockedCommands;
@@ -35,8 +38,9 @@ public class bUI_ActionWheel : MonoBehaviour
         /// <summary>
         /// Constructor for a decision between actions in a stance.
         /// </summary>
-        public Decision (BattleStance _baseStance)
+        public Decision (BattleStance _baseStance, bUI_ActionWheel _wheel)
         {
+            wheel = _wheel;
             baseStance = _baseStance;
             decideableActions = baseStance.actionSet;
             decisionType = DecisionType.ActionSelect;
@@ -48,18 +52,20 @@ public class bUI_ActionWheel : MonoBehaviour
         /// </summary>
         public void Submit ()
         {
+            Decision newDecision = null;
             switch (decisionType)
             {
                 case DecisionType.BattleUI:
                     Debug.Log(commands[selectedOptionIndex]);
                     break;
                 case DecisionType.ActionSelect:
-                    Debug.Log(decideableActions[selectedOptionIndex]);
+                    AIModule_PlayerSide_ManualControl.InputAction(decideableActions[selectedOptionIndex]);                   
                     break;
                 default:
                     Util.Crash(new Exception("Invalid action wheel decision type: " + decisionType.ToString()));
                     break;
             }
+            if (newDecision == null) Timing.RunCoroutine(wheel._CallOnceAnimatorsFinish(wheel.Close));
         }
 
         /// <summary>
@@ -109,10 +115,9 @@ public class bUI_ActionWheel : MonoBehaviour
     /// All buttons, including inactive ones.
     /// </summary>
     private bUI_ActionWheelButton[] allButtons;
+    private Battler decidingBattler { get { return AIModule_PlayerSide_ManualControl.waitingBattler; } }
     private Decision currentDecision;
-    private Dictionary<Animator, int> waitingAnimatorsPushTimeStateHashes;
     private Quaternion defaultRotation;
-    private Stack<Animator> animatorsForWaitingOn;
     private Stack<Decision> decisionsStack;
     private TextBank actionWheelBank;
     private TextBank stancesCommonBank;
@@ -132,13 +137,18 @@ public class bUI_ActionWheel : MonoBehaviour
     void Awake ()
     {
         defaultRotation = transform.rotation;
-        waitingAnimatorsPushTimeStateHashes = new Dictionary<Animator, int>();
-        animatorsForWaitingOn = new Stack<Animator>();
         decisionsStack = new Stack<Decision>();
-        bUI_BattleUIController.instance.RegisterActionWheel(this);
         GenerateButtonsFromPrefab();
         LockInput();
         Close();
+    }
+
+    /// <summary>
+    /// MonoBehaviour.Start ()
+    /// </summary>
+    void Start()
+    {
+        bUI_BattleUIController.instance.RegisterActionWheel(this);
     }
 
     /// <summary>
@@ -146,7 +156,7 @@ public class bUI_ActionWheel : MonoBehaviour
     /// </summary>
     void Update ()
     {
-        if (BattleOverseer.currentTurnBattler == null)
+        if (decidingBattler == null)
         {
             switch (state)
             {
@@ -164,6 +174,17 @@ public class bUI_ActionWheel : MonoBehaviour
                     break;
             }
         }       
+    }
+
+    /// <summary>
+    /// Clear the decision stack.
+    /// Call this between turns to keep from carrying decisions over from the last turn.
+    /// </summary>
+    public void ClearDecisionStack ()
+    {
+        if (isOpen) Close();
+        decisionsStack.Clear();
+        currentDecision = null;
     }
 
     /// <summary>
@@ -190,10 +211,9 @@ public class bUI_ActionWheel : MonoBehaviour
     {
         for (int i = 0; i < activeButtons.Length; i++) activeButtons[i].OnWheelConfirm();
         animator.Play(decisionConfirmHash);
-        WaitOnAnimator(animator);
         Action onCompletion = () =>
         {
-            currentDecision.Submit();
+            currentDecision.Submit();           
         };
         Timing.RunCoroutine(_CallOnceAnimatorsFinish(onCompletion), thisTag);
     }
@@ -231,9 +251,9 @@ public class bUI_ActionWheel : MonoBehaviour
     /// </summary>
     public void Open ()
     {
-        if (BattleOverseer.currentTurnBattler == null) Util.Crash(new Exception("No battler is taking a turn, so you can't open the action wheel."));
-        ConformWheelToCurrentDecision();
+        if (decidingBattler == null) Util.Crash(new Exception("No battler is requesting input so you can't open the action wheel."));
         contents.SetActive(true);
+        ConformWheelToCurrentDecision();
         UnlockInput();
         state = State.Ready;
     }
@@ -244,7 +264,7 @@ public class bUI_ActionWheel : MonoBehaviour
     /// </summary>
     public void PushDecision (BattleStance stance)
     {
-        decisionsStack.Push(new Decision(stance));
+        decisionsStack.Push(new Decision(stance, this));
         if (!isOpen) Open();
         ConformWheelToCurrentDecision();
     }
@@ -264,7 +284,7 @@ public class bUI_ActionWheel : MonoBehaviour
     /// </summary>
     public void PushDecision (bUI_BattleUIController.Command[] commands, bUI_BattleUIController.Command[] lockedCommands)
     {
-        decisionsStack.Push(new Decision(commands, lockedCommands));
+        decisionsStack.Push(new Decision(commands, lockedCommands, this));
         if (!isOpen) Open();
         ConformWheelToCurrentDecision();
     }
@@ -283,15 +303,6 @@ public class bUI_ActionWheel : MonoBehaviour
             else RotatePlaces(diffA);
         }
         else Debug.Log("Tried to rotate toward selected button: " + button.gameObject.name + ". This shouldn't happen. Probably need to debug this.");
-    }
-
-    /// <summary>
-    /// Adds the animator to the stack of animators that need to finish what they're doing before the wheel changes states.
-    /// </summary>
-    public void WaitOnAnimator (Animator waitingAnimator)
-    {
-        animatorsForWaitingOn.Push(waitingAnimator);
-        waitingAnimatorsPushTimeStateHashes.Add(waitingAnimator, waitingAnimator.GetCurrentAnimatorStateInfo(0).fullPathHash);
     }
 
     /// <summary>
@@ -330,7 +341,6 @@ public class bUI_ActionWheel : MonoBehaviour
         SetCenterIcon();
         centerText.text = string.Empty;
         animator.Play(decisionShowHash);
-        WaitOnAnimator(animator);
         Action onCompletion = () =>
         {
             SetCenterText();
@@ -380,7 +390,6 @@ public class bUI_ActionWheel : MonoBehaviour
         int diff = newIndex - currentDecision.selectedOptionIndex;
         float degrees = interval * diff;
         float rotationLen = placeRotationTime;
-        if (Mathf.Abs(diff) > 1) rotationLen *= 2;
         if (newIndex >= currentDecision.optionCount) newIndex -= currentDecision.optionCount;
         else if (newIndex < 0) newIndex += currentDecision.optionCount;
         currentDecision.selectedOptionIndex = newIndex;
@@ -442,25 +451,19 @@ public class bUI_ActionWheel : MonoBehaviour
     }
 
     /// <summary>
-    /// Locks the wheel, waits until every animator on the stack has completed the state it was in when it was pushed,
+    /// Locks the wheel, waits until every animator is in idle state,
     /// and then unlocks and calls onCompletion.
     /// </summary>
     private IEnumerator<float> _CallOnceAnimatorsFinish(Action onCompletion)
     {
         state = State.InTransition;
-        while (animatorsForWaitingOn.Count > 0)
+        yield return Timing.WaitForOneFrame; // animators need a frame of head time to get their state in order
+        bool isDone = false;
+        while (isDone == false)
         {
-            while (true)
-            {
-                if (animatorsForWaitingOn.Count == 0) break;
-                Animator _animator = animatorsForWaitingOn.Peek();
-                if (waitingAnimatorsPushTimeStateHashes[_animator] != _animator.GetCurrentAnimatorStateInfo(0).fullPathHash)
-                {
-                    animatorsForWaitingOn.Pop();
-                    waitingAnimatorsPushTimeStateHashes.Remove(_animator);
-                }
-                else break;
-            }
+            isDone = true;
+            if (animator.GetCurrentAnimatorStateInfo(0).fullPathHash != idleHash) isDone = false;
+            for (int i = 0; i < activeButtons.Length; i++) if (activeButtons[i].InTransitionAnimation()) isDone = false;
             yield return 0;
         }
         state = State.Ready;

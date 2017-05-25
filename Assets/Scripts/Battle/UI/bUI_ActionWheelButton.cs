@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using CnfBattleSys;
+using CnfBattleSys.AI;
 using TMPro;
 
 /// <summary>
@@ -40,17 +41,20 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
     public TextMeshProUGUI guiText_Label;
     public int indexOnWheel { get; private set; }
     private bUI_ActionWheel wheel;
+    private Battler decidingBattler { get { return AIModule_PlayerSide_ManualControl.waitingBattler; } }
     private static TextBank actionsCommonBank;
     private static TextBank commandsBank;
     private static TextBank stancesCommonBank;
     private SelectionType selectionType;
     private State state;
     private bool forbidden;
-    readonly static int confirmAnimHash = Animator.StringToHash("Base Layer.Confirm");
-    readonly static int failedConfirmAnimHash = Animator.StringToHash("Base Layer.FailedConfirm");
-    readonly static int idleAnimHash = Animator.StringToHash("Base Layer.Idle");
-    readonly static int lockedAnimHash = Animator.StringToHash("Base Layer.Locked");
-    readonly static int selectedAnimHash = Animator.StringToHash("Base Layer.Selected");
+    readonly static int confirmTrigger = Animator.StringToHash("confirm");
+    readonly static int idleBool = Animator.StringToHash("idle");
+    readonly static int idlePathHash = Animator.StringToHash("Base Layer.Idle");
+    readonly static int lockedBool = Animator.StringToHash("locked");
+    readonly static int lockedPathHash = Animator.StringToHash("Base Layer.Locked");
+    readonly static int selectedBool = Animator.StringToHash("selected");
+    readonly static int selectedPathHash = Animator.StringToHash("Base Layer.Selected");
     const string commandIconsResourcePath = "Battle/2D/UI/AWIcon/Command/";
 
     /// <summary>
@@ -63,7 +67,7 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
             if (wheel.selectedButton == this) wheel.ConfirmSelection();
             else wheel.RotateToButton(this);
         }
-        else Debug.Log("input forbidden");
+        ConformAnimatorToState();
     }
 
     /// <summary>
@@ -105,8 +109,8 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
         if (command == bUI_BattleUIController.Command.AttackPrimary)
         {
             if (stancesCommonBank == null) stancesCommonBank = TextBankManager.Instance.GetCommonTextBank(typeof(StanceType));
-            thisPage = stancesCommonBank.GetPage(BattleOverseer.currentTurnBattler.currentStance.stanceID);
-            SetIconForStance(BattleOverseer.currentTurnBattler.currentStance);
+            thisPage = stancesCommonBank.GetPage(decidingBattler.currentStance.stanceID);
+            SetIconForStance(decidingBattler.currentStance);
         }
         else
         {
@@ -128,23 +132,37 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
     }
 
     /// <summary>
+    /// Check if the button is in an animation that counts as a transition.
+    /// </summary>
+    public bool InTransitionAnimation ()
+    {
+        bool returnVal = false;
+        switch (state)
+        {
+            case State.Available:
+            case State.Available_ButAttackWillBreakStance:
+                returnVal = animator.GetCurrentAnimatorStateInfo(0).fullPathHash != idlePathHash;
+                break;
+            case State.Selected:
+            case State.Selected_ButAttackWillBreakStance:
+                returnVal = animator.GetCurrentAnimatorStateInfo(0).fullPathHash != selectedPathHash;
+                break;
+            case State.Locked:
+                returnVal = animator.GetCurrentAnimatorStateInfo(0).fullPathHash != lockedPathHash;
+                break;
+            default:
+                Util.Crash("Tried to find out if action wheel button " + indexOnWheel + " was in a transition animation, but that's not possible from state " + state);
+                break;
+        }
+        return returnVal;
+    }
+
+    /// <summary>
     /// Called on all ActionWheelButtons when a selection is confirmed.
     /// </summary>
     public void OnWheelConfirm ()
     {
-        switch (state)
-        {
-            case State.Selected:
-            case State.Selected_ButAttackWillBreakStance:
-                animator.Play(confirmAnimHash);
-                wheel.WaitOnAnimator(animator);
-                break;
-            case State.Locked:
-                animator.Play(failedConfirmAnimHash);
-                wheel.WaitOnAnimator(animator);
-                break;
-        }
-        ConformAnimatorToState();
+        if (wheel.selectedButton == this) animator.SetTrigger(confirmTrigger);
     }
 
     /// <summary>
@@ -163,22 +181,9 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
     /// </summary>
     private void ConformAnimatorToState ()
     {
-        int hash = animator.GetCurrentAnimatorStateInfo(0).fullPathHash;
-        switch (state)
-        {
-            case State.Available:
-                if (hash != idleAnimHash) animator.Play(idleAnimHash);
-                break;
-            case State.Locked:
-                if (hash != lockedAnimHash && hash != failedConfirmAnimHash) animator.Play(lockedAnimHash);
-                break;
-            case State.Selected:
-                if (hash != selectedAnimHash && hash != confirmAnimHash) animator.Play(selectedAnimHash);
-                break;
-            default:
-                Util.Crash(new Exception("Can't conform animator to button state: " + state.ToString()));
-                break;
-        }
+        animator.SetBool(lockedBool, state == State.Locked);
+        animator.SetBool(selectedBool, state == State.Selected | state == State.Selected_ButAttackWillBreakStance);
+        animator.SetBool(idleBool, state == State.Available | state == State.Available_ButAttackWillBreakStance);
     }
 
     /// <summary>
@@ -186,16 +191,16 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
     /// </summary>
     private void DetermineStateForBattleAction (BattleAction action)
     {
-        if (BattleOverseer.currentTurnBattler == null) DetermineStateForCommand(bUI_BattleUIController.Command.AttackPrimary);
-        else if (!BattleOverseer.currentTurnBattler.CanExecuteAction(action)) state = State.Locked;
+        if (decidingBattler == null) DetermineStateForCommand(bUI_BattleUIController.Command.AttackPrimary);
+        else if (!decidingBattler.CanExecuteAction(action)) state = State.Locked;
         else if (wheel.selectedButton == this)
         {
-            if (BattleOverseer.currentTurnBattler.CalcActionStaminaCost(action.baseSPCost) >= BattleOverseer.currentTurnBattler.currentStamina) state = State.Selected_ButAttackWillBreakStance;
+            if (decidingBattler.CalcActionStaminaCost(action.baseSPCost) >= decidingBattler.currentStamina) state = State.Selected_ButAttackWillBreakStance;
             else state = State.Selected;
         }
         else
         {
-            if (BattleOverseer.currentTurnBattler.CalcActionStaminaCost(action.baseSPCost) >= BattleOverseer.currentTurnBattler.currentStamina) state = State.Available_ButAttackWillBreakStance;
+            if (decidingBattler.CalcActionStaminaCost(action.baseSPCost) >= decidingBattler.currentStamina) state = State.Available_ButAttackWillBreakStance;
             else state = State.Available;
         }
     }

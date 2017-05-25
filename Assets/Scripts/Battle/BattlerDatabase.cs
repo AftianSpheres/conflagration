@@ -68,7 +68,7 @@ namespace CnfBattleSys
                 workingNode = rootNode.SelectSingleNode(node);
                 if (workingNode == null) Util.Crash(new Exception(battlerType.ToString() + " has no node " + node));
             };
-            bool isFixedStats;
+            bool isFixedStats = false;
             actOnNode("statsType");
             if (workingNode.InnerText == "fixed") isFixedStats = true;
             else if (workingNode.InnerText == "scaling") isFixedStats = false;

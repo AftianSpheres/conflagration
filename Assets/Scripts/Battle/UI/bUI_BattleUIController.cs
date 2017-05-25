@@ -53,6 +53,14 @@ public class bUI_BattleUIController : MonoBehaviour
     }
 
     /// <summary>
+    /// Clean up UI state after a player turn finishes.
+    /// </summary>
+    public void Cleanup ()
+    {
+        actionWheel.ClearDecisionStack();
+    }
+
+    /// <summary>
     /// Registers an action info area with the battle UI controller.
     /// </summary>
     public void RegisterActionInfoArea (bUI_ActionInfoArea _actionInfoArea)
