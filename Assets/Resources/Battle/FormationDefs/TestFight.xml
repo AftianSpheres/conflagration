@@ -9,19 +9,19 @@
       <battler>
         <battlerType>TestAIUnit</battlerType>
         <position>3, -9</position>
-        <startStance>TestStance</startStance>
+        <startStance>TestStance_Melee</startStance>
       </battler>
       <battler>
         <battlerType>TestAIUnit</battlerType>
         <position>0, 0</position>
-        <startStance>TestStance</startStance>
+        <startStance>TestStance_Melee</startStance>
       </battler>
     </GenericEnemySide>
     <PlayerSide>
       <battler>
         <battlerType>TestAIUnit</battlerType>
         <position>6, 5</position>
-        <startStance>TestStance</startStance>
+        <startStance>TestStance_Melee</startStance>
       </battler>
     </PlayerSide>
   </battlers>

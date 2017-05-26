@@ -12,11 +12,13 @@ public class bUI_ActionWheel : MonoBehaviour
     /// <summary>
     /// Models a decision the action wheel can make.
     /// </summary>
-    private class Decision
+    protected class Decision
     {
         public readonly BattleStance baseStance;
         public readonly bUI_BattleUIController.Command[] commands;
         public readonly BattleAction[] decideableActions;
+        public readonly BattleStance[] decideableStances;
+        public readonly BattleStance lockedStance;
         public readonly DecisionType decisionType;
         public int optionCount { get { if (commands != null) return commands.Length; else return decideableActions.Length; } }
         public int selectedOptionIndex = 0;
@@ -33,6 +35,7 @@ public class bUI_ActionWheel : MonoBehaviour
             commands = _commands;
             lockedCommands = _lockedCommands;
             decideableActions = null;
+            decideableStances = null;
         }
 
         /// <summary>
@@ -45,6 +48,28 @@ public class bUI_ActionWheel : MonoBehaviour
             decideableActions = baseStance.actionSet;
             decisionType = DecisionType.ActionSelect;
             commands = null;
+            decideableStances = null;
+        }
+
+        /// <summary>
+        /// Constructor for a decision between stances.
+        /// </summary>
+        public Decision (BattleStance[] _stances, BattleStance _lockedStance, bUI_ActionWheel _wheel)
+        {
+            wheel = _wheel;
+            decideableStances = _stances;
+            lockedStance = _lockedStance;
+            for (int i = 0; i < decideableStances.Length; i++)
+            {
+                if (decideableStances[i] == lockedStance)
+                {
+                    selectedOptionIndex = i; // The default selection should always be the stance you broke
+                    break;
+                }
+            }
+            decisionType = DecisionType.StanceSelect;
+            commands = null;
+            decideableActions = null;
         }
 
         /// <summary>
@@ -56,10 +81,13 @@ public class bUI_ActionWheel : MonoBehaviour
             switch (decisionType)
             {
                 case DecisionType.BattleUI:
-                    Debug.Log(commands[selectedOptionIndex]);
+                    bUI_BattleUIController.instance.SubmitCommand(commands[selectedOptionIndex]);
                     break;
                 case DecisionType.ActionSelect:
                     AIModule_PlayerSide_ManualControl.InputAction(decideableActions[selectedOptionIndex]);                   
+                    break;
+                case DecisionType.StanceSelect:
+                    AIModule_PlayerSide_ManualControl.InputStance(decideableStances[selectedOptionIndex]);
                     break;
                 default:
                     Util.Crash(new Exception("Invalid action wheel decision type: " + decisionType.ToString()));
@@ -80,11 +108,12 @@ public class bUI_ActionWheel : MonoBehaviour
     /// <summary>
     /// Types of decisions the action wheel can be configured for.
     /// </summary>
-    private enum DecisionType
+    protected enum DecisionType
     {
         None,
         BattleUI,
-        ActionSelect
+        ActionSelect,
+        StanceSelect
     }
     /// <summary>
     /// Action wheel states.
@@ -124,6 +153,12 @@ public class bUI_ActionWheel : MonoBehaviour
     private State state;
     private bool _allowInput;
     private float interval;
+    private static bUI_BattleUIController.Command[] topLevel_noSubactions = { bUI_BattleUIController.Command.Decide_AttackPrimary, bUI_BattleUIController.Command.Move, bUI_BattleUIController.Command.Break, bUI_BattleUIController.Command.Run };
+    private static bUI_BattleUIController.Command[] topLevel_yesSubactions = { bUI_BattleUIController.Command.Decide_AttackPrimary, bUI_BattleUIController.Command.Decide_AttackSecondary, bUI_BattleUIController.Command.Move, bUI_BattleUIController.Command.Break, bUI_BattleUIController.Command.Run };
+    private static bUI_BattleUIController.Command[] topLevelLock_noMoveNoBreakNoRun = { bUI_BattleUIController.Command.Move, bUI_BattleUIController.Command.Break, bUI_BattleUIController.Command.Run };
+    private static bUI_BattleUIController.Command[] topLevelLock_noMoveNoBreak = { bUI_BattleUIController.Command.Move, bUI_BattleUIController.Command.Break };
+    private static bUI_BattleUIController.Command[] topLevelLock_noMoveNoRun = { bUI_BattleUIController.Command.Move, bUI_BattleUIController.Command.Run };
+    private static bUI_BattleUIController.Command[] topLevelLock_noBreakNoRun = { bUI_BattleUIController.Command.Break, bUI_BattleUIController.Command.Run };
     private readonly static int decisionConfirmHash = Animator.StringToHash("Base Layer.DecisionConfirm");
     private readonly static int decisionShowHash = Animator.StringToHash("Base Layer.DecisionShow");
     private readonly static int idleHash = Animator.StringToHash("Base Layer.Idle");
@@ -219,6 +254,60 @@ public class bUI_ActionWheel : MonoBehaviour
     }
 
     /// <summary>
+    /// Use the action wheel to decide which attack to use,
+    /// from either currentStance or metaStance.
+    /// </summary>
+    public void DecideAttacks(bool forMetaStance = false)
+    {
+        BattleStance stance;
+        if (forMetaStance) stance = AIModule_PlayerSide_ManualControl.waitingBattler.metaStance;
+        else stance = AIModule_PlayerSide_ManualControl.waitingBattler.currentStance;
+        decisionsStack.Push(new Decision(stance, this));
+        if (!isOpen) Open();
+        ConformWheelToCurrentDecision();
+    }
+
+    /// <summary>
+    /// Use the action wheel to decide which stance to switch into.
+    /// </summary>
+    public void DecideStances ()
+    {
+        decisionsStack.Push(new Decision(AIModule_PlayerSide_ManualControl.waitingStanceSet, AIModule_PlayerSide_ManualControl.waitingBattler.lockedStance, this));
+        if (!isOpen) Open();
+        ConformWheelToCurrentDecision();
+    }
+
+    /// <summary>
+    /// Use the action wheel to get a top-level command (attack/move/run/break) from the player.
+    /// </summary>
+    public void DecideTopLevel ()
+    {
+        bUI_BattleUIController.Command[] commands;
+        if (AIModule_PlayerSide_ManualControl.waitingBattler.metaStance.stanceID == StanceType.None) commands = topLevel_noSubactions;
+        else commands = topLevel_yesSubactions;
+        bUI_BattleUIController.Command[] locked;
+        bool canMove = AIModule_PlayerSide_ManualControl.waitingBattler.CanMove();
+        bool canBreak = AIModule_PlayerSide_ManualControl.waitingBattler.CanBreak();
+        bool canRun = AIModule_PlayerSide_ManualControl.waitingBattler.CanRun();
+        if (!canMove)
+        {
+            if (canBreak && canRun) locked = new bUI_BattleUIController.Command[] { bUI_BattleUIController.Command.Move };
+            else if (!canRun) locked = topLevelLock_noMoveNoRun;
+            else locked = topLevelLock_noMoveNoBreak;
+        }
+        else if (!canBreak)
+        {
+            if (!canRun) locked = topLevelLock_noBreakNoRun;
+            else locked = new bUI_BattleUIController.Command[] { bUI_BattleUIController.Command.Break };
+        }
+        else if (!canRun) locked = new bUI_BattleUIController.Command[] { bUI_BattleUIController.Command.Run };
+        else locked = new bUI_BattleUIController.Command[0];
+        decisionsStack.Push(new Decision(commands, locked, this));
+        if (!isOpen) Open();
+        ConformWheelToCurrentDecision();
+    }
+
+    /// <summary>
     /// Disposes of the decision on top of the stack.
     /// This should be used when backing out of a second-level or higher decision (ex: action selection)
     /// back to the preceding one.
@@ -256,37 +345,6 @@ public class bUI_ActionWheel : MonoBehaviour
         ConformWheelToCurrentDecision();
         UnlockInput();
         state = State.Ready;
-    }
-
-    /// <summary>
-    /// Push a decision with the specified battle actions as options.
-    /// The action wheel will update itself to present the new decision.
-    /// </summary>
-    public void PushDecision (BattleStance stance)
-    {
-        decisionsStack.Push(new Decision(stance, this));
-        if (!isOpen) Open();
-        ConformWheelToCurrentDecision();
-    }
-
-    /// <summary>
-    /// Push a decision with the specified UI commands as options, and no locked commands.
-    /// The action wheel will update itself to present the new decision.
-    /// </summary>
-    public void PushDecision (bUI_BattleUIController.Command[] commands)
-    {
-        PushDecision(commands, new bUI_BattleUIController.Command[0]);
-    }
-
-    /// <summary>
-    /// Push a decision with the specified UI commands as options, and the given set of locked commands.
-    /// The action wheel will update itself to present the new decision.
-    /// </summary>
-    public void PushDecision (bUI_BattleUIController.Command[] commands, bUI_BattleUIController.Command[] lockedCommands)
-    {
-        decisionsStack.Push(new Decision(commands, lockedCommands, this));
-        if (!isOpen) Open();
-        ConformWheelToCurrentDecision();
     }
 
     /// <summary>

@@ -1024,12 +1024,44 @@ namespace CnfBattleSys
         }
 
         /// <summary>
+        /// Returns true if the battler is allowed to break its current stance,
+        /// false if one or more active statuses prevents it.
+        /// </summary>
+        public bool CanBreak ()
+        {
+            return true; // No status effects that preclude break presently exist
+        }
+
+        /// <summary>
         /// Returns true if the battler is allowed to execute this action,
         /// false if one or more active statuses prevents it.
         /// </summary>
         public bool CanExecuteAction (BattleAction action)
         {
             return true; // No status effects that would preclude action execution presently exist, so this will always return true until we can give it something to do.
+        }
+
+        /// <summary>
+        /// Returns true if the battler can move.
+        /// Returns false if moveDist is less than or equal to zero.
+        /// </summary>
+        public bool CanMove ()
+        {
+            return stats.moveDist <= 0;
+        }
+
+        /// <summary>
+        /// Returns true if the current battle allows battlers to run, and this battler is allowed to run.
+        /// Returns false otherwise.
+        /// </summary>
+        public bool CanRun ()
+        {
+            bool formationAllowsRun;
+            if (BattleOverseer.activeFormation != null && BattleOverseer.activeFormation.formation != FormationType.None)
+                formationAllowsRun = (BattleOverseer.activeFormation.flags & BattleFormationFlags.ForbidPlayerFromRunning) != BattleFormationFlags.ForbidPlayerFromRunning;
+            else formationAllowsRun = true;
+            bool battlerAllowsRun = true; // No status effects that would preclude running currently exist, etc.
+            return formationAllowsRun && battlerAllowsRun;
         }
 
         /// <summary>

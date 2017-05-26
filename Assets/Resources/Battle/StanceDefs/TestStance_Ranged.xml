@@ -10,27 +10,26 @@
     <move>TestStance_Move</move>
   </animNames>
   <actions>
-    <action>TestMeleeAtk</action>
-    <action>TestRangedAOEAtk</action>
-    <action>TestHeal</action>
-    <action>TestBuff</action>
+    <action>TestRangedAtk_LineOfSight</action>
+    <action>TestRangedAtk_AOE</action>
+    <action>TestRangedAtk_AllFoesAndDOTEffect</action>
   </actions>
-  <counterattackAction>TestCounter</counterattackAction>
+  <counterattackAction>None</counterattackAction>
   <moveDelayBonus>0</moveDelayBonus>
   <moveDelayMultiplier>1.0</moveDelayMultiplier>
   <moveDistBonus>0</moveDistBonus>
-  <moveDistMultiplier>1.0</moveDistMultiplier>
+  <moveDistMultiplier>0.7</moveDistMultiplier>
   <stanceChangeDelayBonus>0</stanceChangeDelayBonus>
   <stanceChangeDelayMultiplier>1.0</stanceChangeDelayMultiplier>
   <statMultis>
     <MaxHP>1.0</MaxHP>
-    <ATK>1.0</ATK>
-    <DEF>1.0</DEF>
-    <MATK>1.0</MATK>
-    <MDEF>1.0</MDEF>
-    <SPE>1.0</SPE>
-    <HIT>1.0</HIT>
-    <EVA>1.0</EVA>
+    <ATK>1.3</ATK>
+    <DEF>0.8</DEF>
+    <MATK>1.3</MATK>
+    <MDEF>1.1</MDEF>
+    <SPE>0.9</SPE>
+    <HIT>1.2</HIT>
+    <EVA>0.7</EVA>
   </statMultis>
   <statBonus>
     <MaxHP>0</MaxHP>

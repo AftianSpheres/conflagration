@@ -8,6 +8,6 @@
     public enum BattleFormationFlags
     {
         None = 0,
-        IsTestFight = 1
+        ForbidPlayerFromRunning = 1
     }
 }

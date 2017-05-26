@@ -16,12 +16,14 @@ public class bUI_BattleUIController : MonoBehaviour
     {
         None,
         Back,
-        AttackPrimary,
-        AttackSecondary,
+        Decide_AttackPrimary,
+        Decide_AttackSecondary,
         Break,
         Move,
         Run,
-        CloseWheel
+        CloseWheel,
+        Decide_Stance,
+        WheelFromTopLevel
     }
 
     public static bUI_BattleUIController instance { get; private set; }
@@ -39,17 +41,6 @@ public class bUI_BattleUIController : MonoBehaviour
     void Awake ()
     {
         instance = this;
-    }
-
-    /// <summary>
-    /// MonoBehaviour.Update()
-    /// </summary>
-    void Update ()
-    {
-        if (BattleOverseer.currentTurnBattler != null && actionWheel.isOpen == false)
-        {
-            actionWheel.PushDecision(new Command[] { Command.AttackPrimary, Command.AttackSecondary, Command.Back, Command.Break, Command.CloseWheel, Command.Move, Command.Run });
-        }
     }
 
     /// <summary>
@@ -123,11 +114,11 @@ public class bUI_BattleUIController : MonoBehaviour
     {
         switch (command)
         {
-            case Command.AttackPrimary:
-                actionWheel.PushDecision(AIModule_PlayerSide_ManualControl.waitingBattler.currentStance);
+            case Command.Decide_AttackPrimary:
+                actionWheel.DecideAttacks(false);
                 break;
-            case Command.AttackSecondary:
-                actionWheel.PushDecision(AIModule_PlayerSide_ManualControl.waitingBattler.metaStance);
+            case Command.Decide_AttackSecondary:
+                actionWheel.DecideAttacks(true);
                 break;
             case Command.Break:
                 break;
@@ -142,6 +133,13 @@ public class bUI_BattleUIController : MonoBehaviour
                 break;
             case Command.Run:
                 Debug.Log("Running: not implemented");
+                break;
+            case Command.Decide_Stance:
+                actionWheel.DecideStances();
+                break;
+            case Command.WheelFromTopLevel:
+                if (AIModule_PlayerSide_ManualControl.WaitingForStanceInput()) SubmitCommand(Command.Decide_Stance);
+                //else (actionWheel.)
                 break;
         }
     }

@@ -23,8 +23,8 @@ public class bUI_BattleUITest : bUI_BattleUIController
     /// </summary>
     private void TestForAttacks ()
     {
-        Battler b = new Battler(new BattleFormation.FormationMember(BattlerDatabase.Get(BattlerType.TestPCUnit), Vector2.zero, StanceDatabase.Get(StanceType.TestStance), BattlerSideFlags.PlayerSide, 0));
-        AIModule_PlayerSide_ManualControl.GetTurnActionsFromPlayer(b, false);
-        actionWheel.PushDecision(b.currentStance);
+        Battler b = new Battler(new BattleFormation.FormationMember(BattlerDatabase.Get(BattlerType.TestPCUnit), Vector2.zero, StanceDatabase.Get(StanceType.TestStance_Melee), BattlerSideFlags.PlayerSide, 0));
+        AIModule_PlayerSide_ManualControl.GetTurnActionsFromPlayer(b, true);
+        SubmitCommand(Command.WheelFromTopLevel);
     }
 }

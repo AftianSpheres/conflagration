@@ -106,7 +106,7 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
         DetermineStateForCommand(command);
         if (commandsBank == null) commandsBank = TextBankManager.Instance.GetTextBank("Battle/ActionWheel");
         TextBank.Page thisPage;
-        if (command == bUI_BattleUIController.Command.AttackPrimary)
+        if (command == bUI_BattleUIController.Command.Decide_AttackPrimary)
         {
             if (stancesCommonBank == null) stancesCommonBank = TextBankManager.Instance.GetCommonTextBank(typeof(StanceType));
             thisPage = stancesCommonBank.GetPage(decidingBattler.currentStance.stanceID);
@@ -191,7 +191,7 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
     /// </summary>
     private void DetermineStateForBattleAction (BattleAction action)
     {
-        if (decidingBattler == null) DetermineStateForCommand(bUI_BattleUIController.Command.AttackPrimary);
+        if (decidingBattler == null) DetermineStateForCommand(bUI_BattleUIController.Command.Decide_AttackPrimary);
         else if (!decidingBattler.CanExecuteAction(action)) state = State.Locked;
         else if (wheel.selectedButton == this)
         {
