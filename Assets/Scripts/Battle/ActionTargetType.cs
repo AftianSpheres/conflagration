@@ -10,7 +10,8 @@
         SingleTarget,
         AllTargetsInRange,
         CircularAOE,
-        AllTargetsAlongLinearCorridor,
+        LineOfSightPiercing,
+        LineOfSightSingle,
         Self
     }
 }

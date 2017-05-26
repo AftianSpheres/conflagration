@@ -99,14 +99,14 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
     /// <summary>
     /// Conforms the action wheel button to the UI command.
     /// </summary>
-    public void ConformToUICommand (bUI_BattleUIController.Command command)
+    public void ConformToUICommand (bUI_Command command)
     {
         gameObject.SetActive(true);
         selectionType = SelectionType.FromCommands;
         DetermineStateForCommand(command);
         if (commandsBank == null) commandsBank = TextBankManager.Instance.GetTextBank("Battle/ActionWheel");
         TextBank.Page thisPage;
-        if (command == bUI_BattleUIController.Command.Decide_AttackPrimary)
+        if (command == bUI_Command.Decide_AttackPrimary)
         {
             if (stancesCommonBank == null) stancesCommonBank = TextBankManager.Instance.GetCommonTextBank(typeof(StanceType));
             thisPage = stancesCommonBank.GetPage(decidingBattler.currentStance.stanceID);
@@ -191,7 +191,7 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
     /// </summary>
     private void DetermineStateForBattleAction (BattleAction action)
     {
-        if (decidingBattler == null) DetermineStateForCommand(bUI_BattleUIController.Command.Decide_AttackPrimary);
+        if (decidingBattler == null) DetermineStateForCommand(bUI_Command.Decide_AttackPrimary);
         else if (!decidingBattler.CanExecuteAction(action)) state = State.Locked;
         else if (wheel.selectedButton == this)
         {
@@ -208,7 +208,7 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
     /// <summary>
     /// Determines non-inactive button state based on given command and current wheel state.
     /// </summary>
-    private void DetermineStateForCommand (bUI_BattleUIController.Command command)
+    private void DetermineStateForCommand (bUI_Command command)
     {
         if (wheel.CommandLocked(command)) state = State.Locked;
         else if (wheel.selectedButton == this) state = State.Selected;
@@ -226,7 +226,7 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
     /// <summary>
     /// Loads icon sprite for given command and sets icon to that sprite.
     /// </summary>
-    private void SetIconForCommand (bUI_BattleUIController.Command command)
+    private void SetIconForCommand (bUI_Command command)
     {
         Sprite iconSprite = Resources.Load<Sprite>(commandIconsResourcePath + command.ToString());
         if (iconSprite == null) iconSprite = Resources.Load<Sprite>(commandIconsResourcePath + "Invalid");

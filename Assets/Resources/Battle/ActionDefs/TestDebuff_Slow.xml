@@ -27,7 +27,7 @@
     <useAlternateTargetSet>False</useAlternateTargetSet>
     <categoryFlags>Buff</categoryFlags>
     <fxPackage>
-      <fxType>Test_Buff_STR</fxType>
+      <fxType>Debuff_Slow</fxType>
       <fxHitStat>None</fxHitStat>
       <fxEvadeStat>None</fxEvadeStat>
       <baseSuccessRate>1.0</baseSuccessRate>

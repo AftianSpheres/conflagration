@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<action>
+  <baseAOERadius>0</baseAOERadius>
+  <baseDelay>1.4</baseDelay>
+  <baseFollowthroughStanceChangeDelay>0</baseFollowthroughStanceChangeDelay>
+  <baseMinimumTargetingDistance>0</baseMinimumTargetingDistance>
+  <baseTargetingRange>0</baseTargetingRange>
+  <baseSPCost>10</baseSPCost>
+  <targetingSideFlags>MySide, MyFriends</targetingSideFlags>
+  <targetingType>Self</targetingType>
+  <animSkipTargetHitAnim>None</animSkipTargetHitAnim>
+  <onActionEndTargetAnim>None</onActionEndTargetAnim>
+  <onActionEndUserAnim>None</onActionEndUserAnim>
+  <onActionUseTargetAnim>None</onActionUseTargetAnim>
+  <onActionUseUserAnim>TestAnim_OnUse</onActionUseUserAnim>
+  <categoryFlags>Buff</categoryFlags>
+  <subaction>
+    <baseDamage>-35</baseDamage>
+    <baseAccuracy>1.0</baseAccuracy>
+    <onSubactionHitTargetAnim>None</onSubactionHitTargetAnim>
+    <onSubactionExecuteUserAnim>None</onSubactionExecuteUserAnim>
+    <atkStat>None</atkStat>
+    <defStat>None</defStat>
+    <hitStat>None</hitStat>
+    <evadeStat>None</evadeStat>
+    <damageTypes>None</damageTypes>
+    <useAlternateTargetSet>False</useAlternateTargetSet>
+    <categoryFlags>Buff</categoryFlags>
+    <fxPackage>
+      <fxType>Buff_DamageOutputUp</fxType>
+      <fxHitStat>None</fxHitStat>
+      <fxEvadeStat>None</fxEvadeStat>
+      <baseSuccessRate>1.0</baseSuccessRate>
+      <fxLength_Int>3</fxLength_Int>
+      <fxStrength_Float>2.5</fxStrength_Float>
+    </fxPackage>
+  </subaction>
+</action>

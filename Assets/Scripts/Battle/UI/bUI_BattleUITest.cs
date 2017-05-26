@@ -25,6 +25,6 @@ public class bUI_BattleUITest : bUI_BattleUIController
     {
         Battler b = new Battler(new BattleFormation.FormationMember(BattlerDatabase.Get(BattlerType.TestPCUnit), Vector2.zero, StanceDatabase.Get(StanceType.TestStance_Melee), BattlerSideFlags.PlayerSide, 0));
         AIModule_PlayerSide_ManualControl.GetTurnActionsFromPlayer(b, true);
-        SubmitCommand(Command.WheelFromTopLevel);
+        SubmitCommand(bUI_Command.WheelFromTopLevel);
     }
 }

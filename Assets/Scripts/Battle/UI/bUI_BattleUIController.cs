@@ -9,23 +9,6 @@ using CnfBattleSys.AI;
 /// </summary>
 public class bUI_BattleUIController : MonoBehaviour
 {
-    /// <summary>
-    /// Commands that other parts of the battle UI can pass to BattleUIController.
-    /// </summary>
-    public enum Command
-    {
-        None,
-        Back,
-        Decide_AttackPrimary,
-        Decide_AttackSecondary,
-        Break,
-        Move,
-        Run,
-        CloseWheel,
-        Decide_Stance,
-        WheelFromTopLevel
-    }
-
     public static bUI_BattleUIController instance { get; private set; }
     public bUI_ActionInfoArea actionInfoArea { get; private set; }
     public bUI_ActionWheel actionWheel { get; private set; }
@@ -110,35 +93,35 @@ public class bUI_BattleUIController : MonoBehaviour
     /// <summary>
     /// Submit a command to the battle UI controller.
     /// </summary>
-    public void SubmitCommand (Command command)
+    public void SubmitCommand (bUI_Command command)
     {
         switch (command)
         {
-            case Command.Decide_AttackPrimary:
+            case bUI_Command.Decide_AttackPrimary:
                 actionWheel.DecideAttacks(false);
                 break;
-            case Command.Decide_AttackSecondary:
+            case bUI_Command.Decide_AttackSecondary:
                 actionWheel.DecideAttacks(true);
                 break;
-            case Command.Break:
+            case bUI_Command.Break:
                 break;
-            case Command.Back:
+            case bUI_Command.Back:
                 if (actionWheel.isOpen) actionWheel.DisposeOfTopDecision();
                 break;
-            case Command.CloseWheel:
+            case bUI_Command.CloseWheel:
                 actionWheel.Close();
                 break;
-            case Command.Move:
+            case bUI_Command.Move:
                 Debug.Log("Movement: not implemented");
                 break;
-            case Command.Run:
+            case bUI_Command.Run:
                 Debug.Log("Running: not implemented");
                 break;
-            case Command.Decide_Stance:
+            case bUI_Command.Decide_Stance:
                 actionWheel.DecideStances();
                 break;
-            case Command.WheelFromTopLevel:
-                if (AIModule_PlayerSide_ManualControl.WaitingForStanceInput()) SubmitCommand(Command.Decide_Stance);
+            case bUI_Command.WheelFromTopLevel:
+                if (AIModule_PlayerSide_ManualControl.WaitingForStanceInput()) SubmitCommand(bUI_Command.Decide_Stance);
                 //else (actionWheel.)
                 break;
         }

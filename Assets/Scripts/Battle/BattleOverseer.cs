@@ -749,7 +749,7 @@ namespace CnfBattleSys
             tmpBattlersListBuffer.Clear();
             switch (targetType)
             {
-                case ActionTargetType.AllTargetsAlongLinearCorridor:
+                case ActionTargetType.LineOfSightPiercing:
                     RaycastHit[] hits = Physics.BoxCastAll(user.capsuleCollider.center, new Vector3(radius, 1, radius), target.logicalPosition - user.logicalPosition, Quaternion.FromToRotation(Vector3.zero, target.logicalPosition - user.logicalPosition), fieldRadius, layerMask);
                     for (int h = 0; h < hits.Length; h++)
                     {

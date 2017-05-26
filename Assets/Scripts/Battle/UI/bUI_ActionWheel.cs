@@ -15,7 +15,7 @@ public class bUI_ActionWheel : MonoBehaviour
     protected class Decision
     {
         public readonly BattleStance baseStance;
-        public readonly bUI_BattleUIController.Command[] commands;
+        public readonly bUI_Command[] commands;
         public readonly BattleAction[] decideableActions;
         public readonly BattleStance[] decideableStances;
         public readonly BattleStance lockedStance;
@@ -23,12 +23,12 @@ public class bUI_ActionWheel : MonoBehaviour
         public int optionCount { get { if (commands != null) return commands.Length; else return decideableActions.Length; } }
         public int selectedOptionIndex = 0;
         private readonly bUI_ActionWheel wheel;
-        private readonly bUI_BattleUIController.Command[] lockedCommands;
+        private readonly bUI_Command[] lockedCommands;
 
         /// <summary>
         /// Constructor for a decision between bui controller commands.
         /// </summary>
-        public Decision (bUI_BattleUIController.Command[] _commands, bUI_BattleUIController.Command[] _lockedCommands, bUI_ActionWheel _wheel)
+        public Decision (bUI_Command[] _commands, bUI_Command[] _lockedCommands, bUI_ActionWheel _wheel)
         {
             wheel = _wheel;
             decisionType = DecisionType.BattleUI;
@@ -99,7 +99,7 @@ public class bUI_ActionWheel : MonoBehaviour
         /// <summary>
         /// Returns true if the given command is locked for this decision.
         /// </summary>
-        public bool CommandLocked (bUI_BattleUIController.Command command)
+        public bool CommandLocked (bUI_Command command)
         {
             if (lockedCommands != null) for (int i = 0; i < lockedCommands.Length; i++) if (lockedCommands[i] == command) return true;
             return false;
@@ -153,12 +153,12 @@ public class bUI_ActionWheel : MonoBehaviour
     private State state;
     private bool _allowInput;
     private float interval;
-    private static bUI_BattleUIController.Command[] topLevel_noSubactions = { bUI_BattleUIController.Command.Decide_AttackPrimary, bUI_BattleUIController.Command.Move, bUI_BattleUIController.Command.Break, bUI_BattleUIController.Command.Run };
-    private static bUI_BattleUIController.Command[] topLevel_yesSubactions = { bUI_BattleUIController.Command.Decide_AttackPrimary, bUI_BattleUIController.Command.Decide_AttackSecondary, bUI_BattleUIController.Command.Move, bUI_BattleUIController.Command.Break, bUI_BattleUIController.Command.Run };
-    private static bUI_BattleUIController.Command[] topLevelLock_noMoveNoBreakNoRun = { bUI_BattleUIController.Command.Move, bUI_BattleUIController.Command.Break, bUI_BattleUIController.Command.Run };
-    private static bUI_BattleUIController.Command[] topLevelLock_noMoveNoBreak = { bUI_BattleUIController.Command.Move, bUI_BattleUIController.Command.Break };
-    private static bUI_BattleUIController.Command[] topLevelLock_noMoveNoRun = { bUI_BattleUIController.Command.Move, bUI_BattleUIController.Command.Run };
-    private static bUI_BattleUIController.Command[] topLevelLock_noBreakNoRun = { bUI_BattleUIController.Command.Break, bUI_BattleUIController.Command.Run };
+    private static bUI_Command[] topLevel_noSubactions = { bUI_Command.Decide_AttackPrimary, bUI_Command.Move, bUI_Command.Break, bUI_Command.Run };
+    private static bUI_Command[] topLevel_yesSubactions = { bUI_Command.Decide_AttackPrimary, bUI_Command.Decide_AttackSecondary, bUI_Command.Move, bUI_Command.Break, bUI_Command.Run };
+    private static bUI_Command[] topLevelLock_noMoveNoBreakNoRun = { bUI_Command.Move, bUI_Command.Break, bUI_Command.Run };
+    private static bUI_Command[] topLevelLock_noMoveNoBreak = { bUI_Command.Move, bUI_Command.Break };
+    private static bUI_Command[] topLevelLock_noMoveNoRun = { bUI_Command.Move, bUI_Command.Run };
+    private static bUI_Command[] topLevelLock_noBreakNoRun = { bUI_Command.Break, bUI_Command.Run };
     private readonly static int decisionConfirmHash = Animator.StringToHash("Base Layer.DecisionConfirm");
     private readonly static int decisionShowHash = Animator.StringToHash("Base Layer.DecisionShow");
     private readonly static int idleHash = Animator.StringToHash("Base Layer.Idle");
@@ -234,7 +234,7 @@ public class bUI_ActionWheel : MonoBehaviour
     /// <summary>
     /// Returns true if the command is locked, for the current decison.
     /// </summary>
-    public bool CommandLocked (bUI_BattleUIController.Command command)
+    public bool CommandLocked (bUI_Command command)
     {
         return currentDecision.CommandLocked(command);
     }
@@ -282,26 +282,27 @@ public class bUI_ActionWheel : MonoBehaviour
     /// </summary>
     public void DecideTopLevel ()
     {
-        bUI_BattleUIController.Command[] commands;
+        bUI_Command[] commands;
         if (AIModule_PlayerSide_ManualControl.waitingBattler.metaStance.stanceID == StanceType.None) commands = topLevel_noSubactions;
         else commands = topLevel_yesSubactions;
-        bUI_BattleUIController.Command[] locked;
+        bUI_Command[] locked;
         bool canMove = AIModule_PlayerSide_ManualControl.waitingBattler.CanMove();
         bool canBreak = AIModule_PlayerSide_ManualControl.waitingBattler.CanBreak();
         bool canRun = AIModule_PlayerSide_ManualControl.waitingBattler.CanRun();
         if (!canMove)
         {
-            if (canBreak && canRun) locked = new bUI_BattleUIController.Command[] { bUI_BattleUIController.Command.Move };
+            if (canBreak && canRun) locked = new bUI_Command[] { bUI_Command.Move };
+            else if (!canBreak && !canRun) locked = topLevelLock_noMoveNoBreakNoRun;
             else if (!canRun) locked = topLevelLock_noMoveNoRun;
             else locked = topLevelLock_noMoveNoBreak;
         }
         else if (!canBreak)
         {
             if (!canRun) locked = topLevelLock_noBreakNoRun;
-            else locked = new bUI_BattleUIController.Command[] { bUI_BattleUIController.Command.Break };
+            else locked = new bUI_Command[] { bUI_Command.Break };
         }
-        else if (!canRun) locked = new bUI_BattleUIController.Command[] { bUI_BattleUIController.Command.Run };
-        else locked = new bUI_BattleUIController.Command[0];
+        else if (!canRun) locked = new bUI_Command[] { bUI_Command.Run };
+        else locked = new bUI_Command[0];
         decisionsStack.Push(new Decision(commands, locked, this));
         if (!isOpen) Open();
         ConformWheelToCurrentDecision();
@@ -330,7 +331,7 @@ public class bUI_ActionWheel : MonoBehaviour
     /// <summary>
     /// Gets the command associated with the given button.
     /// </summary>
-    public bUI_BattleUIController.Command GetCommandForButton (bUI_ActionWheelButton button)
+    public bUI_Command GetCommandForButton (bUI_ActionWheelButton button)
     {
         return currentDecision.commands[button.indexOnWheel];
     }

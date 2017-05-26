@@ -11,7 +11,10 @@
   <yOffset>2.4</yOffset>
   <model>TestModelSimple</model>
   <stances>
-    <stance>TestStance</stance>
+    <stance>TestStance_Melee</stance>
+    <stance>TestStance_Ranged</stance>
+    <stance>TestStance_Breaker</stance>
+    <stance>TestStance_Support</stance>
   </stances>
   <metaStance>None</metaStance>
   <baseStats>

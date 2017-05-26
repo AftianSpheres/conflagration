@@ -8,7 +8,10 @@
     public enum SubactionFXType : short
     {
         None,
-        Test_PushTargetBackward,
-        Test_Buff_STR
+        KnockTargetBackward,
+        DealStaminaDamage,
+        DOT_Burning,
+        Buff_DamageOutputUp,
+        Debuff_Slow
     }
 }

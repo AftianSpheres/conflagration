@@ -263,10 +263,11 @@ namespace CnfBattleSys
                 {
                     case ActionTargetType.SingleTarget:
                     case ActionTargetType.Self:
+                    case ActionTargetType.LineOfSightSingle:
                         return forSingle;
                     case ActionTargetType.AllTargetsInRange:
                         return forAll;
-                    case ActionTargetType.AllTargetsAlongLinearCorridor:
+                    case ActionTargetType.LineOfSightPiercing:
                     case ActionTargetType.CircularAOE:
                         return forAOE;
                     case ActionTargetType.None:

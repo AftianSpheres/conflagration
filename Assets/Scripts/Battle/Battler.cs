@@ -929,10 +929,10 @@ namespace CnfBattleSys
         {
             switch (fxPackage.fxType)
             {
-                case SubactionFXType.Test_PushTargetBackward:
+                case SubactionFXType.KnockTargetBackward:
                     Debug.Log("If unit movement existed, we would be pushed backward now");
                     break;
-                case SubactionFXType.Test_Buff_STR:
+                case SubactionFXType.Buff_DamageOutputUp:
                     ApplyStatus(StatusType.TestBuff, StatusPacket_CancelationCondition.CancelWhenDurationZero, 0, fxPackage.fxLength_Byte, new Resistances_Raw(1), 0, DamageTypeFlags.None,
                         MiscStatusEffectFlags.None, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, fxPackage.fxStrength_Float, 1, 1, 1, 1, 1, 1, 1, 1);
                     break;
