@@ -20,7 +20,8 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
     {
         None,
         FromCommands,
-        FromActions
+        FromActions,
+        FromStances
     }
     /// <summary>
     /// Valid action wheel button states.
@@ -78,6 +79,22 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
     {
         if (selectionType == SelectionType.FromActions) DetermineStateForBattleAction(wheel.GetActionForButton(this));
         else if (selectionType == SelectionType.FromCommands) DetermineStateForCommand(wheel.GetCommandForButton(this));
+        // switch statement instead
+        switch (selectionType)
+        {
+            case SelectionType.FromActions:
+                DetermineStateForBattleAction(wheel.GetActionForButton(this));
+                break;
+            case SelectionType.FromCommands:
+                DetermineStateForCommand(wheel.GetCommandForButton(this));
+                break;
+            case SelectionType.FromStances:
+                DetermineStateForStance(wheel.GetStanceForButton(this));
+                break;
+            default:
+                Util.Crash("Bad selection type on action wheel button " + indexOnWheel + " : " + selectionType);
+                break;
+        }
         ConformAnimatorToState();
     }
 
@@ -94,6 +111,18 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
         if (thisPage.isValid) guiText_Label.text = thisPage.text;
         else guiText_Label.text = commandsBank.GetPage("error").text;
         SetIconForBattleAction(action);
+    }
+
+    public void ConformToStance (BattleStance stance)
+    {
+        gameObject.SetActive(true);
+        selectionType = SelectionType.FromStances;
+        DetermineStateForStance(stance);
+        if (stancesCommonBank == null) stancesCommonBank = TextBankManager.Instance.GetCommonTextBank(typeof(StanceType));
+        TextBank.Page thisPage = stancesCommonBank.GetPage(stance.stanceID);
+        if (thisPage.isValid) guiText_Label.text = thisPage.text;
+        else guiText_Label.text = commandsBank.GetPage("error").text;
+        SetIconForStance(stance);
     }
 
     /// <summary>
@@ -211,6 +240,16 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
     private void DetermineStateForCommand (bUI_Command command)
     {
         if (wheel.CommandLocked(command)) state = State.Locked;
+        else if (wheel.selectedButton == this) state = State.Selected;
+        else state = State.Available;
+    }
+
+    /// <summary>
+    /// Determines non-inactive button state based on given stance and current wheel state.
+    /// </summary>
+    private void DetermineStateForStance (BattleStance stance)
+    {
+        if (wheel.StanceLocked(stance)) state = State.Locked;
         else if (wheel.selectedButton == this) state = State.Selected;
         else state = State.Available;
     }

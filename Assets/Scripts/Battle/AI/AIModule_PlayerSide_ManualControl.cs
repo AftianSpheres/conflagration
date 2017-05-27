@@ -42,6 +42,7 @@ namespace CnfBattleSys.AI
         // This is the data the psuedo-AI exposes for use by the battle UI.
 
         public static Battler waitingBattler { get; private set; }
+        public static BattleAction waitingAction { get; private set; }
         public static BattleStance[] waitingStanceSet { get; private set; }
         public static BattleAction[] waitingActionSet_ForStance { get; private set; }
         public static BattleAction[] waitingActionSet_ForMetaStance { get; private set; }
@@ -117,6 +118,7 @@ namespace CnfBattleSys.AI
         private static void EstablishPlayerPresentedData (Battler b)
         {
             waitingBattler = b;
+            waitingAction = null;
             waitingMainPrimaryTargets_ForStanceActions = new Battler[b.currentStance.actionSet.Length][];
             waitingMainSecondaryTargets_ForStanceActions = new Battler[b.currentStance.actionSet.Length][];
             waitingActionSet_ForStance = b.currentStance.actionSet;
@@ -256,7 +258,7 @@ namespace CnfBattleSys.AI
         public static void InputAction (BattleAction action)
         {
             if (selectedAction != null) Util.Crash(new Exception("Input another action after obtaining action input!"));
-            selectedAction = action;
+            selectedAction = waitingAction = action;
         }
 
         /// <summary>

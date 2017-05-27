@@ -164,6 +164,8 @@ public static class Util
     public static void Crash (Exception exception)
     {
         Timing.RunCoroutine(_CrashLoop());
+        if (Application.isEditor) Debug.Break();
+        else Application.Quit();
         throw exception;
     }
 
@@ -174,7 +176,6 @@ public static class Util
     /// </summary>
     private static IEnumerator<float> _CrashLoop ()
     {
-        yield return 0;
         while (true)
         {
             if (Application.isEditor) Debug.Break();

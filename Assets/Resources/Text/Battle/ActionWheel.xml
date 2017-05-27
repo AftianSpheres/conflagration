@@ -1,11 +1,14 @@
 <?xml version="1.0"?>
 <textBank>
   <!--Action wheel-->
-  <page name = "cmd_AttackPrimary">
+  <page name = "cmd_Decide_AttackPrimary">
     <eng>Attack - this should never appear</eng>
   </page>
-  <page name = "cmd_AttackSecondary">
+  <page name = "cmd_Decide_AttackSecondary">
     <eng>Subweapons</eng>
+  </page>
+  <page name = "cmd_Decide_Stances">
+    <eng>STANCE SELECT</eng>
   </page>
   <page name = "cmd_Break">
     <eng>Break</eng>

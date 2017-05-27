@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using CnfBattleSys;
-using CnfBattleSys.AI;
 using MovementEffects;
 using TMPro;
 
@@ -20,7 +19,7 @@ public class bUI_ActionWheel : MonoBehaviour
         public readonly BattleStance[] decideableStances;
         public readonly BattleStance lockedStance;
         public readonly DecisionType decisionType;
-        public int optionCount { get { if (commands != null) return commands.Length; else return decideableActions.Length; } }
+        public int optionCount { get { if (commands != null) return commands.Length; else if (decideableActions != null) return decideableActions.Length; else return decideableStances.Length; } }
         public int selectedOptionIndex = 0;
         private readonly bUI_ActionWheel wheel;
         private readonly bUI_Command[] lockedCommands;
@@ -77,23 +76,24 @@ public class bUI_ActionWheel : MonoBehaviour
         /// </summary>
         public void Submit ()
         {
-            Decision newDecision = null;
             switch (decisionType)
             {
                 case DecisionType.BattleUI:
                     bUI_BattleUIController.instance.SubmitCommand(commands[selectedOptionIndex]);
                     break;
                 case DecisionType.ActionSelect:
-                    AIModule_PlayerSide_ManualControl.InputAction(decideableActions[selectedOptionIndex]);                   
+                    bUI_BattleUIController.instance.SubmitBattleAction(decideableActions[selectedOptionIndex]);
+                    bUI_BattleUIController.instance.SubmitCommand(bUI_Command.GetTargets);
                     break;
                 case DecisionType.StanceSelect:
-                    AIModule_PlayerSide_ManualControl.InputStance(decideableStances[selectedOptionIndex]);
+                    bUI_BattleUIController.instance.SubmitBattleStance(decideableStances[selectedOptionIndex]);
+                    bUI_BattleUIController.instance.SubmitCommand(bUI_Command.WheelFromTopLevel);
                     break;
                 default:
                     Util.Crash(new Exception("Invalid action wheel decision type: " + decisionType.ToString()));
                     break;
             }
-            if (newDecision == null) Timing.RunCoroutine(wheel._CallOnceAnimatorsFinish(wheel.Close));
+            if (wheel.currentDecision == this) wheel.Close();
         }
 
         /// <summary>
@@ -144,8 +144,8 @@ public class bUI_ActionWheel : MonoBehaviour
     /// All buttons, including inactive ones.
     /// </summary>
     private bUI_ActionWheelButton[] allButtons;
-    private Battler decidingBattler { get { return AIModule_PlayerSide_ManualControl.waitingBattler; } }
-    private Decision currentDecision;
+    private Battler decidingBattler { get { return bUI_BattleUIController.instance.displayBattler; } }
+    private Decision currentDecision { get { if (decisionsStack.Count == 0) return null; else return decisionsStack.Peek(); } }
     private Quaternion defaultRotation;
     private Stack<Decision> decisionsStack;
     private TextBank actionWheelBank;
@@ -190,7 +190,7 @@ public class bUI_ActionWheel : MonoBehaviour
     /// MonoBehaviour.Update ()
     /// </summary>
     void Update ()
-    {
+    {       
         if (decidingBattler == null)
         {
             switch (state)
@@ -208,7 +208,11 @@ public class bUI_ActionWheel : MonoBehaviour
                     Util.Crash(new Exception("Invalid action wheel state: " + state.ToString()));
                     break;
             }
-        }       
+        }
+        else if (allowInput && Input.GetKeyDown(KeyCode.Backspace) && decisionsStack.Count > 1)
+        {
+            bUI_BattleUIController.instance.SubmitCommand(bUI_Command.Back);
+        }
     }
 
     /// <summary>
@@ -219,7 +223,6 @@ public class bUI_ActionWheel : MonoBehaviour
     {
         if (isOpen) Close();
         decisionsStack.Clear();
-        currentDecision = null;
     }
 
     /// <summary>
@@ -257,14 +260,16 @@ public class bUI_ActionWheel : MonoBehaviour
     /// Use the action wheel to decide which attack to use,
     /// from either currentStance or metaStance.
     /// </summary>
-    public void DecideAttacks(bool forMetaStance = false)
+    public void DecideAttacks ()
     {
-        BattleStance stance;
-        if (forMetaStance) stance = AIModule_PlayerSide_ManualControl.waitingBattler.metaStance;
-        else stance = AIModule_PlayerSide_ManualControl.waitingBattler.currentStance;
-        decisionsStack.Push(new Decision(stance, this));
-        if (!isOpen) Open();
-        ConformWheelToCurrentDecision();
+        decisionsStack.Push(new Decision(bUI_BattleUIController.instance.displayStance, this));
+        Action onCompletion = ConformWheelToCurrentDecision;
+        if (isOpen) Timing.RunCoroutine(_CallOnceAnimatorsFinish(onCompletion), thisTag);
+        else
+        {
+            Open();
+            onCompletion();
+        }
     }
 
     /// <summary>
@@ -272,9 +277,14 @@ public class bUI_ActionWheel : MonoBehaviour
     /// </summary>
     public void DecideStances ()
     {
-        decisionsStack.Push(new Decision(AIModule_PlayerSide_ManualControl.waitingStanceSet, AIModule_PlayerSide_ManualControl.waitingBattler.lockedStance, this));
-        if (!isOpen) Open();
-        ConformWheelToCurrentDecision();
+        decisionsStack.Push(new Decision(bUI_BattleUIController.instance.displayStanceSet, bUI_BattleUIController.instance.displayBattler.lockedStance, this));
+        Action onCompletion = ConformWheelToCurrentDecision;
+        if (isOpen) Timing.RunCoroutine(_CallOnceAnimatorsFinish(onCompletion), thisTag);
+        else
+        {
+            Open();
+            onCompletion();
+        }
     }
 
     /// <summary>
@@ -283,12 +293,12 @@ public class bUI_ActionWheel : MonoBehaviour
     public void DecideTopLevel ()
     {
         bUI_Command[] commands;
-        if (AIModule_PlayerSide_ManualControl.waitingBattler.metaStance.stanceID == StanceType.None) commands = topLevel_noSubactions;
+        if (bUI_BattleUIController.instance.displayBattler.metaStance.actionSet.Length < 1) commands = topLevel_noSubactions;
         else commands = topLevel_yesSubactions;
         bUI_Command[] locked;
-        bool canMove = AIModule_PlayerSide_ManualControl.waitingBattler.CanMove();
-        bool canBreak = AIModule_PlayerSide_ManualControl.waitingBattler.CanBreak();
-        bool canRun = AIModule_PlayerSide_ManualControl.waitingBattler.CanRun();
+        bool canMove = bUI_BattleUIController.instance.displayBattler.CanMove();
+        bool canBreak = bUI_BattleUIController.instance.displayBattler.CanBreak();
+        bool canRun = bUI_BattleUIController.instance.displayBattler.CanRun();
         if (!canMove)
         {
             if (canBreak && canRun) locked = new bUI_Command[] { bUI_Command.Move };
@@ -304,8 +314,13 @@ public class bUI_ActionWheel : MonoBehaviour
         else if (!canRun) locked = new bUI_Command[] { bUI_Command.Run };
         else locked = new bUI_Command[0];
         decisionsStack.Push(new Decision(commands, locked, this));
-        if (!isOpen) Open();
-        ConformWheelToCurrentDecision();
+        Action onCompletion = ConformWheelToCurrentDecision;
+        if (isOpen) Timing.RunCoroutine(_CallOnceAnimatorsFinish(onCompletion), thisTag);
+        else
+        {
+            Open();
+            onCompletion();
+        }
     }
 
     /// <summary>
@@ -317,7 +332,6 @@ public class bUI_ActionWheel : MonoBehaviour
     {
         if (decisionsStack.Count < 2) Util.Crash(new Exception("Can't dispose of decision unless there's at least one decision above base-level decision!"));
         decisionsStack.Pop();
-        currentDecision = null;
     }
 
     /// <summary>
@@ -334,6 +348,14 @@ public class bUI_ActionWheel : MonoBehaviour
     public bUI_Command GetCommandForButton (bUI_ActionWheelButton button)
     {
         return currentDecision.commands[button.indexOnWheel];
+    }
+
+    /// <summary>
+    /// Gets the stance associated with the given button.
+    /// </summary>
+    public BattleStance GetStanceForButton (bUI_ActionWheelButton button)
+    {
+        return currentDecision.decideableStances[button.indexOnWheel];
     }
 
     /// <summary>
@@ -365,6 +387,14 @@ public class bUI_ActionWheel : MonoBehaviour
     }
 
     /// <summary>
+    /// Returns true if the stance is locked, for the current decision.
+    /// </summary>
+    public bool StanceLocked(BattleStance stance)
+    {
+        return currentDecision.lockedStance != null && currentDecision.lockedStance == stance;
+    }
+
+    /// <summary>
     /// Conforms state of buttons to decision options.
     /// </summary>
     private void ActivateButtonsForDecision (Decision decision)
@@ -379,9 +409,23 @@ public class bUI_ActionWheel : MonoBehaviour
             Vector3 position = rotation * Vector3.right * buttonsDistance;
             allButtons[i].transform.localPosition = position;
             activeButtons[i] = allButtons[i];
-            if (currentDecision.decisionType == DecisionType.ActionSelect) allButtons[i].ConformToBattleAction(currentDecision.decideableActions[i]);
-            else allButtons[i].ConformToUICommand(currentDecision.commands[i]);
+            switch (currentDecision.decisionType)
+            {
+                case DecisionType.ActionSelect:
+                    allButtons[i].ConformToBattleAction(currentDecision.decideableActions[i]);
+                    break;
+                case DecisionType.BattleUI:
+                    allButtons[i].ConformToUICommand(currentDecision.commands[i]);
+                    break;
+                case DecisionType.StanceSelect:
+                    allButtons[i].ConformToStance(currentDecision.decideableStances[i]);
+                    break;
+                default:
+                    Util.Crash("ActivateButtonsForDecision bad decision type: " + currentDecision.decisionType);
+                    break;
+            }
         }
+        for (int i = decision.optionCount; i < allButtons.Length; i++) allButtons[i].Disable();
     }
 
     /// <summary>
@@ -390,7 +434,6 @@ public class bUI_ActionWheel : MonoBehaviour
     private void ConformWheelToCurrentDecision ()
     {
         if (decisionsStack.Count == 0) Util.Crash(new Exception("Can't open wheel before putting a decision on the stack!"));
-        currentDecision = decisionsStack.Peek();
         ActivateButtonsForDecision(currentDecision);
         for (int i = 0; i < activeButtons.Length; i++)
         {
@@ -469,8 +512,12 @@ public class bUI_ActionWheel : MonoBehaviour
     /// </summary>
     private void SetCenterIcon ()
     {
-        if (currentDecision.baseStance != null) centerIcon.sprite = StanceDatabase.GetIconForStanceID(currentDecision.baseStance.stanceID);
-        else centerIcon.sprite = null;
+        if (currentDecision.baseStance != null)
+        {
+            centerIcon.gameObject.SetActive(true);
+            centerIcon.sprite = StanceDatabase.GetIconForStanceID(currentDecision.baseStance.stanceID);
+        }
+        else centerIcon.gameObject.SetActive(false);
     }
 
     /// <summary>

@@ -10,17 +10,38 @@
   <page name = "None">
     <eng>-</eng>
   </page>
-  <page name = "TestMeleeAtk">
-    <eng>Test Melee Attack [0]</eng>
+  <page name = "TestMeleeAtk_OneHit">
+    <eng>One-Hit Melee [test]</eng>
   </page>
-  <page name = "TestRangedAOEAtk">
-    <eng>Test Ranged Attack (AOE) [0]</eng>
+  <page name = "TestMeleeAtk_3XCombo">
+    <eng>Three-Hit Melee [test]</eng>
+  </page>
+  <page name = "TestMeleeAtk_Knockback">
+    <eng>Knockback Melee [test]</eng>
+  </page>
+  <page name = "TestMeleeAtk_StaminaDmg">
+    <eng>Breaking Melee [test]</eng>
+  </page>
+  <page name = "TestRangedAtk_LineOfSight">
+    <eng>Linear Ranged Magic [test]</eng>
+  </page>
+  <page name = "TestRangedAtk_AOE">
+    <eng>AOE Ranged Magic [test]</eng>
+  </page>
+  <page name = "TestRangedAtk_AllFoesAndDOTEffect">
+    <eng>Goddamn Nuke 'Em [test]</eng>
+  </page>
+  <page name = "TestRangedAtk_StaminaDmg">
+    <eng>Breaking Ranged [test]</eng>
   </page>
   <page name = "TestHeal">
-    <eng>Test Heal [0]</eng>
+    <eng>Healing [test]</eng>
   </page>
-  <page name = "TestBuff">
-    <eng>Test Buff (atk+) [0]</eng>
+  <page name = "TestBuff_DamageOutputUp">
+    <eng>Damage Boost [test]</eng>
+  </page>
+  <page name = "TestDebuff_Slow">
+    <eng>Slow [test]</eng>
   </page>
   <page name = "TestCounter">
     <eng>Counterattack! (Test) [0]</eng>

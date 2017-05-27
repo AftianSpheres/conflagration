@@ -12,5 +12,6 @@ public enum bUI_Command
     Run,
     CloseWheel,
     Decide_Stance,
-    WheelFromTopLevel
+    WheelFromTopLevel,
+    GetTargets
 }

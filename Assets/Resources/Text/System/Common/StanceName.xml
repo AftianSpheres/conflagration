@@ -7,7 +7,16 @@
   <page name = "None">
     <eng>-</eng>
   </page>
-  <page name = "TestStance">
-    <eng>Test Stance [0]</eng>
+  <page name = "TestStance_Melee">
+    <eng>Melee Stance [test]</eng>
+  </page>
+  <page name = "TestStance_Ranged">
+    <eng>Ranged Stance [test]</eng>
+  </page>
+  <page name = "TestStance_Breaker">
+    <eng>Breaker Stance [test]</eng>
+  </page>
+  <page name = "TestStance_Support">
+    <eng>Support Stance [test]</eng>
   </page>
 </textBank>

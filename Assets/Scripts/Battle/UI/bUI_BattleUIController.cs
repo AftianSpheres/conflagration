@@ -9,6 +9,16 @@ using CnfBattleSys.AI;
 /// </summary>
 public class bUI_BattleUIController : MonoBehaviour
 {
+    private enum State
+    {
+        None,
+        Wheel_Stances,
+        Wheel_TopLevel,
+        Wheel_Stance,
+        Wheel_MetaStance,
+        AcquiringTargets
+    }
+
     public static bUI_BattleUIController instance { get; private set; }
     public bUI_ActionInfoArea actionInfoArea { get; private set; }
     public bUI_ActionWheel actionWheel { get; private set; }
@@ -17,6 +27,12 @@ public class bUI_BattleUIController : MonoBehaviour
     public bUI_TurnOrderArea turnOrderArea { get; private set; }
     public GameObject enemyInfoboxGroup { get; private set; }
     public GameObject playerInfoboxGroup { get; private set; }
+    public BattleAction displayAction { get; private set; }
+    public Battler displayBattler { get; private set; }
+    public BattleStance displayStance { get; private set; }
+    public BattleStance[] displayStanceSet { get; private set; }
+    private State state;
+    protected bool skip = false;
 
     /// <summary>
     /// MonoBehaviour.Awake()
@@ -91,6 +107,29 @@ public class bUI_BattleUIController : MonoBehaviour
     }
 
     /// <summary>
+    /// Submit an action to the battle UI controller,
+    /// which dispatches it to the fake-AI module.
+    /// </summary>
+    public void SubmitBattleAction (BattleAction action)
+    {
+        if (AIModule_PlayerSide_ManualControl.WaitingForActionInput()) AIModule_PlayerSide_ManualControl.InputAction(action);
+        else Util.Crash("Tried to submit action, but psuedo-AI module wasn't waiting for action");
+    }
+
+    /// <summary>
+    /// Submit a action to the battle UI controller,
+    /// which dispatches it to the fake-AI module.
+    /// </summary>
+    public void SubmitBattleStance (BattleStance stance)
+    {
+        skip = true;
+        Debug.Log(stance.stanceID);
+        return;
+        if (AIModule_PlayerSide_ManualControl.WaitingForStanceInput()) AIModule_PlayerSide_ManualControl.InputStance(stance);
+        else Util.Crash("Tried to submit stance, but psuedo-AI module wasn't waiting for stance");
+    }
+
+    /// <summary>
     /// Submit a command to the battle UI controller.
     /// </summary>
     public void SubmitCommand (bUI_Command command)
@@ -98,15 +137,22 @@ public class bUI_BattleUIController : MonoBehaviour
         switch (command)
         {
             case bUI_Command.Decide_AttackPrimary:
-                actionWheel.DecideAttacks(false);
+                state = State.Wheel_Stance;
+                SetDisplayBattlerData();
+                actionWheel.DecideAttacks();
                 break;
             case bUI_Command.Decide_AttackSecondary:
-                actionWheel.DecideAttacks(true);
+                state = State.Wheel_MetaStance;
+                SetDisplayBattlerData();
+                actionWheel.DecideAttacks();
                 break;
             case bUI_Command.Break:
+                Debug.Log("Breaking: not implemented");
                 break;
             case bUI_Command.Back:
-                if (actionWheel.isOpen) actionWheel.DisposeOfTopDecision();
+                if (state == State.Wheel_Stance || state == State.Wheel_MetaStance) state = State.Wheel_TopLevel;
+                else Util.Crash("Can't go back now");
+                // ...
                 break;
             case bUI_Command.CloseWheel:
                 actionWheel.Close();
@@ -118,17 +164,48 @@ public class bUI_BattleUIController : MonoBehaviour
                 Debug.Log("Running: not implemented");
                 break;
             case bUI_Command.Decide_Stance:
+                state = State.Wheel_Stances;
+                SetDisplayBattlerData();
                 actionWheel.DecideStances();
                 break;
             case bUI_Command.WheelFromTopLevel:
-                if (AIModule_PlayerSide_ManualControl.WaitingForStanceInput()) SubmitCommand(bUI_Command.Decide_Stance);
-                //else (actionWheel.)
+                if (AIModule_PlayerSide_ManualControl.WaitingForStanceInput() && !skip) SubmitCommand(bUI_Command.Decide_Stance);
+                else
+                {
+                    state = State.Wheel_TopLevel;
+                    SetDisplayBattlerData();
+                    actionWheel.DecideTopLevel();
+                }
                 break;
         }
     }
     
-    private void PushStanceBreakTurnPacketToWaitingBattler ()
+    private void SetDisplayBattlerData ()
     {
-
+        displayBattler = AIModule_PlayerSide_ManualControl.waitingBattler;
+        switch (state)
+        {
+            case State.Wheel_TopLevel:
+            case State.Wheel_Stances:
+                displayAction = null;
+                displayStance = displayBattler.currentStance;
+                displayStanceSet = displayBattler.stances;
+                break;
+            case State.Wheel_Stance:
+                displayAction = null;
+                displayStance = displayBattler.currentStance;
+                displayStanceSet = null;
+                break;
+            case State.Wheel_MetaStance:
+                displayAction = null;
+                displayStance = displayBattler.metaStance;
+                displayStanceSet = null;
+                break;
+            case State.AcquiringTargets:
+                displayAction = AIModule_PlayerSide_ManualControl.waitingAction;
+                displayStance = displayBattler.currentStance;
+                displayStanceSet = null;
+                break;
+        }
     }
 }
