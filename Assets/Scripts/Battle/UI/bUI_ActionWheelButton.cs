@@ -34,12 +34,15 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
         Available,
         Available_ButAttackWillBreakStance,
         Selected,
-        Selected_ButAttackWillBreakStance
+        Selected_ButAttackWillBreakStance,
+        SelectedLocked
     }
     public Animator animator;
     public Image buttonBG;
     public Image commandIcon;
     public TextMeshProUGUI guiText_Label;
+    public bool locked { get { return state == State.Locked || state == State.SelectedLocked; } }
+    public bool selected { get { return state == State.Selected || state == State.Selected_ButAttackWillBreakStance || state == State.SelectedLocked; } }
     public int indexOnWheel { get; private set; }
     private bUI_ActionWheel wheel;
     private Battler decidingBattler { get { return AIModule_PlayerSide_ManualControl.waitingBattler; } }

@@ -251,7 +251,9 @@ public class bUI_ActionWheel : MonoBehaviour
         animator.Play(decisionConfirmHash);
         Action onCompletion = () =>
         {
-            currentDecision.Submit();           
+            if (selectedButton.selected && !selectedButton.locked) currentDecision.Submit();
+            else if (selectedButton.locked) Debug.Log("This should play a sound effect...");
+            else Util.Crash("selectedButton isn't selected. This... really, really shouldn't happen, like, ever???");
         };
         Timing.RunCoroutine(_CallOnceAnimatorsFinish(onCompletion), thisTag);
     }
@@ -527,8 +529,21 @@ public class bUI_ActionWheel : MonoBehaviour
     {
         if (actionWheelBank == null) actionWheelBank = TextBankManager.Instance.GetTextBank("Battle/ActionWheel");
         if (stancesCommonBank == null) stancesCommonBank = TextBankManager.Instance.GetCommonTextBank(typeof(StanceType));
-        if (currentDecision.baseStance != null) centerText.text = stancesCommonBank.GetPage(currentDecision.baseStance.stanceID).text;
-        else centerText.text = actionWheelBank.GetPage("centerText").text;
+        switch (currentDecision.decisionType)
+        {
+            case DecisionType.ActionSelect:
+                centerText.text = stancesCommonBank.GetPage(currentDecision.baseStance.stanceID).text;
+                break;
+            case DecisionType.BattleUI:
+                centerText.text = actionWheelBank.GetPage("centerText_TopLevel").text;
+                break;
+            case DecisionType.StanceSelect:
+                centerText.text = actionWheelBank.GetPage("centerText_Stances").text;
+                break;
+            default:
+                Util.Crash("Bad decision type in SetCenterText: " + currentDecision.decisionType);
+                break;
+        }
     }
 
     /// <summary>

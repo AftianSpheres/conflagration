@@ -112,6 +112,8 @@ public class bUI_BattleUIController : MonoBehaviour
     /// </summary>
     public void SubmitBattleAction (BattleAction action)
     {
+        Debug.Log(action.actionID);
+        return;
         if (AIModule_PlayerSide_ManualControl.WaitingForActionInput()) AIModule_PlayerSide_ManualControl.InputAction(action);
         else Util.Crash("Tried to submit action, but psuedo-AI module wasn't waiting for action");
     }

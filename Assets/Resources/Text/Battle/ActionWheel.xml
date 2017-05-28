@@ -25,7 +25,10 @@
   <page name = "error">
     <eng>Error!</eng>
   </page>
-  <page name = "cemterText">
+  <page name = "centerText_TopLevel">
     <eng>ACTION SELECT</eng>
+  </page>
+  <page name = "centerText_Stances">
+    <eng>STANCE SELECT</eng>
   </page>
 </textBank>
