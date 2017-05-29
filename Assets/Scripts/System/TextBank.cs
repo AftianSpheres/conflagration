@@ -34,6 +34,24 @@ public class TextBank
             text = _text;
             isValid = _isValid;
         }
+
+        /// <summary>
+        /// Gets the text in this page in lowercase, but only if the current textLangType permits that.
+        /// </summary>
+        public string TextAsLower()
+        {
+            if (TextBankManager.Instance.CurrentTextLangTypeSupportsCases()) return text.ToLower();
+            else return text;
+        }
+
+        /// <summary>
+        /// Gets the text in this page in uppercase, but only if the current textLangType permits that.
+        /// </summary>
+        public string TextAsUpper ()
+        {
+            if (TextBankManager.Instance.CurrentTextLangTypeSupportsCases()) return text.ToUpper();
+            else return text;
+        }
     }
 
     /// <summary>

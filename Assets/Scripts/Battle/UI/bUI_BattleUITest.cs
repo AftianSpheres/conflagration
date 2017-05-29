@@ -16,6 +16,7 @@ public class bUI_BattleUITest : bUI_BattleUIController
             if (Input.GetKeyDown(KeyCode.Alpha1)) TestForAttacks();
 
         }
+        else if (Input.GetKeyDown(KeyCode.Backspace)) SubmitCommand(bUI_Command.Back);
     }
 
     /// <summary>

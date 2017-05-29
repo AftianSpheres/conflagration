@@ -153,7 +153,7 @@ public class bUI_BattleUIController : MonoBehaviour
                 break;
             case bUI_Command.Back:
                 if (state == State.Wheel_Stance || state == State.Wheel_MetaStance) state = State.Wheel_TopLevel;
-                else Util.Crash("Can't go back now");
+                else Util.Crash("Can't go back now: " + state);
                 // ...
                 break;
             case bUI_Command.CloseWheel:

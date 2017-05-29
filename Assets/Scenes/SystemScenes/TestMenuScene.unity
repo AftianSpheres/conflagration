@@ -352,38 +352,38 @@ Prefab:
     - target: {fileID: 114693283346347262, guid: 478033dc8b9b0fe43b09202f73fbcf3f,
         type: 2}
       propertyPath: m_havePropertiesChanged
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 114693283346347262, guid: 478033dc8b9b0fe43b09202f73fbcf3f,
         type: 2}
       propertyPath: m_isInputParsingRequired
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 224795953889299604, guid: 478033dc8b9b0fe43b09202f73fbcf3f,
-        type: 2}
-      propertyPath: m_LocalScale.x
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 224795953889299604, guid: 478033dc8b9b0fe43b09202f73fbcf3f,
-        type: 2}
-      propertyPath: m_LocalScale.y
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 224795953889299604, guid: 478033dc8b9b0fe43b09202f73fbcf3f,
-        type: 2}
-      propertyPath: m_LocalScale.z
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 224546552680835352, guid: 478033dc8b9b0fe43b09202f73fbcf3f,
+    - target: {fileID: 114693283346347262, guid: 478033dc8b9b0fe43b09202f73fbcf3f,
         type: 2}
-      propertyPath: m_RootOrder
-      value: 2
+      propertyPath: m_fontColor32.rgba
+      value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 224323156751483650, guid: 478033dc8b9b0fe43b09202f73fbcf3f,
+    - target: {fileID: 114912373310853256, guid: 478033dc8b9b0fe43b09202f73fbcf3f,
         type: 2}
-      propertyPath: m_RootOrder
-      value: 3
-      objectReference: {fileID: 0}
+      propertyPath: soundFX_deny
+      value: 
+      objectReference: {fileID: 8300000, guid: aea552b9d62da924ba8f951c4394df4e, type: 3}
+    - target: {fileID: 114912373310853256, guid: 478033dc8b9b0fe43b09202f73fbcf3f,
+        type: 2}
+      propertyPath: soundFX_confirm
+      value: 
+      objectReference: {fileID: 8300000, guid: 42a31383e35046a4a848bf639fc07acd, type: 3}
+    - target: {fileID: 114912373310853256, guid: 478033dc8b9b0fe43b09202f73fbcf3f,
+        type: 2}
+      propertyPath: soundFX_close
+      value: 
+      objectReference: {fileID: 8300000, guid: 26dc4f14c7d3357449b802eaced7073e, type: 3}
+    - target: {fileID: 114912373310853256, guid: 478033dc8b9b0fe43b09202f73fbcf3f,
+        type: 2}
+      propertyPath: soundFX_open
+      value: 
+      objectReference: {fileID: 8300000, guid: 4596624565fde204590a95765cbe2064, type: 3}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 478033dc8b9b0fe43b09202f73fbcf3f, type: 2}
   m_IsPrefabParent: 0

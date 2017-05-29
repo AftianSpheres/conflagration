@@ -87,4 +87,20 @@ public class TextBankManager : Manager<TextBankManager>
             textLangType = _textLangType;
         }
     }
+
+    /// <summary>
+    /// Does the TextBankManager's current TextLangType support cases?
+    /// (Latin alphabets, in other words, for the most part.)
+    /// </summary>
+    public bool CurrentTextLangTypeSupportsCases ()
+    {
+        switch (textLangType)
+        {
+            case TextLangType.English:
+                return true;
+            default:
+                Util.Crash("Invalid textLangType in CurrentTextLangTypeSupportsCases: " + textLangType);
+                return false;
+        }
+    }
 }

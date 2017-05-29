@@ -23,26 +23,14 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
         FromActions,
         FromStances
     }
-    /// <summary>
-    /// Valid action wheel button states.
-    /// </summary>
-    private enum State
-    {
-        None,
-        Disabled,
-        Locked,
-        Available,
-        Available_ButAttackWillBreakStance,
-        Selected,
-        Selected_ButAttackWillBreakStance,
-        SelectedLocked
-    }
     public Animator animator;
     public Image buttonBG;
     public Image commandIcon;
     public TextMeshProUGUI guiText_Label;
-    public bool locked { get { return state == State.Locked || state == State.SelectedLocked; } }
-    public bool selected { get { return state == State.Selected || state == State.Selected_ButAttackWillBreakStance || state == State.SelectedLocked; } }
+    public bool disabled { get; private set; }
+    public bool locked { get; private set; }
+    public bool selected { get; private set; }
+    public bool willBreakStance { get; private set; }
     public int indexOnWheel { get; private set; }
     private bUI_ActionWheel wheel;
     private Battler decidingBattler { get { return AIModule_PlayerSide_ManualControl.waitingBattler; } }
@@ -50,13 +38,14 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
     private static TextBank commandsBank;
     private static TextBank stancesCommonBank;
     private SelectionType selectionType;
-    private State state;
     private bool forbidden;
+    readonly static int closeTrigger = Animator.StringToHash("close");
     readonly static int confirmTrigger = Animator.StringToHash("confirm");
     readonly static int idleBool = Animator.StringToHash("idle");
     readonly static int idlePathHash = Animator.StringToHash("Base Layer.Idle");
     readonly static int lockedBool = Animator.StringToHash("locked");
     readonly static int lockedPathHash = Animator.StringToHash("Base Layer.Locked");
+    readonly static int lockedSelectedPathHash = Animator.StringToHash("Base Layer.Locked+Selected");
     readonly static int selectedBool = Animator.StringToHash("selected");
     readonly static int selectedPathHash = Animator.StringToHash("Base Layer.Selected");
     const string commandIconsResourcePath = "Battle/2D/UI/AWIcon/Command/";
@@ -82,7 +71,6 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
     {
         if (selectionType == SelectionType.FromActions) DetermineStateForBattleAction(wheel.GetActionForButton(this));
         else if (selectionType == SelectionType.FromCommands) DetermineStateForCommand(wheel.GetCommandForButton(this));
-        // switch statement instead
         switch (selectionType)
         {
             case SelectionType.FromActions:
@@ -154,13 +142,13 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
     }
 
     /// <summary>
-    /// Disables the action wheel button - use this to hide 
+    /// Disables the action wheel button - use this to hide it when not in use.
     /// </summary>
     public void Disable()
     {
         gameObject.SetActive(false);
         selectionType = SelectionType.None;
-        state = State.Disabled;
+        disabled = true;
     }
 
     /// <summary>
@@ -169,23 +157,30 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
     public bool InTransitionAnimation ()
     {
         bool returnVal = false;
-        switch (state)
+        Action onIdle = () =>
         {
-            case State.Available:
-            case State.Available_ButAttackWillBreakStance:
-                returnVal = animator.GetCurrentAnimatorStateInfo(0).fullPathHash != idlePathHash;
-                break;
-            case State.Selected:
-            case State.Selected_ButAttackWillBreakStance:
-                returnVal = animator.GetCurrentAnimatorStateInfo(0).fullPathHash != selectedPathHash;
-                break;
-            case State.Locked:
-                returnVal = animator.GetCurrentAnimatorStateInfo(0).fullPathHash != lockedPathHash;
-                break;
-            default:
-                Util.Crash("Tried to find out if action wheel button " + indexOnWheel + " was in a transition animation, but that's not possible from state " + state);
-                break;
+            returnVal = animator.GetCurrentAnimatorStateInfo(0).fullPathHash != idlePathHash;
+        };
+        Action onLocked = () =>
+        {
+            returnVal = animator.GetCurrentAnimatorStateInfo(0).fullPathHash != lockedPathHash;
+        };
+        Action onLockedSelected = () =>
+        {
+            returnVal = animator.GetCurrentAnimatorStateInfo(0).fullPathHash != lockedSelectedPathHash;
+        };
+        Action onSelected = () =>
+        {
+            returnVal = animator.GetCurrentAnimatorStateInfo(0).fullPathHash != selectedPathHash;
+        };
+
+        if (selected)
+        {
+            if (locked) onLockedSelected();
+            else onSelected();
         }
+        else if (locked) onLocked();
+        else if (!disabled) onIdle();
         return returnVal;
     }
 
@@ -195,6 +190,14 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
     public void OnWheelConfirm ()
     {
         if (wheel.selectedButton == this) animator.SetTrigger(confirmTrigger);
+    }
+
+    /// <summary>
+    /// Called on all active buttons when wheel is closed.
+    /// </summary>
+    public void OnWheelClose ()
+    {
+        animator.SetTrigger(closeTrigger);
     }
 
     /// <summary>
@@ -213,9 +216,9 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
     /// </summary>
     private void ConformAnimatorToState ()
     {
-        animator.SetBool(lockedBool, state == State.Locked);
-        animator.SetBool(selectedBool, state == State.Selected | state == State.Selected_ButAttackWillBreakStance);
-        animator.SetBool(idleBool, state == State.Available | state == State.Available_ButAttackWillBreakStance);
+        animator.SetBool(lockedBool, locked);
+        animator.SetBool(selectedBool, selected);
+        animator.SetBool(idleBool, !locked && !selected);
     }
 
     /// <summary>
@@ -224,16 +227,12 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
     private void DetermineStateForBattleAction (BattleAction action)
     {
         if (decidingBattler == null) DetermineStateForCommand(bUI_Command.Decide_AttackPrimary);
-        else if (!decidingBattler.CanExecuteAction(action)) state = State.Locked;
-        else if (wheel.selectedButton == this)
-        {
-            if (decidingBattler.CalcActionStaminaCost(action.baseSPCost) >= decidingBattler.currentStamina) state = State.Selected_ButAttackWillBreakStance;
-            else state = State.Selected;
-        }
         else
         {
-            if (decidingBattler.CalcActionStaminaCost(action.baseSPCost) >= decidingBattler.currentStamina) state = State.Available_ButAttackWillBreakStance;
-            else state = State.Available;
+            locked = !decidingBattler.CanExecuteAction(action);
+            selected = wheel.selectedButton == this;
+            disabled = !wheel.ButtonShouldBeActive(this);
+            willBreakStance = decidingBattler.CalcActionStaminaCost(action.baseSPCost) >= decidingBattler.currentStamina;
         }
     }
 
@@ -242,9 +241,10 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
     /// </summary>
     private void DetermineStateForCommand (bUI_Command command)
     {
-        if (wheel.CommandLocked(command)) state = State.Locked;
-        else if (wheel.selectedButton == this) state = State.Selected;
-        else state = State.Available;
+        locked = wheel.CommandLocked(command);
+        selected = wheel.selectedButton == this;
+        disabled = !wheel.ButtonShouldBeActive(this);
+        willBreakStance = false;
     }
 
     /// <summary>
@@ -252,9 +252,10 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
     /// </summary>
     private void DetermineStateForStance (BattleStance stance)
     {
-        if (wheel.StanceLocked(stance)) state = State.Locked;
-        else if (wheel.selectedButton == this) state = State.Selected;
-        else state = State.Available;
+        locked = wheel.StanceLocked(stance);
+        selected = wheel.selectedButton == this;
+        disabled = !wheel.ButtonShouldBeActive(this);
+        willBreakStance = false;
     }
 
     /// <summary>

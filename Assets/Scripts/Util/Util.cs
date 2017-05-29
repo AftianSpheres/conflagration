@@ -145,6 +145,16 @@ public static class Util
     }
 
     /// <summary>
+    /// Crashes with an automatically generated exception message.
+    /// Simplifies cases where you wanna choke on an out-of-range enum value or what have you.
+    /// </summary>
+    public static void Crash (object withBadValue, object caller, GameObject gameObject)
+    {
+        Type realType = withBadValue.GetType();
+        Crash(new Exception("Bad " + realType + " value " + withBadValue.ToString() + " on " + caller.GetType() + " attached to GameObject " + gameObject.name + " in scene " + gameObject.scene.name));
+    }
+
+    /// <summary>
     /// Throws the exception, then crashes.
     /// Crashing is generally better than doing something
     /// nonsensical, which Unity'll happily do if you just

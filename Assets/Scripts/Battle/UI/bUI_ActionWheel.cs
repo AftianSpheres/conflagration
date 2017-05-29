@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 using CnfBattleSys;
@@ -93,7 +94,7 @@ public class bUI_ActionWheel : MonoBehaviour
                     Util.Crash(new Exception("Invalid action wheel decision type: " + decisionType.ToString()));
                     break;
             }
-            if (wheel.currentDecision == this) wheel.Close();
+            if (wheel.currentDecision == this) Timing.RunCoroutine(wheel._CallOnceAnimatorsFinish(wheel.Close), thisTag);
         }
 
         /// <summary>
@@ -125,7 +126,10 @@ public class bUI_ActionWheel : MonoBehaviour
         Ready,
         InTransition
     }
-    public Animator animator;
+    public AudioClip soundFX_deny;
+    public AudioClip soundFX_confirm;
+    public AudioClip soundFX_close;
+    public AudioClip soundFX_open;
     public bUI_ActionWheelButton selectedButton { get { return activeButtons[currentDecision.selectedOptionIndex]; } }
     public GameObject buttonsPrefab;
     public GameObject contents;
@@ -136,6 +140,7 @@ public class bUI_ActionWheel : MonoBehaviour
     public bool inAttackSelection { get { return currentDecision.decisionType == DecisionType.ActionSelect; } }
     public bool isOpen { get { return state == State.Ready || state == State.InTransition; } }
     public float buttonsDistance;
+    private Animator animator;
     /// <summary>
     /// Buttons that are currently tied to options being presented by the action wheel.
     /// </summary>
@@ -146,6 +151,7 @@ public class bUI_ActionWheel : MonoBehaviour
     private bUI_ActionWheelButton[] allButtons;
     private Battler decidingBattler { get { return bUI_BattleUIController.instance.displayBattler; } }
     private Decision currentDecision { get { if (decisionsStack.Count == 0) return null; else return decisionsStack.Peek(); } }
+    private AudioSource audioSource;
     private Quaternion defaultRotation;
     private Stack<Decision> decisionsStack;
     private TextBank actionWheelBank;
@@ -159,8 +165,10 @@ public class bUI_ActionWheel : MonoBehaviour
     private static bUI_Command[] topLevelLock_noMoveNoBreak = { bUI_Command.Move, bUI_Command.Break };
     private static bUI_Command[] topLevelLock_noMoveNoRun = { bUI_Command.Move, bUI_Command.Run };
     private static bUI_Command[] topLevelLock_noBreakNoRun = { bUI_Command.Break, bUI_Command.Run };
+    private readonly static int closeHash = Animator.StringToHash("Base Layer.Close");
     private readonly static int decisionConfirmHash = Animator.StringToHash("Base Layer.DecisionConfirm");
     private readonly static int decisionShowHash = Animator.StringToHash("Base Layer.DecisionShow");
+    private readonly static int doneHash = Animator.StringToHash("Base Layer.Done");
     private readonly static int idleHash = Animator.StringToHash("Base Layer.Idle");
     const float placeRotationTime = .4f;
     const int maximumNumberOfOptions = 9;
@@ -171,11 +179,14 @@ public class bUI_ActionWheel : MonoBehaviour
     /// </summary>
     void Awake ()
     {
+        animator = GetComponent<Animator>();
+        audioSource = GetComponent <AudioSource>();
         defaultRotation = transform.rotation;
         decisionsStack = new Stack<Decision>();
         GenerateButtonsFromPrefab();
         LockInput();
-        Close();
+        contents.SetActive(false);
+        state = State.Offline;
     }
 
     /// <summary>
@@ -216,6 +227,14 @@ public class bUI_ActionWheel : MonoBehaviour
     }
 
     /// <summary>
+    /// Should this button be active, for a decision with however many options?
+    /// </summary>
+    public bool ButtonShouldBeActive (bUI_ActionWheelButton button)
+    {
+        return button.indexOnWheel < currentDecision.optionCount;
+    }
+
+    /// <summary>
     /// Clear the decision stack.
     /// Call this between turns to keep from carrying decisions over from the last turn.
     /// </summary>
@@ -230,8 +249,15 @@ public class bUI_ActionWheel : MonoBehaviour
     /// </summary>
     public void Close ()
     {
-        contents.SetActive(false);
-        state = State.Offline;
+        Action onCompletion = () =>
+        {
+            contents.SetActive(false);
+            state = State.Offline;
+        };
+        animator.Play(closeHash);
+        for (int i = 0; i < activeButtons.Length; i++) activeButtons[i].OnWheelClose();
+        if (!audioSource.isPlaying) audioSource.PlayOneShot(soundFX_close);
+        Timing.RunCoroutine(_CallOnceAnimatorsFinish(onCompletion));
     }
 
     /// <summary>
@@ -247,14 +273,15 @@ public class bUI_ActionWheel : MonoBehaviour
     /// </summary>
     public void ConfirmSelection ()
     {
+        AudioClip clip = soundFX_confirm;
+        if (selectedButton.locked) clip = soundFX_deny;
         for (int i = 0; i < activeButtons.Length; i++) activeButtons[i].OnWheelConfirm();
         animator.Play(decisionConfirmHash);
         Action onCompletion = () =>
         {
             if (selectedButton.selected && !selectedButton.locked) currentDecision.Submit();
-            else if (selectedButton.locked) Debug.Log("This should play a sound effect...");
-            else Util.Crash("selectedButton isn't selected. This... really, really shouldn't happen, like, ever???");
         };
+        if (!audioSource.isPlaying) audioSource.PlayOneShot(clip);
         Timing.RunCoroutine(_CallOnceAnimatorsFinish(onCompletion), thisTag);
     }
 
@@ -369,6 +396,7 @@ public class bUI_ActionWheel : MonoBehaviour
         contents.SetActive(true);
         ConformWheelToCurrentDecision();
         UnlockInput();
+        if (!audioSource.isPlaying) audioSource.PlayOneShot(soundFX_open);
         state = State.Ready;
     }
 
@@ -443,13 +471,8 @@ public class bUI_ActionWheel : MonoBehaviour
         }
         ConformWheelRotationToSelectedButton();
         SetCenterIcon();
-        centerText.text = string.Empty;
+        SetCenterText();
         animator.Play(decisionShowHash);
-        Action onCompletion = () =>
-        {
-            SetCenterText();
-        };
-        Timing.RunCoroutine(_CallOnceAnimatorsFinish(onCompletion), thisTag);
     }
 
     /// <summary>
@@ -532,7 +555,7 @@ public class bUI_ActionWheel : MonoBehaviour
         switch (currentDecision.decisionType)
         {
             case DecisionType.ActionSelect:
-                centerText.text = stancesCommonBank.GetPage(currentDecision.baseStance.stanceID).text;
+                centerText.text = stancesCommonBank.GetPage(currentDecision.baseStance.stanceID).TextAsUpper();
                 break;
             case DecisionType.BattleUI:
                 centerText.text = actionWheelBank.GetPage("centerText_TopLevel").text;
@@ -583,7 +606,8 @@ public class bUI_ActionWheel : MonoBehaviour
         while (isDone == false)
         {
             isDone = true;
-            if (animator.GetCurrentAnimatorStateInfo(0).fullPathHash != idleHash) isDone = false;
+            int hash = animator.GetCurrentAnimatorStateInfo(0).fullPathHash;
+            if (hash != idleHash && hash != doneHash) isDone = false;
             for (int i = 0; i < activeButtons.Length; i++) if (activeButtons[i].InTransitionAnimation()) isDone = false;
             yield return 0;
         }
