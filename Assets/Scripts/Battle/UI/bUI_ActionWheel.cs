@@ -220,10 +220,6 @@ public class bUI_ActionWheel : MonoBehaviour
                     break;
             }
         }
-        else if (allowInput && Input.GetKeyDown(KeyCode.Backspace) && decisionsStack.Count > 1)
-        {
-            bUI_BattleUIController.instance.SubmitCommand(bUI_Command.Back);
-        }
     }
 
     /// <summary>
@@ -361,6 +357,7 @@ public class bUI_ActionWheel : MonoBehaviour
     {
         if (decisionsStack.Count < 2) Util.Crash(new Exception("Can't dispose of decision unless there's at least one decision above base-level decision!"));
         decisionsStack.Pop();
+        ConformWheelToCurrentDecision();
     }
 
     /// <summary>

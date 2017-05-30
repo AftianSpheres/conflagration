@@ -105,9 +105,9 @@ GameObject:
   m_Component:
   - component: {fileID: 224795953889299604}
   - component: {fileID: 114912373310853256}
-  - component: {fileID: 95314906727018962}
-  - component: {fileID: 82381090755770026}
   - component: {fileID: 114603928958665454}
+  - component: {fileID: 82381090755770026}
+  - component: {fileID: 95314906727018962}
   m_Layer: 5
   m_Name: Action Wheel
   m_TagString: Untagged
@@ -174,7 +174,7 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
-  m_PlayOnAwake: 1
+  m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1
   Loop: 0
@@ -182,9 +182,9 @@ AudioSource:
   Spatialize: 0
   SpatializePostEffects: 0
   Priority: 128
-  DopplerLevel: 1
+  DopplerLevel: 0
   MinDistance: 1
-  MaxDistance: 500
+  MaxDistance: 1.01
   Pan2D: 0
   rolloffMode: 0
   BypassEffects: 0
@@ -558,7 +558,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 48c33e808446c474b8a33081b9126e35, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  animator: {fileID: 95314906727018962}
+  soundFX_deny: {fileID: 8300000, guid: aea552b9d62da924ba8f951c4394df4e, type: 3}
+  soundFX_confirm: {fileID: 8300000, guid: 42a31383e35046a4a848bf639fc07acd, type: 3}
+  soundFX_close: {fileID: 8300000, guid: 26dc4f14c7d3357449b802eaced7073e, type: 3}
+  soundFX_open: {fileID: 8300000, guid: 4596624565fde204590a95765cbe2064, type: 3}
   buttonsPrefab: {fileID: 1348159804334416, guid: 143d555c7bef6fe4595aca103dc5b465,
     type: 2}
   contents: {fileID: 1097365846438254}
@@ -743,7 +746,7 @@ RectTransform:
   m_GameObject: {fileID: 1683158768974390}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 2, y: 2, z: 1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 224754474797898218}
   m_Father: {fileID: 0}

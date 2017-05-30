@@ -32,7 +32,6 @@ public class bUI_BattleUIController : MonoBehaviour
     public BattleStance displayStance { get; private set; }
     public BattleStance[] displayStanceSet { get; private set; }
     private State state;
-    protected bool skip = false;
 
     /// <summary>
     /// MonoBehaviour.Awake()
@@ -112,8 +111,6 @@ public class bUI_BattleUIController : MonoBehaviour
     /// </summary>
     public void SubmitBattleAction (BattleAction action)
     {
-        Debug.Log(action.actionID);
-        return;
         if (AIModule_PlayerSide_ManualControl.WaitingForActionInput()) AIModule_PlayerSide_ManualControl.InputAction(action);
         else Util.Crash("Tried to submit action, but psuedo-AI module wasn't waiting for action");
     }
@@ -124,9 +121,6 @@ public class bUI_BattleUIController : MonoBehaviour
     /// </summary>
     public void SubmitBattleStance (BattleStance stance)
     {
-        skip = true;
-        Debug.Log(stance.stanceID);
-        return;
         if (AIModule_PlayerSide_ManualControl.WaitingForStanceInput()) AIModule_PlayerSide_ManualControl.InputStance(stance);
         else Util.Crash("Tried to submit stance, but psuedo-AI module wasn't waiting for stance");
     }
@@ -154,7 +148,8 @@ public class bUI_BattleUIController : MonoBehaviour
             case bUI_Command.Back:
                 if (state == State.Wheel_Stance || state == State.Wheel_MetaStance) state = State.Wheel_TopLevel;
                 else Util.Crash("Can't go back now: " + state);
-                // ...
+                SetDisplayBattlerData();
+                actionWheel.DisposeOfTopDecision();
                 break;
             case bUI_Command.CloseWheel:
                 actionWheel.Close();
@@ -171,10 +166,10 @@ public class bUI_BattleUIController : MonoBehaviour
                 actionWheel.DecideStances();
                 break;
             case bUI_Command.WheelFromTopLevel:
-                if (AIModule_PlayerSide_ManualControl.WaitingForStanceInput() && !skip) SubmitCommand(bUI_Command.Decide_Stance);
+                state = State.Wheel_TopLevel;
+                if (AIModule_PlayerSide_ManualControl.WaitingForStanceInput()) goto case bUI_Command.Decide_Stance;
                 else
                 {
-                    state = State.Wheel_TopLevel;
                     SetDisplayBattlerData();
                     actionWheel.DecideTopLevel();
                 }
