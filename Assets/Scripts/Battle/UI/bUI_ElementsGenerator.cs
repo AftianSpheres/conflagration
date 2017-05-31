@@ -77,10 +77,10 @@ public class bUI_ElementsGenerator : MonoBehaviour
     /// </summary>
     public void AssignInfoboxesToBattlers ()
     {
-        for (int b = 0; b < BattleOverseer.allBattlers.Count; b++)
+        for (int b = 0; b < BattleOverseer.currentBattle.allBattlers.Length; b++)
         {
-            if (BattleOverseer.allBattlers[b].side == BattlerSideFlags.PlayerSide) GetPlayerPartyInfoboxFor(BattleOverseer.allBattlers[b].puppet);
-            else GetEnemyInfoboxFor(BattleOverseer.allBattlers[b].puppet);
+            if (BattleOverseer.currentBattle.allBattlers[b].side == BattlerSideFlags.PlayerSide) GetPlayerPartyInfoboxFor(BattleOverseer.currentBattle.allBattlers[b].puppet);
+            else GetEnemyInfoboxFor(BattleOverseer.currentBattle.allBattlers[b].puppet);
         }
         HideUnusedPlayerPartyInfoboxes();
     }

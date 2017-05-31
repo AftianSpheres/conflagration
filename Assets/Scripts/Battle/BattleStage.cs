@@ -129,8 +129,19 @@ public class BattleStage : MonoBehaviour
         switch (localState)
         {
             case LocalState.ReadyToAdvanceBattle:
-                if (BattleOverseer.overseerState == BattleOverseer.OverseerState.BattleWon || BattleOverseer.overseerState == BattleOverseer.OverseerState.BattleLost) gameObject.SetActive(false);
-                else if (BattleOverseer.overseerState != BattleOverseer.OverseerState.WaitingForInput && BattleOverseer.overseerState != BattleOverseer.OverseerState.Paused) BattleOverseer.BattleStep();
+                switch (BattleOverseer.currentBattle.state)
+                {
+                    case BattleData.State.BattleWon:
+                    case BattleData.State.BattleLost:
+                        gameObject.SetActive(false);
+                        break;
+                    case BattleData.State.WaitingForInput:
+                    case BattleData.State.Paused:
+                        break;
+                    default:
+                        BattleOverseer.currentBattle.BattleStep();
+                        break;
+                }
                 break;
             case LocalState.HandlingAnimEvent:
                 if (activeAnimEvents.Count == 0)
@@ -180,7 +191,7 @@ public class BattleStage : MonoBehaviour
     /// </summary>
     public void StartOfTurn ()
     {
-        if (BattleOverseer.overseerState != BattleOverseer.OverseerState.Offline) LogBattleState();
+        if (BattleOverseer.currentBattle.state != BattleData.State.Offline) LogBattleState();
     }
 
     /// <summary>
@@ -279,9 +290,9 @@ public class BattleStage : MonoBehaviour
     private void LogBattleState()
     {
         string o = string.Empty;
-        for (int b = 0; b < BattleOverseer.allBattlers.Count; b++)
+        for (int b = 0; b < BattleOverseer.currentBattle.allBattlers.Length; b++)
         {
-            Battler bat = BattleOverseer.allBattlers[b];
+            Battler bat = BattleOverseer.currentBattle.allBattlers[b];
             // This might actually be the single worst line of code in the world but idgaf given what the usage case is.
             string battlerString = b.ToString() + ": " + bat.battlerType.ToString() + "|" + bat.currentStance.ToString() + " (HP: " + bat.currentHP + " / " + bat.stats.maxHP + ") (Stamina: " + bat.currentStamina.ToString() + ") [" + bat.side.ToString() + "]";
             o += battlerString + Environment.NewLine;

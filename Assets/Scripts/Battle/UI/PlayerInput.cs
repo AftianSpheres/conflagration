@@ -17,7 +17,6 @@ public class PlayerInput : MonoBehaviour
         Online
     }
     private LocalState localState;
-    private List<Battler> battlersListBuffer;
     private List<BattleAction> selectableBattleActions;
     private List<int> originalIndicesForBattleActions;
     private BattleAction selectedBattleAction;
@@ -33,7 +32,6 @@ public class PlayerInput : MonoBehaviour
     {
         selectableBattleActions = new List<BattleAction>(10);
         originalIndicesForBattleActions = new List<int>(10);
-        battlersListBuffer = new List<Battler>();
 	}
 	
     /// <summary>
@@ -175,8 +173,8 @@ public class PlayerInput : MonoBehaviour
         KeyCode[] alphaKeyCodes = { KeyCode.Alpha0, KeyCode.Alpha1, KeyCode.Alpha2, KeyCode.Alpha3, KeyCode.Alpha4, KeyCode.Alpha5, KeyCode.Alpha6, KeyCode.Alpha7, KeyCode.Alpha8, KeyCode.Alpha9 };
         KeyCode[] numpadKeyCodes = { KeyCode.Keypad0, KeyCode.Keypad1, KeyCode.Keypad2, KeyCode.Keypad3, KeyCode.Keypad4, KeyCode.Keypad5, KeyCode.Keypad6, KeyCode.Keypad7, KeyCode.Keypad8, KeyCode.Keypad9 };
         Battler[] mainTargets;
-        BattleOverseer.GetBattlersEnemiesTo(BattlerSideFlags.PlayerSide, ref battlersListBuffer);
-        Battler[] enemies = battlersListBuffer.ToArray();
+        BattleOverseer.currentBattle.GetBattlersEnemiesTo(BattlerSideFlags.PlayerSide, FleetingCollections.battlerBuffer_0);
+        Battler[] enemies = FleetingCollections.battlerBuffer_0.ToArray();
         if (enemies.Length > 10) Util.Crash(new Exception("Please don't ask me to target more than 10 enemies. I am not a real UI."));
         if (asSecondary)
         {
@@ -193,7 +191,7 @@ public class PlayerInput : MonoBehaviour
         Battler[][] subtargets = new Battler[mainTargets.Length][];
         for (int i = 0; i < subtargets.Length; i++)
         {
-            subtargets[i] = BattleOverseer.GetBattlersWithinAOERangeOf(AIModule_PlayerSide_ManualControl.waitingBattler, mainTargets[i], selectedBattleAction.targetingType, selectedBattleAction.baseAOERadius, enemies);
+            subtargets[i] = BattleOverseer.currentBattle.GetBattlersWithinAOERangeOf(AIModule_PlayerSide_ManualControl.waitingBattler, mainTargets[i], selectedBattleAction.targetingType, selectedBattleAction.baseAOERadius, enemies);
             string s = i.ToString() + " " + mainTargets[i].battlerType + ": ";
             for (int st = 0; st < subtargets[i].Length; st++)
             {
@@ -248,20 +246,20 @@ public class PlayerInput : MonoBehaviour
         if (targetAcquired)
         {
             Debug.Log("Confirmed target set");
-            battlersListBuffer.Clear();
+            FleetingCollections.battlerBuffer_0.Clear();
             Battler[] subtargets;
             if (asSecondary) 
             {
-                battlersListBuffer.Add(selectedMainSecondaryTarget);
-                subtargets = BattleOverseer.GetBattlersWithinAOERangeOf(AIModule_PlayerSide_ManualControl.waitingBattler, selectedMainSecondaryTarget, selectedBattleAction.targetingType, selectedBattleAction.baseAOERadius, enemies);
+                FleetingCollections.battlerBuffer_0.Add(selectedMainSecondaryTarget);
+                subtargets = BattleOverseer.currentBattle.GetBattlersWithinAOERangeOf(AIModule_PlayerSide_ManualControl.waitingBattler, selectedMainSecondaryTarget, selectedBattleAction.targetingType, selectedBattleAction.baseAOERadius, enemies);
             }
             else
             {
-                battlersListBuffer.Add(selectedMainPrimaryTarget);
-                subtargets = BattleOverseer.GetBattlersWithinAOERangeOf(AIModule_PlayerSide_ManualControl.waitingBattler, selectedMainPrimaryTarget, selectedBattleAction.targetingType, selectedBattleAction.baseAOERadius, enemies);
+                FleetingCollections.battlerBuffer_0.Add(selectedMainPrimaryTarget);
+                subtargets = BattleOverseer.currentBattle.GetBattlersWithinAOERangeOf(AIModule_PlayerSide_ManualControl.waitingBattler, selectedMainPrimaryTarget, selectedBattleAction.targetingType, selectedBattleAction.baseAOERadius, enemies);
             }
-            for (int i = 0; i < subtargets.Length; i++) battlersListBuffer.Add(subtargets[i]);
-            AIModule_PlayerSide_ManualControl.InputTargets(battlersListBuffer.ToArray(), asSecondary);
+            for (int i = 0; i < subtargets.Length; i++) FleetingCollections.battlerBuffer_0.Add(subtargets[i]);
+            AIModule_PlayerSide_ManualControl.InputTargets(FleetingCollections.battlerBuffer_0.ToArray(), asSecondary);
         }
 
     }

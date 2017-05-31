@@ -10,12 +10,10 @@ using MovementEffects;
 public static class Util
 {
     public static ulong buildNumber { get { if (_buildNumber == 0) GetBuildNumber(); return _buildNumber; } }
-    private readonly static char[] vowelsArray = { 'a', 'e', 'i', 'o', 'u', 'A', 'E', 'I', 'O', 'U' };
+    private readonly static char[] vowelsArray = { 'a', 'e', 'i', 'o', 'u', 'A', 'E', 'I', 'O', 'U' }; // lol
     private static ulong _buildNumber = 0;
     private const string buildNumberPath = "buildnumber";
-#if UNITY_EDITOR
-    public static ulong internalBuildNumber { get { return _buildNumber; } } // this is an ugly hack but we need to be able to make sure the build number hasn't already been set in order to only increment it once
-#endif
+
     /// <summary>
     /// Loads in the build number.
     /// </summary>

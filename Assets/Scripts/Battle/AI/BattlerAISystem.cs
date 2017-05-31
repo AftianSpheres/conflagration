@@ -58,24 +58,6 @@ namespace CnfBattleSys
         }
 
         /// <summary>
-        /// This is not safe for use in asynchronous operations.
-        /// </summary>
-        private static List<Battler> battlersListBuffer;
-        /// <summary>
-        /// This is not safe for use in asynchronous operations.
-        /// </summary>
-        private static List<Battler> alsoBattlersListBuffer; // I am probably way too worried about unnecessary allocations to be doing things this way
-
-        /// <summary>
-        /// First-run setup for BattlerAISystem.
-        /// </summary>
-        public static void FirstRunSetup ()
-        {
-            battlersListBuffer = new List<Battler>();
-            alsoBattlersListBuffer = new List<Battler>();
-        }
-
-        /// <summary>
         /// Starts the AI on deciding what the unit should do.
         /// Thia is basically just an intermediary that goes between the Battler and
         /// the individual AI modules, so as to keep the (already pretty gnarly) Battler
@@ -220,7 +202,7 @@ namespace CnfBattleSys
                 Battler[][] subtargetsForAOE = new Battler[potentialTargets.Length][];
                 for (int t = 0; t < potentialTargets.Length; t++)
                 {
-                    subtargetsForAOE[t] = BattleOverseer.GetBattlersWithinAOERangeOf(user, potentialTargets[t], targetingType, action.baseAOERadius, potentialTargets);
+                    subtargetsForAOE[t] = BattleOverseer.currentBattle.GetBattlersWithinAOERangeOf(user, potentialTargets[t], targetingType, action.baseAOERadius, potentialTargets);
                     for (int inAOERadIndex = 0; inAOERadIndex < subtargetsForAOE[t].Length; inAOERadIndex++)
                     {
                         float foundScore = float.NaN;
@@ -245,13 +227,13 @@ namespace CnfBattleSys
                         optimumTargetIndex = i;
                     }
                 }
-                battlersListBuffer.Clear();
-                battlersListBuffer.Add(potentialTargets[optimumTargetIndex]);
+                FleetingCollections.battlerBuffer_0.Clear();
+                FleetingCollections.battlerBuffer_0.Add(potentialTargets[optimumTargetIndex]);
                 for (int i = 0; i < subtargetsForAOE[optimumTargetIndex].Length; i++)
                 {
-                    battlersListBuffer.Add(subtargetsForAOE[optimumTargetIndex][i]);
+                    FleetingCollections.battlerBuffer_0.Add(subtargetsForAOE[optimumTargetIndex][i]);
                 }
-                return battlersListBuffer.ToArray();
+                return FleetingCollections.battlerBuffer_0.ToArray();
             };
             Func<ActionTargetType, Battler[], Battler[]> forAll = (targetingType, potentialTargets) =>
             {
@@ -430,33 +412,33 @@ namespace CnfBattleSys
             Battler[][] output = new Battler[2][];
             Action<TargetSideFlags> populateList = (targetSideFlags) =>
             {
-                battlersListBuffer.Clear();
-                alsoBattlersListBuffer.Clear();
+                FleetingCollections.battlerBuffer_0.Clear();
+                FleetingCollections.battlerBuffer_1.Clear();
                 if (targetSideFlags == TargetSideFlags.None) Util.Crash(new Exception("Can't find legal targets for action " + battleAction.actionID.ToString() + " because it doesn't _have_ legal targets. This is either a special case that shouldn't go through normal target acquisition, something that just shouldn't _be_ executed, or completely broken."));
                 if ((targetSideFlags & TargetSideFlags.MySide) == TargetSideFlags.MySide)
                 {
-                    BattleOverseer.GetBattlersSameSideAs(b.side, ref battlersListBuffer);
+                    BattleOverseer.currentBattle.GetBattlersSameSideAs(b.side, FleetingCollections.battlerBuffer_0);
                 }
                 if ((targetSideFlags & TargetSideFlags.MyFriends) == TargetSideFlags.MyFriends)
                 {
-                    BattleOverseer.GetBattlersAlliedTo_Strict(b.side, ref battlersListBuffer);
+                    BattleOverseer.currentBattle.GetBattlersAlliedTo_Strict(b.side, FleetingCollections.battlerBuffer_0);
                 }
                 if ((targetSideFlags & TargetSideFlags.MyEnemies) == TargetSideFlags.MyEnemies)
                 {
-                    BattleOverseer.GetBattlersEnemiesTo(b.side, ref battlersListBuffer);
+                    BattleOverseer.currentBattle.GetBattlersEnemiesTo(b.side, FleetingCollections.battlerBuffer_0);
                 }
                 if ((targetSideFlags & TargetSideFlags.Neutral) == TargetSideFlags.Neutral)
                 {
-                    BattleOverseer.GetBattlersEnemiesTo(b.side, ref battlersListBuffer);
+                    BattleOverseer.currentBattle.GetBattlersEnemiesTo(b.side, FleetingCollections.battlerBuffer_0);
                 }
-                for (int i = 0; i < battlersListBuffer.Count; i++) if (battlersListBuffer[i].IsValidTargetFor(b, battleAction)) alsoBattlersListBuffer.Add(battlersListBuffer[i]);
+                for (int i = 0; i < FleetingCollections.battlerBuffer_0.Count; i++) if (FleetingCollections.battlerBuffer_0[i].IsValidTargetFor(b, battleAction)) FleetingCollections.battlerBuffer_1.Add(FleetingCollections.battlerBuffer_0[i]);
             };
             populateList(battleAction.targetingSideFlags);
-            output[0] = alsoBattlersListBuffer.ToArray();
+            output[0] = FleetingCollections.battlerBuffer_1.ToArray();
             if (battleAction.alternateTargetSideFlags != TargetSideFlags.None)
             {
                 populateList(battleAction.alternateTargetSideFlags);
-                output[1] = alsoBattlersListBuffer.ToArray();
+                output[1] = FleetingCollections.battlerBuffer_1.ToArray();
             }
             else output[1] = new Battler[0];
             return output;

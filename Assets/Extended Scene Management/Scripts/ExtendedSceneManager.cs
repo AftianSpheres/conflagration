@@ -98,7 +98,6 @@ namespace ExtendedSceneManagement
         void Awake()
         {
             SceneRing[] rings = (SceneRing[])Enum.GetValues(typeof(SceneRing));
-            BattleOverseer.FirstRunSetup();
             timing = gameObject.AddComponent<Timing>();
             currentLoadingOps = new List<AsyncOperation>(32);
             extendedScenesArray = new ExtendedScene[SceneDatatable.metadata.Length];

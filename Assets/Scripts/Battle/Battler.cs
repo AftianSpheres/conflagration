@@ -840,6 +840,7 @@ namespace CnfBattleSys
         public TurnActions turnActions { get; private set; }
         public BattleAction lastActionExecuted { get; private set; }
         public BattleStance lockedStance { get; private set; }
+        private BattleData battle;
 
         // Collider, which is ugly, but using Unity colliders is the simplest way to do AOE checks and shit
         public CapsuleCollider capsuleCollider { get; private set; }
@@ -847,13 +848,14 @@ namespace CnfBattleSys
         public BattlerPuppet puppet { get; private set; }
 
         // Magic
-        public float speedFactor { get { return stats.Spe / BattleOverseer.normalizedSpeed; } }
-        public int index { get { return BattleOverseer.allBattlers.IndexOf(this); } }
+        public float speedFactor { get { return stats.Spe / battle.normalizedSpeed; } }
+        public int index { get; private set; }
 
-        public Battler (BattleFormation.FormationMember fm)
+        public Battler (BattleFormation.FormationMember fm, BattleData _battle, int _index)
         {
+            index = _index;
+            battle = _battle;
             statusPackets = new Dictionary<StatusType, StatusPacket>();
-
             // Load in everything from the battler data table first
             battlerType = fm.battlerData.battlerType;
             level = fm.battlerData.level;
@@ -1057,8 +1059,8 @@ namespace CnfBattleSys
         public bool CanRun ()
         {
             bool formationAllowsRun;
-            if (BattleOverseer.activeFormation != null && BattleOverseer.activeFormation.formation != FormationType.None)
-                formationAllowsRun = (BattleOverseer.activeFormation.flags & BattleFormationFlags.ForbidPlayerFromRunning) != BattleFormationFlags.ForbidPlayerFromRunning;
+            if (battle.activeFormation != null && battle.activeFormation.formation != FormationType.None)
+                formationAllowsRun = (battle.activeFormation.flags & BattleFormationFlags.ForbidPlayerFromRunning) != BattleFormationFlags.ForbidPlayerFromRunning;
             else formationAllowsRun = true;
             bool battlerAllowsRun = true; // No status effects that would preclude running currently exist, etc.
             return formationAllowsRun && battlerAllowsRun;

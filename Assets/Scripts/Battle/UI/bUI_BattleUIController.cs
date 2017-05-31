@@ -177,6 +177,9 @@ public class bUI_BattleUIController : MonoBehaviour
         }
     }
     
+    /// <summary>
+    /// Sets the data that other parts of the UI refer to when presenting information to the player.
+    /// </summary>
     private void SetDisplayBattlerData ()
     {
         displayBattler = AIModule_PlayerSide_ManualControl.waitingBattler;
