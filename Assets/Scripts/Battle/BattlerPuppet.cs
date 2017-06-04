@@ -22,6 +22,24 @@ public class BattlerPuppet : MonoBehaviour
     private bUI_ResourceBar staminaBar;
     private bUI_BattlerInfobox battlerInfobox;
     private float stepTime;
+    private LinkedList<Action> StatusPacketsModified;
+
+    /// <summary>
+    /// MonoBehaviour.Awake ()
+    /// </summary>
+    void Awake ()
+    {
+        StatusPacketsModified = new LinkedList<Action>();
+    }
+
+    /// <summary>
+    /// Adds the action to the linked list of functions that will
+    /// be called when status packets are touched.
+    /// </summary>
+    public void AddToOnStatusPacketsModified(Action action)
+    {
+        StatusPacketsModified.AddLast(action);
+    }
 
     /// <summary>
     /// Attaches this puppet to the specified Battler.
@@ -52,6 +70,29 @@ public class BattlerPuppet : MonoBehaviour
         if (_staminaBar.resourceType != bUI_ResourceBar.ResourceType.Stamina) Util.Crash(new Exception(gameObject.name + " tried to attach a non-stamina resource bar as stamina bar"));
         staminaBar = _staminaBar;
         staminaBar.HandleValueChanges();
+    }
+
+    /// <summary>
+    /// Fired off when we do anything that touches StatusPackets.
+    /// </summary>
+    public void OnStatusPacketsModified()
+    {
+        LinkedListNode<Action> node = StatusPacketsModified.First;
+        while (true)
+        {
+            node.Value();
+            if (node.Next != null) node = node.Next;
+            else break;
+        }
+    }
+
+    /// <summary>
+    /// Removes the action from the linked list of functions that will
+    /// be called when status packets are touched.
+    /// </summary>
+    public void RemoveFromOnStatusPacketsModified(Action action)
+    {
+        StatusPacketsModified.Remove(action);
     }
 
     /// <summary>

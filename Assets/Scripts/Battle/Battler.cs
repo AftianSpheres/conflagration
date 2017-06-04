@@ -907,7 +907,7 @@ namespace CnfBattleSys
         /// <param name="level">I ain't gonna spell this out for you.</param>
         /// <param name="growth">Growth factor. Normally less than 1. Applies a multiplier equal to growth at level 1 and 1 at level 120. 
         /// Lower values cause steeper slopes, as more of the stat gains are loaded into the later levels.</param>
-        public static int CalculateStat(int baseStat, int level, float growth)
+        public static int CalculateStat (int baseStat, int level, float growth)
         {
             const float mlv = maxLevel; // implicit divide-as-float
             const int adjustment = 30;
@@ -963,6 +963,7 @@ namespace CnfBattleSys
                 statusPackets[_statusType].CollideWith(packet);
             }
             else statusPackets[_statusType] = packet;
+            OnStatusPacketsModified();
             return keyAlreadyExisted;
         }
 
@@ -1095,8 +1096,8 @@ namespace CnfBattleSys
             lockedStance = currentStance;
             currentStance = stance;
             currentStamina = stance.maxStamina;
-            statusPackets.Remove(StatusType.StanceBroken_Voluntary);
-            statusPackets.Remove(StatusType.StanceBroken_Forced);
+            RemoveStatus(StatusType.StanceBroken_Voluntary);
+            RemoveStatus(StatusType.StanceBroken_Forced);
             puppet.DispatchBattlerUIEvent(BattlerUIEventType.StanceChange);
         }
 
@@ -1161,7 +1162,7 @@ namespace CnfBattleSys
             currentStamina = 0;
             currentStance = StanceDatabase.Get(StanceType.None);
             currentDelay = float.PositiveInfinity;
-            statusPackets.Clear();
+            ClearStatus();
             isDead = true;
             if (puppet == null) return;
             else puppet.DispatchAnimEvent(AnimEventType.Die);
@@ -1181,6 +1182,15 @@ namespace CnfBattleSys
                 if (currentDelay < 0) currentDelay = 0;
                 if (currentDelay == 0) BattleOverseer.RequestTurn(this);
             }
+        }
+
+        /// <summary>
+        /// Clears status packet dict.
+        /// </summary>
+        public void ClearStatus ()
+        {
+            statusPackets.Clear();
+            OnStatusPacketsModified();
         }
         
         /// <summary>
@@ -1295,6 +1305,14 @@ namespace CnfBattleSys
         }
 
         /// <summary>
+        /// Fired off when we do anything that touches StatusPackets.
+        /// </summary>
+        private void OnStatusPacketsModified()
+        {
+            puppet.OnStatusPacketsModified();
+        }
+
+        /// <summary>
         /// Takes a TurnActions struct and stores it as our turnActions.
         /// Also takes a set of BattlerAIMessageFlags, which can
         /// be used to communicate things like eg. "extend your turn"
@@ -1311,6 +1329,15 @@ namespace CnfBattleSys
                 BattleOverseer.ExtendCurrentTurn();
             if ((messageFlags & BattlerAIMessageFlags.ForbidMovementOnNextTurn) == BattlerAIMessageFlags.ForbidMovementOnNextTurn)
                 Debug.Log("What even is movement, mannnn");
+        }
+
+        /// <summary>
+        /// Removes the given status.
+        /// </summary>
+        public void RemoveStatus (StatusType statusType)
+        {
+            statusPackets.Remove(statusType);
+            OnStatusPacketsModified();
         }
 
         /// <summary>
@@ -1352,5 +1379,4 @@ namespace CnfBattleSys
         }
 
     }
-
 }

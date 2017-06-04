@@ -19,6 +19,7 @@ public class bUI_BattlerInfobox : MonoBehaviour
         Initialized
     }
 
+    public BattlerPuppet puppet { get; private set; }
     public LocalState localState = LocalState.Uninitialized;
     public Image bgImage;
     public Image mugshot;
@@ -28,7 +29,7 @@ public class bUI_BattlerInfobox : MonoBehaviour
     public bUI_ResourceBar hpBar;
     public bUI_ResourceBar staminaBar;
     public bool lockPosition;
-    private BattlerPuppet puppet;
+
     private static TextBank battlerNamesBank;
     private static TextBank battlerInfoboxBank;
     private static TextBank stanceNamesBank;
