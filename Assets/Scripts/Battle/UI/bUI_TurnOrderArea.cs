@@ -9,39 +9,28 @@ using TMPro;
 /// </summary>
 public class bUI_TurnOrderArea : MonoBehaviour
 {
-    public Color bgColor_Enemy;
-    public Color bgColor_Friend;
-    public Color bgColor_Neutral;
-    public Color bgColor_Player;
+    public bUI_TurnOrderPanel panelsPrototype;
     private Battler[] primaryTurnOrderBattlers;
-    private Battler[] prospectiveTurnOrderBattlers;
+    private bUI_TurnOrderPanel[] panels;
+    private RectTransform rectTransform;
     private bool realOrderIsStale { get { return realOrderGenTurn < BattleOverseer.currentBattle.turnManagementSubsystem.elapsedTurns; } }
     private int realOrderGenTurn = -1;
-
-    private const string iconsResourcePath = "Battle/2D/UI/BattlerIcon/Cutin";
 
     /// <summary>
     /// MonoBehaviour.Awake ()
     /// </summary>
-    void Awake()
+    void Awake ()
     {
-    
+        rectTransform = GetComponent<RectTransform>();
+        GeneratePanels();
     }
 
     /// <summary>
     /// MonoBehaviour.Start ()
     /// </summary>
-    void Start()
+    void Start ()
     {
-        
-    }
-
-    /// <summary>
-    /// Resets display based on last real turn order battler set.
-    /// </summary>
-    public void CancelPreview ()
-    {
-        DisplayWith(primaryTurnOrderBattlers);
+        bUI_BattleUIController.instance.RegisterTurnOrderArea(this);
     }
 
     /// <summary>
@@ -49,7 +38,7 @@ public class bUI_TurnOrderArea : MonoBehaviour
     /// </summary>
     public void ConformToTurnOrder ()
     {
-        primaryTurnOrderBattlers = BattleOverseer.currentBattle.GetBattlersByTurnOrder();
+        if (realOrderIsStale) primaryTurnOrderBattlers = BattleOverseer.currentBattle.GetBattlersByTurnOrder();
         DisplayWith(primaryTurnOrderBattlers);
     }
 
@@ -66,8 +55,7 @@ public class bUI_TurnOrderArea : MonoBehaviour
     /// </summary>
     public void PreviewTurnOrderForDelayOf (float delay)
     {
-        prospectiveTurnOrderBattlers = BattleOverseer.currentBattle.GetBattlersBySimulatedTurnOrder(delay);
-        DisplayWith(prospectiveTurnOrderBattlers);
+        DisplayWith(BattleOverseer.currentBattle.GetBattlersBySimulatedTurnOrder(delay));
     }
 
     /// <summary>
@@ -84,9 +72,36 @@ public class bUI_TurnOrderArea : MonoBehaviour
     /// because we can just detect a tentative turn order placement by checking units after position 0
     /// to see if they're actually the same unit that's at position 0.
     /// </summary>
-    private void DisplayWith(Battler[] battlersArray)
+    private void DisplayWith (Battler[] battlersArray)
     {
-
+        for (int i = 0; i < panels.Length; i++)
+        {
+            if (i < battlersArray.Length) panels[i].PairWithBattler(battlersArray[i]);
+            else panels[i].Hide();
+        }
     }
 
+    /// <summary>
+    /// Generate the turn order panels.
+    /// </summary>
+    private void GeneratePanels ()
+    {
+        RectTransform panelsRectTransform = panelsPrototype.GetComponent<RectTransform>();
+        int panelCount = Mathf.FloorToInt(rectTransform.sizeDelta.y / panelsRectTransform.sizeDelta.y);
+        panels = new bUI_TurnOrderPanel[panelCount];
+        for (int i = 0; i < panelCount; i++)
+        {
+            bUI_TurnOrderPanel newPanel = Instantiate(panelsPrototype, rectTransform);
+            if (i == 0)
+            {
+                newPanel.transform.localPosition = new Vector3((panelsRectTransform.sizeDelta.x / 2) * 1.5f, -(panelsRectTransform.sizeDelta.y * i), 0);
+            }
+            else newPanel.transform.localPosition = new Vector3(panelsRectTransform.sizeDelta.x / 2, -(panelsRectTransform.sizeDelta.y * i), 0);
+            newPanel.gameObject.name = "Turn Order Panel " + i;
+            newPanel.SetIndex(i);
+            panels[i] = newPanel;
+        }
+        panelsPrototype.gameObject.SetActive(false);
+        Destroy(panelsPrototype);
+    }
 }

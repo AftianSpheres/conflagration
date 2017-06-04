@@ -109,7 +109,7 @@ public class bUI_ActionWheel : MonoBehaviour
     /// <summary>
     /// Types of decisions the action wheel can be configured for.
     /// </summary>
-    protected enum DecisionType
+    public enum DecisionType
     {
         None,
         BattleUI,
@@ -130,12 +130,16 @@ public class bUI_ActionWheel : MonoBehaviour
     public AudioClip soundFX_confirm;
     public AudioClip soundFX_close;
     public AudioClip soundFX_open;
+    public BattleAction selectedAction { get { return currentDecision.decideableActions[currentDecision.selectedOptionIndex]; } }
+    public BattleStance selectedStance { get { return currentDecision.decideableStances[currentDecision.selectedOptionIndex]; } }
     public bUI_ActionWheelButton selectedButton { get { return activeButtons[currentDecision.selectedOptionIndex]; } }
+    public bUI_Command selectedCommand { get { return currentDecision.commands[currentDecision.selectedOptionIndex]; } }
     public GameObject buttonsPrefab;
     public GameObject contents;
     public Image centerIcon;
     public TextMeshProUGUI centerText;
     public Transform buttonsParent;
+    public DecisionType decisionType { get { return currentDecision.decisionType; } }
     public bool allowInput { get { return _allowInput && state == State.Ready; } }
     public bool inAttackSelection { get { return currentDecision.decisionType == DecisionType.ActionSelect; } }
     public bool isOpen { get { return state == State.Ready || state == State.InTransition; } }
@@ -149,6 +153,7 @@ public class bUI_ActionWheel : MonoBehaviour
     /// All buttons, including inactive ones.
     /// </summary>
     private bUI_ActionWheelButton[] allButtons;
+    private bUI_ActionWheelInfobox infobox;
     private Battler decidingBattler { get { return bUI_BattleUIController.instance.displayBattler; } }
     private Decision currentDecision { get { if (decisionsStack.Count == 0) return null; else return decisionsStack.Peek(); } }
     private AudioSource audioSource;
@@ -184,6 +189,8 @@ public class bUI_ActionWheel : MonoBehaviour
         defaultRotation = transform.rotation;
         decisionsStack = new Stack<Decision>();
         GenerateButtonsFromPrefab();
+        infobox = GetComponentInChildren<bUI_ActionWheelInfobox>();
+        infobox.PairWithWheel(this);
         LockInput();
         contents.SetActive(false);
         state = State.Offline;
@@ -247,12 +254,14 @@ public class bUI_ActionWheel : MonoBehaviour
     {
         Action onCompletion = () =>
         {
+            infobox.Clear();
             contents.SetActive(false);
             state = State.Offline;
         };
         animator.Play(closeHash);
         for (int i = 0; i < activeButtons.Length; i++) activeButtons[i].OnWheelClose();
         if (!audioSource.isPlaying) audioSource.PlayOneShot(soundFX_close);
+        bUI_BattleUIController.instance.turnOrderArea.ConformToTurnOrder();
         Timing.RunCoroutine(_CallOnceAnimatorsFinish(onCompletion));
     }
 
@@ -433,7 +442,7 @@ public class bUI_ActionWheel : MonoBehaviour
         {
             float angle = i * interval;
             Quaternion rotation = Quaternion.AngleAxis(angle, Vector3.forward);
-            Vector3 position = rotation * Vector3.right * buttonsDistance;
+            Vector3 position = rotation * Vector3.up * buttonsDistance;
             allButtons[i].transform.localPosition = position;
             activeButtons[i] = allButtons[i];
             switch (currentDecision.decisionType)
@@ -469,6 +478,8 @@ public class bUI_ActionWheel : MonoBehaviour
         ConformWheelRotationToSelectedButton();
         SetCenterIcon();
         SetCenterText();
+        SetTurnOrder();
+        infobox.OnWheelPositionChange();
         animator.Play(decisionShowHash);
     }
 
@@ -510,6 +521,7 @@ public class bUI_ActionWheel : MonoBehaviour
     /// </summary>
     private void RotatePlaces (int places)
     {
+        bUI_BattleUIController.instance.turnOrderArea.ConformToTurnOrder();
         int newIndex = currentDecision.selectedOptionIndex + places;
         int diff = newIndex - currentDecision.selectedOptionIndex;
         float degrees = interval * diff;
@@ -524,8 +536,11 @@ public class bUI_ActionWheel : MonoBehaviour
                 activeButtons[i].ConformStateToWheelPosition();
             }
             ConformWheelRotationToSelectedButton();
+            SetTurnOrder();
+            infobox.OnWheelPositionChange();
             UnlockInput();
         };
+        infobox.Clear();
         Timing.RunCoroutine(_RotateWheel(degrees, rotationLen, onCompletion), thisTag);
     }
 
@@ -564,6 +579,19 @@ public class bUI_ActionWheel : MonoBehaviour
                 Util.Crash("Bad decision type in SetCenterText: " + currentDecision.decisionType);
                 break;
         }
+    }
+
+    /// <summary>
+    /// Sets turn order based on selected action.
+    /// </summary>
+    private void SetTurnOrder ()
+    {
+        if (currentDecision.decisionType == DecisionType.ActionSelect) bUI_BattleUIController.instance.turnOrderArea.PreviewTurnOrderForDelayOf(bUI_BattleUIController.instance.displayBattler.GetDelayForAction(selectedAction));
+        else if (currentDecision.decisionType == DecisionType.BattleUI && selectedCommand == bUI_Command.Break)
+        {
+            bUI_BattleUIController.instance.turnOrderArea.PreviewTurnOrderForDelayOf(bUI_BattleUIController.instance.displayBattler.GetDelayForAction(ActionDatabase.SpecialActions.selfStanceBreakAction));
+        }
+        else bUI_BattleUIController.instance.turnOrderArea.ConformToTurnOrder();
     }
 
     /// <summary>

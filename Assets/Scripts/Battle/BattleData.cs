@@ -305,7 +305,7 @@ namespace CnfBattleSys
                     FleetingCollections.battlerBuffer_0.AddRange(battlersBySide[BattlerSideFlags.GenericNeutralSide]);
                     break;
                 default:
-                    Util.Crash(new System.Exception("Tried to find allies of side " + side + ", but it wasn't in the table."));
+                    Util.Crash(new Exception("Tried to find allies of side " + side + ", but it wasn't in the table."));
                     break;
             }
             for (int i = 0; i < FleetingCollections.battlerBuffer_0.Count; i++) if (!outputList.Contains(FleetingCollections.battlerBuffer_0[i])) outputList.Add(FleetingCollections.battlerBuffer_0[i]);

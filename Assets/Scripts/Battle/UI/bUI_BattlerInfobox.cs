@@ -20,6 +20,7 @@ public class bUI_BattlerInfobox : MonoBehaviour
     }
 
     public LocalState localState = LocalState.Uninitialized;
+    public Image bgImage;
     public Image mugshot;
     public TextMeshProUGUI guiText_BattlerName;
     public TextMeshProUGUI guiText_BattlerLevel;
@@ -100,8 +101,9 @@ public class bUI_BattlerInfobox : MonoBehaviour
         hpBar.AttachBattlerPuppet(puppet);
         staminaBar.AttachBattlerPuppet(puppet);
         if (!lockPosition) SyncPositionWithPuppet();
-        DisplayBattlerName();
-        DisplayBattlerLevel();
+        if (bgImage != null) bgImage.color = bUI_BattleUIController.instance.GetPanelColorFor(puppet.battler);
+        if (guiText_BattlerName != null) DisplayBattlerName();
+        if (guiText_BattlerLevel != null) DisplayBattlerLevel();
         if (guiText_StanceName != null) DisplayStanceName();
         if (mugshot != null) DisplayMugshot();
         localState = LocalState.Initialized;

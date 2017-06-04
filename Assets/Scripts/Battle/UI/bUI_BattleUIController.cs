@@ -18,12 +18,15 @@ public class bUI_BattleUIController : MonoBehaviour
         Wheel_MetaStance,
         AcquiringTargets
     }
-
+    public Color bgColor_Enemy;
+    public Color bgColor_Friend;
+    public Color bgColor_Neutral;
+    public Color bgColor_Player;
     public static bUI_BattleUIController instance { get; private set; }
-    public bUI_ActionInfoArea actionInfoArea { get; private set; }
     public bUI_ActionWheel actionWheel { get; private set; }
     public bUI_CameraHarness cameraHarness { get; private set; }
     public bUI_ElementsGenerator elementsGen { get; private set; }
+    public bUI_MessagePopup messagePopup { get; private set; }
     public bUI_TurnOrderArea turnOrderArea { get; private set; }
     public GameObject enemyInfoboxGroup { get; private set; }
     public GameObject playerInfoboxGroup { get; private set; }
@@ -50,11 +53,24 @@ public class bUI_BattleUIController : MonoBehaviour
     }
 
     /// <summary>
-    /// Registers an action info area with the battle UI controller.
+    /// Get the color of the background for a panel associated with the given battler.
     /// </summary>
-    public void RegisterActionInfoArea (bUI_ActionInfoArea _actionInfoArea)
+    public Color GetPanelColorFor(Battler battler)
     {
-        actionInfoArea = _actionInfoArea;
+        switch (BattleUtility.GetRelativeSidesFor(battler.side, BattlerSideFlags.PlayerSide))
+        {
+            case TargetSideFlags.MySide:
+                return bgColor_Player;
+            case TargetSideFlags.MyFriends:
+                return bgColor_Friend;
+            case TargetSideFlags.MyEnemies:
+                return bgColor_Enemy;
+            case TargetSideFlags.Neutral:
+                return bgColor_Neutral;
+            default:
+                Util.Crash(BattleUtility.GetRelativeSidesFor(battler.side, BattlerSideFlags.PlayerSide), this, gameObject);
+                return Color.clear;
+        }
     }
 
     /// <summary>
@@ -87,6 +103,14 @@ public class bUI_BattleUIController : MonoBehaviour
     public void RegisterEnemyInfoboxGroup (GameObject _enemyInfoboxGroup)
     {
         enemyInfoboxGroup = _enemyInfoboxGroup;
+    }
+
+    /// <summary>
+    /// Registers message popup w/ battle ui controller
+    /// </summary>
+    public void RegisterMessagePopup (bUI_MessagePopup _messagePopup)
+    {
+        messagePopup = _messagePopup;
     }
 
     /// <summary>

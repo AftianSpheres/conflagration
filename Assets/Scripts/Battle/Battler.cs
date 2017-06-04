@@ -1067,6 +1067,14 @@ namespace CnfBattleSys
         }
 
         /// <summary>
+        /// Gets the delay this unit will incur when using action.
+        /// </summary>
+        public float GetDelayForAction (BattleAction action)
+        {
+            return speedFactor * action.baseDelay;
+        }
+
+        /// <summary>
         /// Sets battler stance immediately. Doesn't do any of the normal
         /// stance break behavior. This should only be used to let the AI
         /// system test a Battler's prospective actions in multiple stances,

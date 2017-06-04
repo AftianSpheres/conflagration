@@ -15,13 +15,10 @@ public class bUI_ElementsGenerator : MonoBehaviour
     const int expectedNumberOfPlayerPartyInfoboxes = 4;
 
     /// <summary>
-    /// MonoBehaviour.Awake()
+    /// MonoBehaviour.Awake ()
     /// </summary>
-    void Awake()
+    void Awake ()
     {
-        bUI_BattleUIController.instance.RegisterElementsGenerator(this);
-        bUI_BattleUIController.instance.RegisterEnemyInfoboxGroup(enemyInfoboxesParent.gameObject);
-        bUI_BattleUIController.instance.RegisterPlayerInfoboxGroup(playerInfoboxesParent.gameObject);
         playerPartyInfoboxes = new List<bUI_BattlerInfobox>(expectedNumberOfPlayerPartyInfoboxes);
         for (int i = 0; i < playerInfoboxesParent.childCount; i++)
         {
@@ -31,6 +28,16 @@ public class bUI_ElementsGenerator : MonoBehaviour
             if (playerInfobox == null) Util.Crash(new Exception("No battler infobox behavior on player infobox no. " + i.ToString()));
             playerPartyInfoboxes.Add(playerInfobox);
         }
+    }
+
+    /// <summary>
+    /// MonoBehaviour.Start ()
+    /// </summary>
+    void Start()
+    {
+        bUI_BattleUIController.instance.RegisterElementsGenerator(this);
+        bUI_BattleUIController.instance.RegisterEnemyInfoboxGroup(enemyInfoboxesParent.gameObject);
+        bUI_BattleUIController.instance.RegisterPlayerInfoboxGroup(playerInfoboxesParent.gameObject);
     }
 
     /// <summary>
