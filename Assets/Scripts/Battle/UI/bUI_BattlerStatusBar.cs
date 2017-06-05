@@ -10,7 +10,6 @@ using MovementEffects;
 public class bUI_BattlerStatusBar : MonoBehaviour
 {
     private BattlerPuppet puppet;
-    private bUI_BattlerInfobox infobox;
     private bUI_StatusIcon iconsPrototype;
     private bUI_StatusIcon[] icons;
     private RectTransform rectTransform;
@@ -39,13 +38,12 @@ public class bUI_BattlerStatusBar : MonoBehaviour
     }
 
     /// <summary>
-    /// Pairs with the infobox and attaches to the puppet's OnStatusPacketsModified
-    /// linked list.
+    /// Pairs with the puppet and attaches to the 
+    /// OnStatusPacketsModified linked list.
     /// </summary>
-    public void PairWithInfobox (bUI_BattlerInfobox _infobox)
+    public void PairWithPuppet (BattlerPuppet _puppet)
     {
-        infobox = _infobox;
-        puppet = infobox.puppet;
+        puppet = _puppet;
         puppet.AddToOnStatusPacketsModified(OnStatusPacketsModified);
     }
 

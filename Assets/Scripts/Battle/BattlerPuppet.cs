@@ -18,9 +18,7 @@ public class BattlerPuppet : MonoBehaviour
     public MeshFilter meshFilter;
     private BattlerModelType modelType;
     private Vector3 offset;
-    private bUI_ResourceBar hpBar;
-    private bUI_ResourceBar staminaBar;
-    private bUI_BattlerInfobox battlerInfobox;
+    private bUI_InfoboxShell infoboxShell;
     private float stepTime;
     private LinkedList<Action> StatusPacketsModified;
 
@@ -53,23 +51,12 @@ public class BattlerPuppet : MonoBehaviour
     }
 
     /// <summary>
-    /// Attaches specified resource bar to this puppet as HP bar.
+    /// Associate puppet with infobox shell.
     /// </summary>
-    public void AttachHPBar (bUI_ResourceBar _hpBar)
+    public void AttachInfoboxShell (bUI_InfoboxShell _infoboxShell)
     {
-        if (_hpBar.resourceType != bUI_ResourceBar.ResourceType.HP) Util.Crash(new Exception(gameObject.name + " tried to attach a non-HP resource bar as HP bar"));
-        hpBar = _hpBar;
-        hpBar.HandleValueChanges();
-    }
-
-    /// <summary>
-    /// Attaches specified resource bar to this puppet as stamina bar.
-    /// </summary>
-    public void AttachStaminaBar (bUI_ResourceBar _staminaBar)
-    {
-        if (_staminaBar.resourceType != bUI_ResourceBar.ResourceType.Stamina) Util.Crash(new Exception(gameObject.name + " tried to attach a non-stamina resource bar as stamina bar"));
-        staminaBar = _staminaBar;
-        staminaBar.HandleValueChanges();
+        infoboxShell = _infoboxShell;
+        infoboxShell.AttachPuppet(this);
     }
 
     /// <summary>
@@ -142,13 +129,13 @@ public class BattlerPuppet : MonoBehaviour
         switch (battlerUIEventType)
         {
             case BattlerUIEventType.HPValueChange:
-                if (hpBar != null) hpBar.HandleValueChanges();
+                if (infoboxShell != null) infoboxShell.DoOnInfoboxen((infobox) => { infobox.HandleHPValueChanges(); });
                 break;
             case BattlerUIEventType.StaminaValueChange:
-                if (staminaBar != null) staminaBar.HandleValueChanges();
+                if (infoboxShell != null) infoboxShell.DoOnInfoboxen((infobox) => { infobox.HandleStaminaValueChanges(); });
                 break;
             case BattlerUIEventType.StanceChange:
-                if (battlerInfobox != null) battlerInfobox.DisplayStanceName();
+                if (infoboxShell != null) infoboxShell.DoOnInfoboxen((infobox) => { infobox.DisplayStanceName(); });
                 break;
             default:
                 Util.Crash(new Exception("Bad battler UI event: " + battlerUIEventType.ToString()));
@@ -193,7 +180,7 @@ public class BattlerPuppet : MonoBehaviour
         const string meshPath = "/mesh";
         string myPath = modelType.ToString();
         Mesh mesh = Resources.Load<Mesh>(bmPath + myPath + meshPath);
-        if (mesh == null) Util.Crash(new System.Exception("Couldn't load battle model mesh: " + myPath + meshPath));
+        if (mesh == null) Util.Crash(new Exception("Couldn't load battle model mesh: " + myPath + meshPath));
         meshFilter.mesh = mesh;
     }
 }

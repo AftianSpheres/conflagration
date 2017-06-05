@@ -1,17 +1,15 @@
 ﻿using UnityEngine;
-using System;
-using System.Collections.Generic;
 using CnfBattleSys;
 
 /// <summary>
 /// MonoBehaviour that generates battle UI element widgets.
 /// </summary>
 public class bUI_ElementsGenerator : MonoBehaviour
-{  
-    public GameObject enemyInfoboxPrefab;
+{
+    public bUI_InfoboxShell enemeInfoboxPrefab;
     public Transform enemyInfoboxesParent;
     public Transform playerInfoboxesParent;
-    private List<bUI_BattlerInfobox> playerPartyInfoboxes;
+    private bUI_InfoboxShell[] playerPartyInfoboxes;
     const int expectedNumberOfPlayerPartyInfoboxes = 4;
 
     /// <summary>
@@ -19,14 +17,13 @@ public class bUI_ElementsGenerator : MonoBehaviour
     /// </summary>
     void Awake ()
     {
-        playerPartyInfoboxes = new List<bUI_BattlerInfobox>(expectedNumberOfPlayerPartyInfoboxes);
-        for (int i = 0; i < playerInfoboxesParent.childCount; i++)
+        bUI_InfoboxShell[] _tmp_playerPartyInfoboxes = playerInfoboxesParent.GetComponentsInChildren<bUI_InfoboxShell>(); // Since no order can be promised here, we have to sort this before storing it
+        playerPartyInfoboxes = new bUI_InfoboxShell[_tmp_playerPartyInfoboxes.Length];
+        for (int i = 0; i < _tmp_playerPartyInfoboxes.Length; i++)
         {
-            GameObject go = playerInfoboxesParent.transform.Find("Player Infobox " + i.ToString()).gameObject;
-            if (go == null) break; // if there are more children than player infoboxes, it's because there are ui widgets or whatever, so we can quit looking instead of going through all of those
-            bUI_BattlerInfobox playerInfobox = go.GetComponent<bUI_BattlerInfobox>();
-            if (playerInfobox == null) Util.Crash(new Exception("No battler infobox behavior on player infobox no. " + i.ToString()));
-            playerPartyInfoboxes.Add(playerInfobox);
+            int index = _tmp_playerPartyInfoboxes[i].index;
+            if (playerPartyInfoboxes[index] != null) Util.Crash("Multiple player party infoboxes of index " + i);
+            else playerPartyInfoboxes[index] = _tmp_playerPartyInfoboxes[i];
         }
     }
 
@@ -44,28 +41,24 @@ public class bUI_ElementsGenerator : MonoBehaviour
     /// Generates an enemy infobox and attaches it to the given puppet.
     /// TO-DO: Way down the line this should probably actually distinguish friendly/neutral units from hostile ones.
     /// </summary>
-    private void GetEnemyInfoboxFor (BattlerPuppet puppet)
+    private void GetNPCInfoboxenFor (BattlerPuppet puppet)
     {
-        bUI_BattlerInfobox infobox = Instantiate(enemyInfoboxPrefab).GetComponent<bUI_BattlerInfobox>();
-        infobox.gameObject.name = "Enemy infobox " + puppet.battler.side.ToString() + " " + puppet.battler.asSideIndex.ToString();
-        infobox.transform.SetParent(enemyInfoboxesParent);
-        infobox.AttachPuppet(puppet);
+        bUI_InfoboxShell infoboxShell = Instantiate(enemeInfoboxPrefab, enemyInfoboxesParent);
+        infoboxShell.gameObject.name = "Enemy infobox " + puppet.battler.side.ToString() + " " + puppet.battler.asSideIndex.ToString();
+        puppet.AttachInfoboxShell(infoboxShell);
+        infoboxShell.index = puppet.battler.index;
     }
 
     /// <summary>
     /// Gets one of the pre-baked player party infoboxes corresponding to given puppet's party-slot index and associates the two.
     /// </summary>
-    private void GetPlayerPartyInfoboxFor(BattlerPuppet puppet)
+    private void GetPlayerInfoboxenFor(BattlerPuppet puppet)
     {
-        if (playerPartyInfoboxes.Count <= puppet.battler.asSideIndex)
+        if (puppet.battler.asSideIndex >= playerPartyInfoboxes.Length)
         {
             Debug.Log(puppet.gameObject.name + " is a higher party mbmber index than the bUI_ElementsGenerator's party infobox array can support, so we can't give it an infobox!");
         }
-        else
-        {
-            bUI_BattlerInfobox infobox = playerPartyInfoboxes[puppet.battler.asSideIndex];
-            infobox.AttachPuppet(puppet);
-        }
+        else puppet.AttachInfoboxShell(playerPartyInfoboxes[puppet.battler.asSideIndex]);
     }
 
     /// <summary>
@@ -73,9 +66,9 @@ public class bUI_ElementsGenerator : MonoBehaviour
     /// </summary>
     private void HideUnusedPlayerPartyInfoboxes ()
     {
-        for (int i = 0; i < playerPartyInfoboxes.Count; i++)
+        for (int i = 0; i < playerPartyInfoboxes.Length; i++)
         {
-            if (playerPartyInfoboxes[i].localState == bUI_BattlerInfobox.LocalState.Uninitialized) playerPartyInfoboxes[i].gameObject.SetActive(false);
+            if (playerPartyInfoboxes[i].state == bUI_InfoboxShell.State.Uninitialized) playerPartyInfoboxes[i].gameObject.SetActive(false);
         }
     }
 
@@ -86,8 +79,8 @@ public class bUI_ElementsGenerator : MonoBehaviour
     {
         for (int b = 0; b < BattleOverseer.currentBattle.allBattlers.Length; b++)
         {
-            if (BattleOverseer.currentBattle.allBattlers[b].side == BattlerSideFlags.PlayerSide) GetPlayerPartyInfoboxFor(BattleOverseer.currentBattle.allBattlers[b].puppet);
-            else GetEnemyInfoboxFor(BattleOverseer.currentBattle.allBattlers[b].puppet);
+            if (BattleOverseer.currentBattle.allBattlers[b].side == BattlerSideFlags.PlayerSide) GetPlayerInfoboxenFor(BattleOverseer.currentBattle.allBattlers[b].puppet);
+            else GetNPCInfoboxenFor(BattleOverseer.currentBattle.allBattlers[b].puppet);
         }
         HideUnusedPlayerPartyInfoboxes();
     }

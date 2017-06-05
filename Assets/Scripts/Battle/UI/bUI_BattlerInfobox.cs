@@ -9,46 +9,74 @@ using CnfBattleSys;
 /// </summary>
 public class bUI_BattlerInfobox : MonoBehaviour
 {
-    /// <summary>
-    /// bUI_EnemyInfobox states
-    /// </summary>
-    public enum LocalState
-    {
-        None,
-        Uninitialized,
-        Initialized
-    }
-
+    public InfoboxType infoboxType;
     public BattlerPuppet puppet { get; private set; }
-    public LocalState localState = LocalState.Uninitialized;
     public Image bgImage;
     public Image mugshot;
     public TextMeshProUGUI guiText_BattlerName;
     public TextMeshProUGUI guiText_BattlerLevel;
     public TextMeshProUGUI guiText_StanceName;
-    public bUI_ResourceBar hpBar;
-    public bUI_ResourceBar staminaBar;
     public bool lockPosition;
-
+    private bUI_ResourceBar hpBar;
+    private bUI_ResourceBar staminaBar;
+    //private bUI_ResourceBar subweaponsChargeBar; (this mechanic doesn't exist yet)
+    private bUI_InfoboxShell infoboxShell;
+    private bUI_BattlerStatusBar statusBar;
     private static TextBank battlerNamesBank;
     private static TextBank battlerInfoboxBank;
     private static TextBank stanceNamesBank;
     private const string mugshotsResourcePath = "Battle/2D/UI/BattlerMugshot/";
 
     /// <summary>
-    /// This is just a blob of nasty debugging stuff!!!
+    /// MonoBehaviour.Awake ()
     /// </summary>
-    private void Update()
+    void Awake()
     {
-        if (Input.GetKeyDown(KeyCode.A))
+        bUI_ResourceBar[] resourceBars = GetComponentsInChildren<bUI_ResourceBar>();
+        for (int i = 0; i < resourceBars.Length; i++)
         {
-            if (localState == LocalState.Uninitialized) AttachPuppet(puppet);
-            else
+            switch (resourceBars[i].resourceType)
             {
-                puppet.battler.DealOrHealDamage(puppet.battler.currentHP / 2);
+                case bUI_ResourceBar.ResourceType.HP:
+                    if (hpBar != null) Util.Crash("Multiple HP bars as children of infobox " + gameObject.name);
+                    else hpBar = resourceBars[i];
+                    break;
+                case bUI_ResourceBar.ResourceType.Stamina:
+                    if (staminaBar != null) Util.Crash("Multiple stamina bars as children of infobox " + gameObject.name);
+                    else staminaBar = resourceBars[i];
+                    break;
+                default:
+                    Util.Crash(resourceBars[i].resourceType, this, gameObject);
+                    break;
             }
         }
-        
+        infoboxShell = transform.parent.GetComponent<bUI_InfoboxShell>();
+    }
+
+    /// <summary>
+    /// MonoBehaviour.Start ()
+    /// </summary>
+    void Start ()
+    {
+        statusBar = GetComponentInChildren<bUI_BattlerStatusBar>();
+        if (statusBar != null) statusBar.PairWithPuppet(puppet);
+    }
+
+
+    /// <summary>
+    /// Associates this infobox and its child widgets with the specified puppet.
+    /// </summary>
+    public void AttachPuppet(BattlerPuppet _puppet)
+    {
+        puppet = _puppet;
+        if (hpBar != null) hpBar.AttachBattlerPuppet(_puppet);
+        if (staminaBar != null) staminaBar.AttachBattlerPuppet(_puppet);
+        if (!lockPosition) SyncPositionWithPuppet();
+        if (bgImage != null) bgImage.color = bUI_BattleUIController.instance.GetPanelColorFor(_puppet.battler);
+        if (guiText_BattlerName != null) DisplayBattlerName();
+        if (guiText_BattlerLevel != null) DisplayBattlerLevel();
+        if (guiText_StanceName != null) DisplayStanceName();
+        if (mugshot != null) DisplayMugshot();
     }
 
     /// <summary>
@@ -94,20 +122,19 @@ public class bUI_BattlerInfobox : MonoBehaviour
     }
 
     /// <summary>
-    /// Associates this infobox and its child widgets with the specified puppet.
+    /// Handle value changes on HP bar.
     /// </summary>
-    public void AttachPuppet (BattlerPuppet puppet)
+    public void HandleHPValueChanges ()
     {
-        this.puppet = puppet;
-        hpBar.AttachBattlerPuppet(puppet);
-        staminaBar.AttachBattlerPuppet(puppet);
-        if (!lockPosition) SyncPositionWithPuppet();
-        if (bgImage != null) bgImage.color = bUI_BattleUIController.instance.GetPanelColorFor(puppet.battler);
-        if (guiText_BattlerName != null) DisplayBattlerName();
-        if (guiText_BattlerLevel != null) DisplayBattlerLevel();
-        if (guiText_StanceName != null) DisplayStanceName();
-        if (mugshot != null) DisplayMugshot();
-        localState = LocalState.Initialized;
+        if (hpBar != null) hpBar.HandleValueChanges();
+    }
+
+    /// <summary>
+    /// Handle value changes on stamina bar.
+    /// </summary>
+    public void HandleStaminaValueChanges ()
+    {
+        if (staminaBar != null) staminaBar.HandleValueChanges();
     }
 
     /// <summary>

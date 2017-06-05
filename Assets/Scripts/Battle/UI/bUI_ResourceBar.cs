@@ -20,33 +20,30 @@ public class bUI_ResourceBar : MonoBehaviour
 
     public ResourceType resourceType;
     public Image barFill;
+    public Image barPreview;
     public BattlerPuppet puppet;
     public TextMeshProUGUI uguiText;
-    public Color fullResourceColor;
     public Color depletedResourceColor;
+    public Color fullResourceColor;
+    public Color previewColor;
     public bool displayCurrentValueOverMaxValue;
     public bool scaleHorizontally;
     public bool scaleVertically;
     public bool graduateColorAsResourceDepletes;
     public float animationTime;
-    private int realValueAtLastUpdate;
     private int approachingValue;
-    private uint thisInstance;
+    private int previewValue;
+    private int realValueAtLastUpdate;
     private Vector2 originalScale;
+    private Vector2 originalPreviewScale;
     private Vector2 currentScaleMulti = Vector2.one;
-    private string scaleOverTimeTag { get { return thisInstance.ToString() + _scaleOverTimeTag; } }
+    private Vector2 currentPreviewScaleMulti;
+    private string scaleOverTimeTag { get { return GetInstanceID() + _scaleOverTimeTag; } }
     const string _scaleOverTimeTag = "_bUI_ResourceBar_scaleOverTime";
-    private string colorOverTimeTag { get { return thisInstance.ToString() + _colorOverTimeTag; } }
+    private string colorOverTimeTag { get { return GetInstanceID() + _colorOverTimeTag; } }
     const string _colorOverTimeTag = "_bUI_ResourceBar_colorOverTime";
-    private string updateValueTag { get { return thisInstance.ToString() + _updateValueTag; } }
+    private string updateValueTag { get { return GetInstanceID() + _updateValueTag; } }
     const string _updateValueTag = "_bUI_ResourceBar_HPOverTime";
-
-    /// <summary>
-    /// We use this to allow individual instances of UI_ResourceBar to identify coroutine instances that belong to them.
-    /// The instanceCounter increments each time a ResourceBar is loaded, and each ResourceBar identifies itself using the
-    /// state of instanceCounter at the time it loaded in.
-    /// </summary>
-    static uint instanceCounter = uint.MinValue;
 
     /// <summary>
     /// MonoBehaviour.Awake()
@@ -54,8 +51,8 @@ public class bUI_ResourceBar : MonoBehaviour
     void Awake ()
     {
         originalScale = barFill.rectTransform.sizeDelta;
-        thisInstance = instanceCounter;
-        instanceCounter++;
+        originalPreviewScale = barPreview.rectTransform.sizeDelta;
+        SetPreviewSize(Vector2.zero);
     }
 
     /// <summary>
@@ -64,21 +61,6 @@ public class bUI_ResourceBar : MonoBehaviour
     public void AttachBattlerPuppet (BattlerPuppet _puppet)
     {
         puppet = _puppet;
-        switch (resourceType)
-        {
-            case ResourceType.HP:
-                puppet.AttachHPBar(this);
-                break;
-            case ResourceType.Stamina:
-                puppet.AttachStaminaBar(this);
-                break;
-            case ResourceType.SubweaponsCharge:
-                Util.Crash(new NotImplementedException());
-                break;
-            default:
-                Util.Crash(new Exception("Invalid resource type on resource bar " + gameObject.name + ": " + resourceType.ToString()));
-                break;
-        }
         UpdateValueImmediately();
     }
 
@@ -153,6 +135,26 @@ public class bUI_ResourceBar : MonoBehaviour
     }
 
     /// <summary>
+    /// Preview the effect of using an action that will impact this resource.
+    /// </summary>
+    public void PreviewValue(int _previewValue)
+    {
+        previewValue = _previewValue;
+        float ratio = previewValue / realValueAtLastUpdate;
+        SetPreviewSize(currentScaleMulti * ratio);
+        if (uguiText != null) SetGUITextBasedOnValue(realValueAtLastUpdate, true);
+    }
+
+    /// <summary>
+    /// Cancel the resource value change preview.
+    /// </summary>
+    public void UnpreviewValue()
+    {
+        SetPreviewSize(Vector2.zero);
+        if (uguiText != null) SetGUITextBasedOnValue(realValueAtLastUpdate);
+    }
+
+    /// <summary>
     /// Coroutine: Gradually change color to given value over duration seconds.
     /// </summary>
     private IEnumerator<float> _ChangeColorOverTime(Color finalColor, float duration)
@@ -210,20 +212,39 @@ public class bUI_ResourceBar : MonoBehaviour
     /// <summary>
     /// Scales the bar based on the scale multiplier given.
     /// </summary>
-    private void SetBarSize(Vector2 newScaleMulti)
+    private void SetBarSize (Vector2 newScaleMulti)
     {
         currentScaleMulti = newScaleMulti;
         barFill.rectTransform.sizeDelta = new Vector2(originalScale.x * currentScaleMulti.x, originalScale.y * currentScaleMulti.y);
     }
 
     /// <summary>
+    /// Scales the bar preview based on the scale multiplier given.
+    /// </summary>
+    private void SetPreviewSize (Vector2 newScaleMulti)
+    {
+        currentPreviewScaleMulti = newScaleMulti;
+        barPreview.rectTransform.sizeDelta = new Vector2(originalPreviewScale.x * currentPreviewScaleMulti.x, originalPreviewScale.x * currentPreviewScaleMulti.y);
+    }
+
+    /// <summary>
     /// Sets Gui text based on given value. Doesn't manage that, so keep that in mind.
     /// </summary>
-    private void SetGUITextBasedOnValue (int value)
+    private void SetGUITextBasedOnValue (int value, bool forPreview = false)
     {
         int max = GetResourceMax();
-        if (displayCurrentValueOverMaxValue) uguiText.SetText(value.ToString() + " / " + max);
-        else uguiText.SetText(value.ToString());
+        if (forPreview)
+        {
+            int diff = (value - previewValue);
+            if (displayCurrentValueOverMaxValue) uguiText.SetText(value.ToString() + " " + diff + " / " + max);
+            else uguiText.SetText(value.ToString() + " " + diff);
+        }
+        else
+        {
+            if (displayCurrentValueOverMaxValue) uguiText.SetText(value.ToString() + " / " + max);
+            else uguiText.SetText(value.ToString());
+        }
+
     }
 
     /// <summary>
