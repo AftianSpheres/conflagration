@@ -51,17 +51,8 @@ public class bUI_BattlerInfobox : MonoBehaviour
             }
         }
         infoboxShell = transform.parent.GetComponent<bUI_InfoboxShell>();
-    }
-
-    /// <summary>
-    /// MonoBehaviour.Start ()
-    /// </summary>
-    void Start ()
-    {
         statusBar = GetComponentInChildren<bUI_BattlerStatusBar>();
-        if (statusBar != null) statusBar.PairWithPuppet(puppet);
     }
-
 
     /// <summary>
     /// Associates this infobox and its child widgets with the specified puppet.
@@ -71,6 +62,7 @@ public class bUI_BattlerInfobox : MonoBehaviour
         puppet = _puppet;
         if (hpBar != null) hpBar.AttachBattlerPuppet(_puppet);
         if (staminaBar != null) staminaBar.AttachBattlerPuppet(_puppet);
+        if (statusBar != null) statusBar.PairWithPuppet(puppet);
         if (!lockPosition) SyncPositionWithPuppet();
         if (bgImage != null) bgImage.color = bUI_BattleUIController.instance.GetPanelColorFor(_puppet.battler);
         if (guiText_BattlerName != null) DisplayBattlerName();
@@ -130,11 +122,31 @@ public class bUI_BattlerInfobox : MonoBehaviour
     }
 
     /// <summary>
+    /// Handles previews on resource bars for given action.
+    /// </summary>
+    public void HandleResourceBarPreviews (BattleAction action)
+    {
+        int finalStamina = puppet.battler.currentStamina - puppet.battler.CalcActionStaminaCost(action.baseSPCost);
+        if (action.actionID == ActionType.INTERNAL_BreakOwnStance) finalStamina = 0; // breaking your stance automatically empties your stamina bar
+        else if (finalStamina < 0) finalStamina = 0;
+        else if (finalStamina > puppet.battler.currentStance.maxStamina) finalStamina = puppet.battler.currentStance.maxStamina;
+        staminaBar.PreviewValue(finalStamina);
+    }
+
+    /// <summary>
     /// Handle value changes on stamina bar.
     /// </summary>
     public void HandleStaminaValueChanges ()
     {
         if (staminaBar != null) staminaBar.HandleValueChanges();
+    }
+
+    /// <summary>
+    /// Cleans up existing resource bar previews.
+    /// </summary>
+    public void NullifyResourceBarPreviews ()
+    {
+        staminaBar.UnpreviewValue();
     }
 
     /// <summary>

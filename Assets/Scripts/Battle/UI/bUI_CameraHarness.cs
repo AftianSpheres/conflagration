@@ -28,12 +28,11 @@ public class bUI_CameraHarness : MonoBehaviour
     private ViewpointMode viewpointMode;
 	
     /// <summary>
-    /// MonoBehaviour.Awake()
+    /// MonoBehaviour.Start ()
     /// </summary>
-    void Awake ()
+    void Start()
     {
         bUI_BattleUIController.instance.RegisterCameraHarness(this);
     }
-	
 
 }

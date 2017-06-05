@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using CnfBattleSys;
 
@@ -32,7 +30,7 @@ public class bUI_TurnOrderPanel : MonoBehaviour
     /// <summary>
     /// MonoBehaviour.Awake ()
     /// </summary>
-    void Start ()
+    void Awake ()
     {
         animator = GetComponent<Animator>();
         bgImage = GetComponent<Image>();

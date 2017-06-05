@@ -154,6 +154,7 @@ public class bUI_ActionWheel : MonoBehaviour
     /// </summary>
     private bUI_ActionWheelButton[] allButtons;
     private bUI_ActionWheelInfobox infobox;
+    private bUI_InfoboxShell actingUnitInfobox { get { return decidingBattler.puppet.infoboxShell; } }
     private Battler decidingBattler { get { return bUI_BattleUIController.instance.displayBattler; } }
     private Decision currentDecision { get { if (decisionsStack.Count == 0) return null; else return decisionsStack.Peek(); } }
     private AudioSource audioSource;
@@ -185,12 +186,11 @@ public class bUI_ActionWheel : MonoBehaviour
     void Awake ()
     {
         animator = GetComponent<Animator>();
-        audioSource = GetComponent <AudioSource>();
-        defaultRotation = transform.rotation;
-        decisionsStack = new Stack<Decision>();
-        GenerateButtonsFromPrefab();
+        audioSource = GetComponent<AudioSource>();
         infobox = GetComponentInChildren<bUI_ActionWheelInfobox>();
-        infobox.PairWithWheel(this);
+        decisionsStack = new Stack<Decision>();
+        defaultRotation = transform.rotation;
+        GenerateButtonsFromPrefab();
         LockInput();
         contents.SetActive(false);
         state = State.Offline;
@@ -202,6 +202,7 @@ public class bUI_ActionWheel : MonoBehaviour
     void Start()
     {
         bUI_BattleUIController.instance.RegisterActionWheel(this);
+        infobox.PairWithWheel(this);
     }
 
     /// <summary>
@@ -261,8 +262,7 @@ public class bUI_ActionWheel : MonoBehaviour
         animator.Play(closeHash);
         for (int i = 0; i < activeButtons.Length; i++) activeButtons[i].OnWheelClose();
         if (!audioSource.isPlaying) audioSource.PlayOneShot(soundFX_close);
-        bUI_BattleUIController.instance.turnOrderArea.ConformToTurnOrder();
-        Timing.RunCoroutine(_CallOnceAnimatorsFinish(onCompletion));
+        UnsetPreviews();
     }
 
     /// <summary>
@@ -478,7 +478,7 @@ public class bUI_ActionWheel : MonoBehaviour
         ConformWheelRotationToSelectedButton();
         SetCenterIcon();
         SetCenterText();
-        SetTurnOrder();
+        SetPreviews();
         infobox.OnWheelPositionChange();
         animator.Play(decisionShowHash);
     }
@@ -521,7 +521,7 @@ public class bUI_ActionWheel : MonoBehaviour
     /// </summary>
     private void RotatePlaces (int places)
     {
-        bUI_BattleUIController.instance.turnOrderArea.ConformToTurnOrder();
+        UnsetPreviews();
         int newIndex = currentDecision.selectedOptionIndex + places;
         int diff = newIndex - currentDecision.selectedOptionIndex;
         float degrees = interval * diff;
@@ -536,7 +536,7 @@ public class bUI_ActionWheel : MonoBehaviour
                 activeButtons[i].ConformStateToWheelPosition();
             }
             ConformWheelRotationToSelectedButton();
-            SetTurnOrder();
+            SetPreviews();
             infobox.OnWheelPositionChange();
             UnlockInput();
         };
@@ -582,16 +582,21 @@ public class bUI_ActionWheel : MonoBehaviour
     }
 
     /// <summary>
-    /// Sets turn order based on selected action.
+    /// Sets up turn order/stamina/etc. previews based on selected action.
     /// </summary>
-    private void SetTurnOrder ()
+    private void SetPreviews ()
     {
-        if (currentDecision.decisionType == DecisionType.ActionSelect) bUI_BattleUIController.instance.turnOrderArea.PreviewTurnOrderForDelayOf(bUI_BattleUIController.instance.displayBattler.GetDelayForAction(selectedAction));
+        if (currentDecision.decisionType == DecisionType.ActionSelect)
+        {
+            bUI_BattleUIController.instance.turnOrderArea.PreviewTurnOrderForDelayOf(bUI_BattleUIController.instance.displayBattler.GetDelayForAction(selectedAction));
+            actingUnitInfobox.DoOnInfoboxen((unitInfobox) => { unitInfobox.HandleResourceBarPreviews(selectedAction); });
+        }
         else if (currentDecision.decisionType == DecisionType.BattleUI && selectedCommand == bUI_Command.Break)
         {
             bUI_BattleUIController.instance.turnOrderArea.PreviewTurnOrderForDelayOf(bUI_BattleUIController.instance.displayBattler.GetDelayForAction(ActionDatabase.SpecialActions.selfStanceBreakAction));
+            actingUnitInfobox.DoOnInfoboxen((unitInfobox) => { unitInfobox.HandleResourceBarPreviews(ActionDatabase.SpecialActions.selfStanceBreakAction); });
         }
-        else bUI_BattleUIController.instance.turnOrderArea.ConformToTurnOrder();
+        else UnsetPreviews();
     }
 
     /// <summary>
@@ -617,6 +622,15 @@ public class bUI_ActionWheel : MonoBehaviour
     private void UnlockInput ()
     {
         _allowInput = true;
+    }
+
+    /// <summary>
+    /// Make sure we aren't previewing action consequences.
+    /// </summary>
+    private void UnsetPreviews ()
+    {
+        bUI_BattleUIController.instance.turnOrderArea.ConformToTurnOrder();
+        actingUnitInfobox.DoOnInfoboxen((unitInfobox) => { unitInfobox.NullifyResourceBarPreviews(); });
     }
 
     /// <summary>

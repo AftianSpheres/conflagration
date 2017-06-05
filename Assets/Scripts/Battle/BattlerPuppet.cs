@@ -12,13 +12,13 @@ using CnfBattleSys;
 public class BattlerPuppet : MonoBehaviour
 {
     public Battler battler { get; private set; }
+    public bUI_InfoboxShell infoboxShell { get; private set; }
     public CapsuleCollider capsuleCollider;
     public Animator animator;
     public MeshRenderer meshRenderer;
     public MeshFilter meshFilter;
     private BattlerModelType modelType;
     private Vector3 offset;
-    private bUI_InfoboxShell infoboxShell;
     private float stepTime;
     private LinkedList<Action> StatusPacketsModified;
 

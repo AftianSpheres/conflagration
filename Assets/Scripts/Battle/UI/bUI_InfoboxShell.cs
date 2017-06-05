@@ -25,7 +25,7 @@ public class bUI_InfoboxShell : MonoBehaviour
     /// <summary>
     /// MonoBehaviour.Awake ()
     /// </summary>
-	void Awake ()
+    void Awake ()
     {
         infoboxen = GetComponentsInChildren<bUI_BattlerInfobox>();
         infoboxDict = new Dictionary<InfoboxType, bUI_BattlerInfobox>(infoboxen.Length);
@@ -43,6 +43,11 @@ public class bUI_InfoboxShell : MonoBehaviour
     {
         state = State.Initialized;
         DoOnInfoboxen((infobox) => { infobox.AttachPuppet(puppet); });
+    }
+
+    public void Collapse ()
+    {
+
     }
 
     /// <summary>

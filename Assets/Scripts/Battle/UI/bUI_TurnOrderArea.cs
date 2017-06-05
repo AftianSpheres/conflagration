@@ -9,8 +9,9 @@ using TMPro;
 /// </summary>
 public class bUI_TurnOrderArea : MonoBehaviour
 {
-    public bUI_TurnOrderPanel panelsPrototype;
+    
     private Battler[] primaryTurnOrderBattlers;
+    private bUI_TurnOrderPanel panelsPrototype;
     private bUI_TurnOrderPanel[] panels;
     private RectTransform rectTransform;
     private bool realOrderIsStale { get { return realOrderGenTurn < BattleOverseer.currentBattle.turnManagementSubsystem.elapsedTurns; } }
@@ -21,6 +22,7 @@ public class bUI_TurnOrderArea : MonoBehaviour
     /// </summary>
     void Awake ()
     {
+        panelsPrototype = GetComponentInChildren<bUI_TurnOrderPanel>();
         rectTransform = GetComponent<RectTransform>();
         GeneratePanels();
     }
@@ -102,6 +104,6 @@ public class bUI_TurnOrderArea : MonoBehaviour
             panels[i] = newPanel;
         }
         panelsPrototype.gameObject.SetActive(false);
-        Destroy(panelsPrototype);
+        Destroy(panelsPrototype.gameObject);
     }
 }

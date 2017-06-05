@@ -131,7 +131,7 @@ namespace ExtendedSceneManagement
         private void AssignRootGO()
         {
             GameObject[] roots = sceneData.GetRootGameObjects();
-            if (roots.Length == 1 && roots[0].GetComponents<Component>().Length == 1) rootHandle = roots[0];
+            if (roots.Length == 1) rootHandle = roots[0];
             else rootHandle = null;
             if (rootHandle != null)
             {

@@ -15,7 +15,7 @@ public class bUI_ElementsGenerator : MonoBehaviour
     /// <summary>
     /// MonoBehaviour.Awake ()
     /// </summary>
-    void Awake ()
+    void Awake()
     {
         bUI_InfoboxShell[] _tmp_playerPartyInfoboxes = playerInfoboxesParent.GetComponentsInChildren<bUI_InfoboxShell>(); // Since no order can be promised here, we have to sort this before storing it
         playerPartyInfoboxes = new bUI_InfoboxShell[_tmp_playerPartyInfoboxes.Length];

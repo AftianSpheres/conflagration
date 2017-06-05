@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<!--Stance descriptions-->
+<textBank>
+  <page name = "InvalidStance">
+    <eng>Invalid Stance - this shouldn't appear anywhere</eng>
+  </page>
+  <page name = "None">
+    <eng>None - this shouldn't appear anywhere either</eng>
+  </page>
+  <page name = "TestStance_Melee">
+    <eng>A test stance that has a lot of melee shit</eng>
+  </page>
+  <page name = "TestStance_Ranged">
+    <eng>A test stance that's way far out, man</eng>
+  </page>
+  <page name = "TestStance_Breaker">
+    <eng>The breakers roar in a shitty test stance</eng>
+  </page>
+  <page name = "TestStance_Support">
+    <eng>A very supportive test stance</eng>
+  </page>
+</textBank>
