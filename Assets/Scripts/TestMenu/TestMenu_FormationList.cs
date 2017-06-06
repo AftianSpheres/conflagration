@@ -1,6 +1,10 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.UI;
 using CnfBattleSys;
-using System;
+using TMPro;
 
 /// <summary>
 /// TestMenu MonoBehaviour that populates the formation select list
@@ -9,73 +13,110 @@ using System;
 /// </summary>
 public class TestMenu_FormationList : MonoBehaviour
 {
-    public GUIStyle buttonStyle;
-    private BattleFormation[] allFormationsInRange;
-    private GUILayoutOption[] scrollOptions;
-    private RectTransform rectTransform;
-    private TextBank testMenuBank;
-    private Vector2 scrollPosition;
-    private string[] buttonStrings;
+    public RectTransform buttonsParent;
+    private Button buttonsPrefab;
+    private static TextBank localBank;
+    private const string bgmPlaceholder = "!bgm!";
+    private const string flagsPlaceholder = "!flags!";
+    private const string venuePlaceholder = "!venue!";
 
     /// <summary>
     /// MonoBehaviour.Awake ()
     /// </summary>
-    void Awake()
+    void Awake ()
     {
-        rectTransform = GetComponent<RectTransform>();
-        scrollOptions = new GUILayoutOption[] { GUILayout.Width(350) };
+        buttonsPrefab = GetComponentInChildren<Button>();
+        TextBankManager.DoOnceOnline(GenerateButtons);
     }
 
     /// <summary>
-    /// MonoBehaviour.OnGUI ()
+    /// Generates buttons for all formations and populates the scroll rect.
     /// </summary>
-    void OnGUI ()
+    private void GenerateButtons ()
     {
-        if (allFormationsInRange == null) Setup();
-        if (allFormationsInRange == null) return;
-        GUILayout.BeginArea(new Rect(820, 60, 500, 650));
-        scrollPosition = GUILayout.BeginScrollView(scrollPosition, false, true, scrollOptions);
-        for (int i = 0; i < allFormationsInRange.Length; i++)
+        if (localBank == null) localBank = TextBankManager.Instance.GetTextBank("TestMenu/battle");
+        float baseSize = buttonsPrefab.GetComponent<RectTransform>().sizeDelta.y;
+        BattleFormation[] formations = FormationDatabase.GetAll();
+        buttonsParent.sizeDelta = new Vector2(buttonsParent.sizeDelta.x, baseSize * (formations.Length + 1));
+        for (int i = 0; i < formations.Length; i++)
         {
-            if (GUILayout.Button(buttonStrings[i], buttonStyle)) TransitionToBattle(allFormationsInRange[i]);
-        }
-        GUILayout.EndScrollView();
-        GUILayout.EndArea();
-    }
-
-    /// <summary>
-    /// Sets up the strings and formation data for this menu.
-    /// </summary>
-    private void Setup ()
-    {
-        if (TextBankManager.Instance == null) return;
-        if (testMenuBank == null) testMenuBank = TextBankManager.Instance.GetTextBank("TestMenu/battle");
-        allFormationsInRange = FormationDatabase.GetAll();
-        buttonStrings = new string[allFormationsInRange.Length];
-        string line0 = testMenuBank.GetPage("btn_line0").text;
-        string line1 = testMenuBank.GetPage("btn_battler").text;
-        string[] line0Placeholders = { "[#formationNo]", "[#formationID]", "[#venueID]", "[#bgmID]" };
-        string[] line1Placeholders = { "[#enemyID]", "[#sideID]" };
-        for (int i = 0; i < allFormationsInRange.Length; i++)
-        {
-            string[] replacements = { (i + 1).ToString(), allFormationsInRange[i].formation.ToString(), allFormationsInRange[i].venue.ToString(), allFormationsInRange[i].bgmTrack.ToString() };
-            string thisLine0 = Util.BatchReplace(line0, line0Placeholders, replacements);
-            string thisLine1 = string.Empty;
-            for (int b = 0; b < allFormationsInRange[i].battlers.Length; b++)
+            BattleFormation formation = formations[i];
+            Button newButton = Instantiate(buttonsPrefab, buttonsParent);
+            newButton.GetComponent<RectTransform>().anchoredPosition = baseSize * Vector2.down * i;
+            TextMeshProUGUI label = newButton.GetComponentInChildren<TextMeshProUGUI>();
+            string line0 = i + ": " + formation.formationID.ToString();
+            string flagsList = string.Empty;
+            for (int f = 1, b = 0; b < 32; b++, f = f << 1)
             {
-                replacements = new string[] { allFormationsInRange[i].battlers[b].battlerData.battlerType.ToString(), allFormationsInRange[i].battlers[b].side.ToString() };
-                thisLine1 += Util.BatchReplace(line1, line1Placeholders, replacements);
-                if (b + 1 < allFormationsInRange[i].battlers.Length) thisLine1 += ", ";
+                if ((formation.flags & (BattleFormationFlags)f) == (BattleFormationFlags)f)
+                {
+                    if (flagsList.Length > 0) flagsList += ", ";
+                    flagsList += ((BattleFormationFlags)f).ToString();
+                }
             }
-            buttonStrings[i] = thisLine0 + Environment.NewLine + thisLine1;
+            if (flagsList.Length == 0) flagsList = BattleFormationFlags.None.ToString();
+            string line1 = localBank.GetPage("bgmLabel").text.Replace(bgmPlaceholder, formation.bgmTrack.ToString()) + ", " +
+                           localBank.GetPage("venueLabel").text.Replace(venuePlaceholder, formation.venue.ToString()) + ", " +
+                           localBank.GetPage("flagsLabel").text.Replace(flagsPlaceholder, flagsList);
+            string line2 = GetBattlersListStringFor(formation);
+            label.text = line0 + Environment.NewLine + line1 + Environment.NewLine + line2;
+            
+            newButton.onClick.AddListener(new UnityAction(() => { BattleTransitionManager.Instance.EnterBattleScene(formation); }));
+            newButton.gameObject.name = "Button: " + formation.formationID.ToString();
         }
+        buttonsPrefab.gameObject.SetActive(false);
+        Destroy(buttonsPrefab.gameObject);
     }
 
     /// <summary>
-    /// Starts a battle from the test menu.
+    /// Get a string listing off every battler in the formation by side.
     /// </summary>
-    private void TransitionToBattle (BattleFormation formation)
+    private string GetBattlersListStringFor (BattleFormation formation)
     {
-        BattleTransitionManager.Instance.EnterBattleScene(formation);
+        Dictionary<BattlerSideFlags, Stack<BattlerData>> dict = new Dictionary<BattlerSideFlags, Stack<BattlerData>>(8);
+        for (int b = 0; b < formation.battlers.Length; b++)
+        {
+            BattlerSideFlags side = formation.battlers[b].side;
+            if (!dict.ContainsKey(side)) dict.Add(side, new Stack<BattlerData>(16));
+            dict[side].Push(formation.battlers[b].battlerData);
+        }
+        BattlerSideFlags[] sides = new BattlerSideFlags[dict.Keys.Count];
+        dict.Keys.CopyTo(sides, 0);
+        string[] sideLists = new string[sides.Length];
+        Dictionary<BattlerType, int> battlerCounts = new Dictionary<BattlerType, int>(16);
+        for (int s = 0; s < sides.Length; s++)
+        {
+            sideLists[s] = string.Empty;
+            int count = dict[sides[s]].Count;
+            battlerCounts.Clear();
+            for (int b = 0; b < count; b++)
+            {
+                BattlerData battlerData = dict[sides[s]].Pop();
+                if (!battlerCounts.ContainsKey(battlerData.battlerType)) battlerCounts.Add(battlerData.battlerType, 1);
+                else battlerCounts[battlerData.battlerType]++;
+            }
+            BattlerType[] battlerTypes = new BattlerType[battlerCounts.Keys.Count];
+            battlerCounts.Keys.CopyTo(battlerTypes, 0);
+            if (battlerTypes.Length > 0)
+            {
+                sideLists[s] += sides[s].ToString() + ": ";
+                int originalLength = sideLists[s].Length;
+                for (int b = 0; b < battlerTypes.Length; b++)
+                {
+                    if (sideLists[s].Length > originalLength) sideLists[s] += ", ";
+                    sideLists[s] = sideLists[s] + battlerTypes[b].ToString() + " x" + battlerCounts[battlerTypes[b]].ToString();
+                }
+            }
+        }
+        string outputString = string.Empty;
+        for (int s = 0; s < sideLists.Length; s++)
+        {
+            if (sideLists[s].Length > 0)
+            {
+                if (outputString.Length > 0) outputString += "; ";
+                outputString += sideLists[s];
+            }
+        }
+        return outputString;
     }
 }

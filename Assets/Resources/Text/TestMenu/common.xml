@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<!--Master test menu-->
+<textBank>
+  <page name = "infoString">
+    <eng>cnfbattlesys testmenu | build !buildstring!</eng>
+  </page>
+</textBank>

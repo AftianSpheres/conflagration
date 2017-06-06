@@ -35,8 +35,11 @@ namespace CnfBattleSys
             /// "No formation." Not included in count, because it plugs into the table.
             /// </summary>
             public static readonly BattleFormation noneFormation = new BattleFormation(FormationType.None, VenueType.None, BGMTrackType.None, BattleFormationFlags.None, Vector2.zero, new BattleFormation.FormationMember[0]);
+        }
 
-
+        static FormationDatabase ()
+        {
+            Load();
         }
 
         /// <summary>

@@ -17,17 +17,6 @@ namespace CnfBattleSys
         public static BattleData currentBattle { get; private set; }
 
         /// <summary>
-        /// Load datasets as soon as you actually get to do that, but no sooner.
-        /// </summary>
-        static BattleOverseer ()
-        {
-            ActionDatabase.Load();
-            StanceDatabase.Load(); // stances reference actions
-            BattlerDatabase.Load(); // battlers reference stances
-            FormationDatabase.Load(); // formations reference battlers
-        }
-
-        /// <summary>
         /// Sets up battle based on given formation and starts
         /// executing Battle Shit.
         /// </summary>

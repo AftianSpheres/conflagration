@@ -39,6 +39,11 @@ namespace CnfBattleSys
 
         }
 
+        static StanceDatabase ()
+        {
+            Load();
+        }
+
         /// <summary>
         /// Loads in and parses all the xml files for the stance dataset.
         /// This should only ever run once.

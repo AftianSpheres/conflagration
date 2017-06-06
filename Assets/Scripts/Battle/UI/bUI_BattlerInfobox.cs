@@ -20,7 +20,7 @@ public class bUI_BattlerInfobox : MonoBehaviour
     private bUI_ResourceBar hpBar;
     private bUI_ResourceBar staminaBar;
     //private bUI_ResourceBar subweaponsChargeBar; (this mechanic doesn't exist yet)
-    private bUI_InfoboxShell infoboxShell;
+    //private bUI_InfoboxShell infoboxShell;
     private bUI_BattlerStatusBar statusBar;
     private static TextBank battlerNamesBank;
     private static TextBank battlerInfoboxBank;
@@ -50,7 +50,7 @@ public class bUI_BattlerInfobox : MonoBehaviour
                     break;
             }
         }
-        infoboxShell = transform.parent.GetComponent<bUI_InfoboxShell>();
+        //infoboxShell = transform.parent.GetComponent<bUI_InfoboxShell>();
         statusBar = GetComponentInChildren<bUI_BattlerStatusBar>();
     }
 

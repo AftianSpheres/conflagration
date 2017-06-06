@@ -34,7 +34,7 @@ namespace CnfBattleSys
             }
         }
 
-        public readonly FormationType formation;
+        public readonly FormationType formationID;
         public readonly VenueType venue;
         public readonly BGMTrackType bgmTrack;
         public readonly BattleFormationFlags flags;
@@ -46,7 +46,7 @@ namespace CnfBattleSys
         /// </summary>
         public BattleFormation (FormationType _formation, VenueType _venue, BGMTrackType _bgmTrack, BattleFormationFlags _flags, Vector2 _fieldBounds, FormationMember[] _battlers)
         {
-            formation = _formation;
+            formationID = _formation;
             venue = _venue;
             bgmTrack = _bgmTrack;
             flags = _flags;

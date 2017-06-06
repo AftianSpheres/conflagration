@@ -4,13 +4,13 @@
   <page name = "infoString">
     <eng>cnfbattlesys testmenu | build [#buildstring]</eng>
   </page>
-  <page name = "selectFormation">
-    <eng>Select formation to start battle</eng>
+  <page name = "venueLabel">
+    <eng>Venue: !venue!</eng>
   </page>
-  <page name = "btn_line0">
-    <eng>[#formationNo], [#formationID], venue [#venueID], bgm [#bgmID]</eng>
+  <page name = "bgmLabel">
+    <eng>BGM: !bgm!</eng>
   </page>
-  <page name = "btn_battler">
-    <eng>[#enemyID]|[[#sideID]]</eng>
+  <page name = "flagsLabel">
+    <eng>Flags: !flags!</eng>
   </page>
 </textBank>

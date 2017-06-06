@@ -6,7 +6,7 @@ using TMPro;
 /// </summary>
 public class TestMenu_InfoString : MonoBehaviour
 {
-    public TextMeshProUGUI guiText_InfoString;
+    private TextMeshProUGUI guiText_InfoString;
     private TextBank testMenuBank;
 
     /// <summary>
@@ -14,15 +14,8 @@ public class TestMenu_InfoString : MonoBehaviour
     /// </summary>
     void Awake ()
     {
-        TryToUpdateInfoString();
-    }
-
-    /// <summary>
-    /// MonoBehaviour.Update ()
-    /// </summary>
-    void Update()
-    {
-        TryToUpdateInfoString();
+        guiText_InfoString = GetComponentInChildren<TextMeshProUGUI>();
+        TextBankManager.DoOnceOnline(UpdateInfoString);
     }
 
     /// <summary>
@@ -30,14 +23,10 @@ public class TestMenu_InfoString : MonoBehaviour
     /// Because the test menu is designed to be opened frequently in editor play mode,
     /// we engineer in safeties for events that can't actually happen during gameplay.
     /// </summary>
-    private void TryToUpdateInfoString ()
+    private void UpdateInfoString ()
     {
-        if (TextBankManager.Instance != null)
-        {
-            testMenuBank = TextBankManager.Instance.GetTextBank("TestMenu/battle");
-            guiText_InfoString.text = testMenuBank.GetPage("infoString").text.Replace("[#buildstring]", Util.buildNumber.ToString());
-            Destroy(this);
-        }
+        testMenuBank = TextBankManager.Instance.GetTextBank("TestMenu/common");
+        guiText_InfoString.text = testMenuBank.GetPage("infoString").text.Replace("!buildstring!", Util.buildNumber.ToString());
     }
 
 }

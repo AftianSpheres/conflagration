@@ -35,6 +35,11 @@ namespace CnfBattleSys
                 10, 1, 1, 1, 1, 1, 1, 1, 0, 0, new BattlerData.Growths(1, 1, 1, 1, 1, 1, 1, 1), new Battler.Resistances_Raw(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1));
         }
 
+        static BattlerDatabase()
+        {
+            Load();
+        }
+
         /// <summary>
         /// Loads in and parses all the xml files, parses the unit dataset.
         /// This should only ever run once.

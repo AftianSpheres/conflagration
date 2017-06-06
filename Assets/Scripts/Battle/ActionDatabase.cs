@@ -44,6 +44,11 @@ namespace CnfBattleSys
                                                            AnimEventType.None, AnimEventType.None, AnimEventType.None, AnimEventType.None, BattleActionCategoryFlags.None, defaultSubactionArray);
         }
 
+        static ActionDatabase ()
+        {
+            Load();
+        }
+
         /// <summary>
         /// Loads in and parses all of the xml files, populates the action dataset.
         /// This should only ever run once.

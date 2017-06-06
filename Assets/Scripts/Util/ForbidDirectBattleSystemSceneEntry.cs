@@ -22,7 +22,7 @@ public class ForbidDirectBattleSystemSceneEntry : MonoBehaviour {
             }
             else
             {
-                Destroy(gameObject);
+                Destroy(this);
             }
         }
     }

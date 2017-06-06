@@ -1060,7 +1060,7 @@ namespace CnfBattleSys
         public bool CanRun ()
         {
             bool formationAllowsRun;
-            if (battle.activeFormation != null && battle.activeFormation.formation != FormationType.None)
+            if (battle.activeFormation != null && battle.activeFormation.formationID != FormationType.None)
                 formationAllowsRun = (battle.activeFormation.flags & BattleFormationFlags.ForbidPlayerFromRunning) != BattleFormationFlags.ForbidPlayerFromRunning;
             else formationAllowsRun = true;
             bool battlerAllowsRun = true; // No status effects that would preclude running currently exist, etc.
