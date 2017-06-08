@@ -115,7 +115,7 @@ namespace CnfBattleSys
         public void Cleanup()
         {
             currentActingBattler = null;
-            actionInExecution = ActionDatabase.Get(ActionType.None);
+            actionInExecution = ActionDatabase.SpecialActions.noneBattleAction;
             subactionExecutionIndex = subactionFXExecutionIndex = 0;
             targets.Clear();
             alternateTargets.Clear();

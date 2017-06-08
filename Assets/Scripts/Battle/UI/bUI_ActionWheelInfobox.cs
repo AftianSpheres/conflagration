@@ -18,7 +18,7 @@ public class bUI_ActionWheelInfobox : MonoBehaviour
     /// </summary>
     void Awake ()
     {
-        infoboxContents = GetComponentInChildren<TextMeshProUGUI>();
+        if (infoboxContents == null) infoboxContents = GetComponentInChildren<TextMeshProUGUI>();
     }
 
     /// <summary>
@@ -56,6 +56,7 @@ public class bUI_ActionWheelInfobox : MonoBehaviour
     /// </summary>
     public void PairWithWheel (bUI_ActionWheel _wheel)
     {
+        if (infoboxContents == null) infoboxContents = GetComponentInChildren<TextMeshProUGUI>();
         wheel = _wheel;
         Clear();
     }

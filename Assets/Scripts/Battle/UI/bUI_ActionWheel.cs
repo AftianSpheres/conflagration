@@ -199,7 +199,7 @@ public class bUI_ActionWheel : MonoBehaviour
     /// <summary>
     /// MonoBehaviour.Start ()
     /// </summary>
-    void Start()
+    void Start ()
     {
         bUI_BattleUIController.instance.RegisterActionWheel(this);
         infobox.PairWithWheel(this);

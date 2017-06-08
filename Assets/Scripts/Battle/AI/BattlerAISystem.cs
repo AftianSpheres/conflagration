@@ -227,13 +227,13 @@ namespace CnfBattleSys
                         optimumTargetIndex = i;
                     }
                 }
-                FleetingCollections.battlerBuffer_0.Clear();
-                FleetingCollections.battlerBuffer_0.Add(potentialTargets[optimumTargetIndex]);
-                for (int i = 0; i < subtargetsForAOE[optimumTargetIndex].Length; i++)
+                Battler[] output = new Battler[subtargetsForAOE[optimumTargetIndex].Length + 1];
+                output[0] = potentialTargets[optimumTargetIndex];
+                for (int i = 1; i < output.Length; i++)
                 {
-                    FleetingCollections.battlerBuffer_0.Add(subtargetsForAOE[optimumTargetIndex][i]);
+                    output[i] = subtargetsForAOE[optimumTargetIndex][i - 1];
                 }
-                return FleetingCollections.battlerBuffer_0.ToArray();
+                return output;
             };
             Func<ActionTargetType, Battler[], Battler[]> forAll = (targetingType, potentialTargets) =>
             {
@@ -410,36 +410,55 @@ namespace CnfBattleSys
         public static Battler[][] FindLegalTargetsForAction (Battler b, BattleAction battleAction)
         {
             Battler[][] output = new Battler[2][];
-            Action<TargetSideFlags> populateList = (targetSideFlags) =>
+            Func<TargetSideFlags, Battler[]> populateList = (targetSideFlags) =>
             {
-                FleetingCollections.battlerBuffer_0.Clear();
-                FleetingCollections.battlerBuffer_1.Clear();
+                Battler[] t0 = new Battler[0];
+                Battler[] t1 = new Battler[0];
+                Battler[] t2 = new Battler[0];
+                Battler[] t3 = new Battler[0];
                 if (targetSideFlags == TargetSideFlags.None) Util.Crash(new Exception("Can't find legal targets for action " + battleAction.actionID.ToString() + " because it doesn't _have_ legal targets. This is either a special case that shouldn't go through normal target acquisition, something that just shouldn't _be_ executed, or completely broken."));
                 if ((targetSideFlags & TargetSideFlags.MySide) == TargetSideFlags.MySide)
                 {
-                    BattleOverseer.currentBattle.GetBattlersSameSideAs(b.side, FleetingCollections.battlerBuffer_0);
+                    t0 = BattleOverseer.currentBattle.GetBattlersSameSideAs(b.side);
                 }
                 if ((targetSideFlags & TargetSideFlags.MyFriends) == TargetSideFlags.MyFriends)
                 {
-                    BattleOverseer.currentBattle.GetBattlersAlliedTo_Strict(b.side, FleetingCollections.battlerBuffer_0);
+                    t1 = BattleOverseer.currentBattle.GetBattlersAlliedTo(b.side, true);
                 }
                 if ((targetSideFlags & TargetSideFlags.MyEnemies) == TargetSideFlags.MyEnemies)
                 {
-                    BattleOverseer.currentBattle.GetBattlersEnemiesTo(b.side, FleetingCollections.battlerBuffer_0);
+                    t2 = BattleOverseer.currentBattle.GetBattlersEnemiesTo(b.side);
                 }
                 if ((targetSideFlags & TargetSideFlags.Neutral) == TargetSideFlags.Neutral)
                 {
-                    BattleOverseer.currentBattle.GetBattlersEnemiesTo(b.side, FleetingCollections.battlerBuffer_0);
+                    t3 = BattleOverseer.currentBattle.GetBattlersEnemiesTo(b.side);
                 }
-                for (int i = 0; i < FleetingCollections.battlerBuffer_0.Count; i++) if (FleetingCollections.battlerBuffer_0[i].IsValidTargetFor(b, battleAction)) FleetingCollections.battlerBuffer_1.Add(FleetingCollections.battlerBuffer_0[i]);
-            };
-            populateList(battleAction.targetingSideFlags);
-            output[0] = FleetingCollections.battlerBuffer_1.ToArray();
-            if (battleAction.alternateTargetSideFlags != TargetSideFlags.None)
-            {
-                populateList(battleAction.alternateTargetSideFlags);
-                output[1] = FleetingCollections.battlerBuffer_1.ToArray();
-            }
+                Battler[] targets = new Battler[t0.Length + t1.Length + t2.Length + t3.Length];
+                t0.CopyTo(targets, 0);
+                t1.CopyTo(targets, t0.Length);
+                t2.CopyTo(targets, t0.Length + t1.Length);
+                t3.CopyTo(targets, t0.Length + t1.Length + t2.Length);
+                int validLen = targets.Length;
+                bool[] validity = new bool[targets.Length];
+                for (int i = 0; i < targets.Length; i++)
+                {
+                    validity[i] = targets[i].IsValidTargetFor(b, battleAction);
+                    if (!validity[i]) validLen--;
+                }
+                Battler[] validTargets = new Battler[validLen];
+                int vti = 0;
+                for (int i = 0; i < targets.Length; i++)
+                {
+                    if (validity[i])
+                    {
+                        validTargets[vti] = targets[i];
+                        vti++;
+                    }
+                }
+                return validTargets;
+            };      
+            output[0] = populateList(battleAction.targetingSideFlags);
+            if (battleAction.alternateTargetSideFlags != TargetSideFlags.None) output[1] = populateList(battleAction.alternateTargetSideFlags);
             else output[1] = new Battler[0];
             return output;
         }    

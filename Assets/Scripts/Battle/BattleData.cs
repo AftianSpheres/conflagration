@@ -89,21 +89,21 @@ namespace CnfBattleSys
             battlersBySide = new Dictionary<BattlerSideFlags, Battler[]>();
             battlerTiebreakerStack = new Stack<Battler>();
             BattlerSideFlags[] sides = (BattlerSideFlags[])Enum.GetValues(typeof(BattlerSideFlags));
-            FleetingCollections.battlerBuffer_0.Clear();
+            Battler[] battlers = new Battler[activeFormation.battlers.Length];
             int[] sideCounts = new int[sides.Length];
             for (int b = 0; b < activeFormation.battlers.Length; b++)
             {
-                GenerateBattlerFromFormationMember(activeFormation.battlers[b], b, FleetingCollections.battlerBuffer_0, ref sides, ref sideCounts);
+                GenerateBattlerFromFormationMember(activeFormation.battlers[b], b, ref battlers, ref sides, ref sideCounts);
             }
-            allBattlers = FleetingCollections.battlerBuffer_0.ToArray();
+            allBattlers = battlers;
             for (int s = 0; s < sides.Length; s++)
             {
                 battlersBySide[sides[s]] = new Battler[sideCounts[s]];
                 for (int b = 0, bS = 0; b < allBattlers.Length && bS < sideCounts[s]; b++)
                 {
-                    if (allBattlers[s].side == sides[s])
+                    if (allBattlers[b].side == sides[s])
                     {
-                        battlersBySide[sides[s]][bS] = allBattlers[s];
+                        battlersBySide[sides[s]][bS] = allBattlers[b];
                         bS++;
                     }
                 }
@@ -171,10 +171,10 @@ namespace CnfBattleSys
         /// <summary>
         /// Generates a Battler based on the given formation member and attaches a puppet gameobject to it.
         /// </summary>
-        private void GenerateBattlerFromFormationMember(BattleFormation.FormationMember formationMember, int index, List<Battler> allBattlers, ref BattlerSideFlags[] sides, ref int[] sideCounts)
+        private void GenerateBattlerFromFormationMember(BattleFormation.FormationMember formationMember, int index, ref Battler[] battlers, ref BattlerSideFlags[] sides, ref int[] sideCounts)
         {
             Battler battler = new Battler(formationMember, this, index);
-            allBattlers.Add(battler);
+            battlers[index] = battler;
             for (int s = 0; s < sides.Length; s++)
             {
                 if (battler.side == sides[s])
@@ -248,12 +248,8 @@ namespace CnfBattleSys
         private bool CheckIfBattleWon()
         {
             int liveEnemiesCount = 0;
-            FleetingCollections.battlerBuffer_0.Clear();
-            GetBattlersEnemiesTo(BattlerSideFlags.PlayerSide, FleetingCollections.battlerBuffer_0);
-            for (int i = 0; i < FleetingCollections.battlerBuffer_0.Count; i++)
-            {
-                if (!FleetingCollections.battlerBuffer_0[i].isDead) liveEnemiesCount++;
-            }
+            Battler[] enemies = GetBattlersEnemiesTo(BattlerSideFlags.PlayerSide);
+            for (int i = 0; i < enemies.Length; i++) if (!enemies[i].isDead) liveEnemiesCount++;
             return liveEnemiesCount < 1;
         }
 
@@ -263,10 +259,7 @@ namespace CnfBattleSys
         private bool CheckIfBattleLost()
         {
             int livePlayersCount = 0;
-            for (int i = 0; i < battlersBySide[BattlerSideFlags.PlayerSide].Length; i++)
-            {
-                if (!battlersBySide[BattlerSideFlags.PlayerSide][i].isDead) livePlayersCount++;
-            }
+            for (int i = 0; i < battlersBySide[BattlerSideFlags.PlayerSide].Length; i++) if (!battlersBySide[BattlerSideFlags.PlayerSide][i].isDead) livePlayersCount++;
             return livePlayersCount < 1;
         }
 
@@ -287,56 +280,46 @@ namespace CnfBattleSys
         /// Gets all Battlers that are considered allies of a battler of side side.
         /// This includes those of the battler's own side - call GetBattlersAlliedTo_Strict
         /// if you want, specifically, allies of a _different_ side.
+        /// If strict == true, this excludes those of the battler's own side.
         /// </summary>
-        public void GetBattlersAlliedTo(BattlerSideFlags side, List<Battler> outputList)
+        public Battler[] GetBattlersAlliedTo(BattlerSideFlags side, bool strict = false)
         {
-            FleetingCollections.battlerBuffer_0.Clear(); // make sure this is empty before trying to use it
+            int count = 0;
+            Battler[] output = new Battler[0];
+            int lastIndex = 0;
+            Action<BattlerSideFlags> addSide = (_side) => { for (int i = 0; i < battlersBySide[_side].Length; i++) { output[lastIndex] = battlersBySide[_side][i]; lastIndex++; } };
+            Action<BattlerSideFlags> countSide = (_side) => { for (int i = 0; i < battlersBySide[_side].Length; i++) count++; };
             switch (side)
             {
                 case BattlerSideFlags.PlayerSide:
+                    if (!strict) countSide(BattlerSideFlags.PlayerSide);
+                    countSide(BattlerSideFlags.GenericAlliedSide);
+                    output = new Battler[count];
+                    if (!strict) addSide(BattlerSideFlags.PlayerSide);
+                    addSide(BattlerSideFlags.GenericAlliedSide);
+                    break;
                 case BattlerSideFlags.GenericAlliedSide:
-                    FleetingCollections.battlerBuffer_0.AddRange(battlersBySide[BattlerSideFlags.PlayerSide]);
-                    FleetingCollections.battlerBuffer_0.AddRange(battlersBySide[BattlerSideFlags.GenericAlliedSide]);
+                    countSide(BattlerSideFlags.PlayerSide);
+                    if (!strict) countSide(BattlerSideFlags.GenericAlliedSide);
+                    output = new Battler[count];
+                    addSide(BattlerSideFlags.PlayerSide);
+                    if (!strict) addSide(BattlerSideFlags.GenericAlliedSide);
                     break;
                 case BattlerSideFlags.GenericEnemySide:
-                    FleetingCollections.battlerBuffer_0.AddRange(battlersBySide[BattlerSideFlags.GenericEnemySide]);
+                    if (!strict)
+                    {
+                        countSide(BattlerSideFlags.GenericEnemySide);
+                        output = new Battler[count];
+                        addSide(BattlerSideFlags.GenericEnemySide);
+                    }
                     break;
                 case BattlerSideFlags.GenericNeutralSide:
-                    FleetingCollections.battlerBuffer_0.AddRange(battlersBySide[BattlerSideFlags.GenericNeutralSide]);
                     break;
                 default:
                     Util.Crash(new Exception("Tried to find allies of side " + side + ", but it wasn't in the table."));
                     break;
             }
-            for (int i = 0; i < FleetingCollections.battlerBuffer_0.Count; i++) if (!outputList.Contains(FleetingCollections.battlerBuffer_0[i])) outputList.Add(FleetingCollections.battlerBuffer_0[i]);
-        }
-
-        /// <summary>
-        /// Gets all Battlers that are considered allies of a battler of side side.
-        /// This excludes those of the battler's own side.
-        /// </summary>
-        public void GetBattlersAlliedTo_Strict(BattlerSideFlags side, List<Battler> outputList)
-        {
-            FleetingCollections.battlerBuffer_0.Clear(); // make sure this is empty before trying to use it
-            switch (side)
-            {
-                case BattlerSideFlags.PlayerSide:
-                    FleetingCollections.battlerBuffer_0.AddRange(battlersBySide[BattlerSideFlags.GenericAlliedSide]);
-                    break;
-                case BattlerSideFlags.GenericAlliedSide:
-                    FleetingCollections.battlerBuffer_0.AddRange(battlersBySide[BattlerSideFlags.PlayerSide]);
-                    break;
-                case BattlerSideFlags.GenericEnemySide:
-                    FleetingCollections.battlerBuffer_0.AddRange(battlersBySide[BattlerSideFlags.GenericEnemySide]);
-                    break;
-                case BattlerSideFlags.GenericNeutralSide:
-                    FleetingCollections.battlerBuffer_0.AddRange(battlersBySide[BattlerSideFlags.GenericNeutralSide]);
-                    break;
-                default:
-                    Util.Crash(new Exception("Tried to find allies of side " + side + ", but it wasn't in the table."));
-                    break;
-            }
-            for (int i = 0; i < FleetingCollections.battlerBuffer_0.Count; i++) if (!outputList.Contains(FleetingCollections.battlerBuffer_0[i])) outputList.Add(FleetingCollections.battlerBuffer_0[i]);
+            return output;
         }
 
         /// <summary>
@@ -356,62 +339,73 @@ namespace CnfBattleSys
         /// </summary>
         public Battler[] GetBattlersBySimulatedTurnOrder(float prospectiveDelay)
         {
-            FleetingCollections.battlerBuffer_0.Clear();
-            if (turnManagementSubsystem.currentTurnBattler != null) FleetingCollections.battlerBuffer_0.Add(turnManagementSubsystem.currentTurnBattler);
-            else if (prospectiveDelay >= 0) Util.Crash(new Exception("Can't get turn order with prospective delay value: no battler is acting"));
-            if (turnManagementSubsystem.battlersReadyToTakeTurns.Count > 0)
+            bool[] skips = new bool[allBattlers.Length];
+            Battler[] output;
+            int skipCount = 0;
+            for (int i = 0; i < allBattlers.Length; i++) if (allBattlers[i].isDead) { skips[i] = true; skipCount++; }
+            if (prospectiveDelay >= 0) output = new Battler[allBattlers.Length + 1 - skipCount];
+            else
             {
-                for (int i = 0; i < turnManagementSubsystem.battlersReadyToTakeTurns.Count; i++) FleetingCollections.battlerBuffer_0.Add(turnManagementSubsystem.battlersReadyToTakeTurns[i]);
+                output = new Battler[allBattlers.Length - skipCount];
+                skips[turnManagementSubsystem.currentTurnBattler.index] = true; // We generate one placement for the battler in this instance. If we have a prospective delay, we don't set the skip value yet... 
             }
-            int skippedBattlers = 0;
-            int cnt = allBattlers.Length;
-            if (prospectiveDelay >= 0) cnt++;
-            while (FleetingCollections.battlerBuffer_0.Count + skippedBattlers < cnt)
+            output[0] = turnManagementSubsystem.currentTurnBattler;
+            int lastFilledIndex = 0;
+            for (int i = 0; i < turnManagementSubsystem.battlersReadyToTakeTurns.Count; i++)
             {
-                float lowestRemainingDelay = float.MaxValue;
-                int thisIterationBattlerIndex = -1;
-                for (int i = 0; i < allBattlers.Length; i++)
+                output[i + 1] = turnManagementSubsystem.battlersReadyToTakeTurns[i];
+                skips[output[i + 1].index] = true;
+                lastFilledIndex++;
+            }
+            while (lastFilledIndex + 1 < output.Length)
+            {
+                Battler foundBattler = null;
+                float lowestDelay = float.MaxValue;
+                for (int b = 0; b < allBattlers.Length; b++)
                 {
-                    if (FleetingCollections.battlerBuffer_0.Contains(allBattlers[i])) continue; // battler already in the list
-                    else if (allBattlers[i].isDead)
+                    if (skips[b] == true) continue;
+                    Battler battler = allBattlers[b];
+                    float delay;
+                    if (battler == turnManagementSubsystem.currentTurnBattler) delay = prospectiveDelay;
+                    else delay = battler.currentDelay;
+                    if (delay < lowestDelay)
                     {
-                        skippedBattlers++; // don't hang
-                        continue; // it's dead so it ain't gonna get no more turns
-                    }
-                    else
-                    {
-                        if (allBattlers[i].currentDelay < lowestRemainingDelay)
-                        {
-                            lowestRemainingDelay = allBattlers[i].currentDelay;
-                            thisIterationBattlerIndex = i;
-                        }
+                        foundBattler = battler;
+                        lowestDelay = delay;
                     }
                 }
-                if (prospectiveDelay >= 0 && prospectiveDelay < lowestRemainingDelay)
-                {
-                    FleetingCollections.battlerBuffer_0.Add(turnManagementSubsystem.currentTurnBattler);
-                    continue;
-                }
-                if (thisIterationBattlerIndex > -1) FleetingCollections.battlerBuffer_0.Add(allBattlers[thisIterationBattlerIndex]);
+                if (foundBattler == null) { Util.Crash("Didn't find a battler during GetBattlersBySimulatedTurnOrder, which... shouldn't happen, ever."); break; }
+                output[lastFilledIndex] = foundBattler;
+                skips[foundBattler.index] = true;
+                lastFilledIndex++;
             }
-            return FleetingCollections.battlerBuffer_0.ToArray();
+            return output;
         }
 
         /// <summary>
         /// Gets all Battlers that are considered enemies of a battler of side side.
         /// </summary>
-        public void GetBattlersEnemiesTo(BattlerSideFlags side, List<Battler> outputList)
+        public Battler[] GetBattlersEnemiesTo(BattlerSideFlags side)
         {
-            FleetingCollections.battlerBuffer_0.Clear();
+            int count = 0;
+            Battler[] output = new Battler[0];
+            int lastIndex = 0;
+            Action<BattlerSideFlags> addSide = (_side) => { for (int i = 0; i < battlersBySide[_side].Length; i++) { output[lastIndex] = battlersBySide[_side][i]; lastIndex++; } };
+            Action<BattlerSideFlags> countSide = (_side) => { for (int i = 0; i < battlersBySide[_side].Length; i++) count++; };
             switch (side)
             {
                 case BattlerSideFlags.PlayerSide:
                 case BattlerSideFlags.GenericAlliedSide:
-                    FleetingCollections.battlerBuffer_0.AddRange(battlersBySide[BattlerSideFlags.GenericEnemySide]);
+                    countSide(BattlerSideFlags.GenericEnemySide);
+                    output = new Battler[count];
+                    addSide(BattlerSideFlags.GenericEnemySide);
                     break;
                 case BattlerSideFlags.GenericEnemySide:
-                    FleetingCollections.battlerBuffer_0.AddRange(battlersBySide[BattlerSideFlags.PlayerSide]);
-                    FleetingCollections.battlerBuffer_0.AddRange(battlersBySide[BattlerSideFlags.GenericAlliedSide]);
+                    countSide(BattlerSideFlags.PlayerSide);
+                    countSide(BattlerSideFlags.GenericAlliedSide);
+                    output = new Battler[count];
+                    addSide(BattlerSideFlags.PlayerSide);
+                    addSide(BattlerSideFlags.GenericAlliedSide);
                     break;
                 case BattlerSideFlags.GenericNeutralSide:
                     break;
@@ -419,32 +413,42 @@ namespace CnfBattleSys
                     Util.Crash(new Exception("Tried to find enemies of side " + side + ", but it wasn't in the table."));
                     break;
             }
-            for (int i = 0; i < FleetingCollections.battlerBuffer_0.Count; i++) if (!outputList.Contains(FleetingCollections.battlerBuffer_0[i])) outputList.Add(FleetingCollections.battlerBuffer_0[i]);
+            return output;
         }
 
         /// <summary>
         /// Gets all Battlers that are considered neutral to a battler of side side.
         /// </summary>
-        public void GetBattlersNeutralTo(BattlerSideFlags side, List<Battler> outputList)
+        public Battler[] GetBattlersNeutralTo(BattlerSideFlags side)
         {
-            FleetingCollections.battlerBuffer_0.Clear(); // make sure this is empty before trying to use it
+            int count = 0;
+            Battler[] output = new Battler[0];
+            int lastIndex = 0;
+            Action<BattlerSideFlags> addSide = (_side) => { for (int i = 0; i < battlersBySide[_side].Length; i++) { output[lastIndex] = battlersBySide[_side][i]; lastIndex++; } };
+            Action<BattlerSideFlags> countSide = (_side) => { for (int i = 0; i < battlersBySide[_side].Length; i++) count++; };
             switch (side)
             {
                 case BattlerSideFlags.PlayerSide:
                 case BattlerSideFlags.GenericAlliedSide:
                 case BattlerSideFlags.GenericEnemySide:
-                    FleetingCollections.battlerBuffer_0.AddRange(battlersBySide[BattlerSideFlags.GenericNeutralSide]);
+                    countSide(BattlerSideFlags.GenericNeutralSide);
+                    output = new Battler[count];
+                    addSide(BattlerSideFlags.GenericNeutralSide);
                     break;
                 case BattlerSideFlags.GenericNeutralSide:
-                    FleetingCollections.battlerBuffer_0.AddRange(battlersBySide[BattlerSideFlags.PlayerSide]);
-                    FleetingCollections.battlerBuffer_0.AddRange(battlersBySide[BattlerSideFlags.GenericAlliedSide]);
-                    FleetingCollections.battlerBuffer_0.AddRange(battlersBySide[BattlerSideFlags.GenericEnemySide]);
+                    countSide(BattlerSideFlags.PlayerSide);
+                    countSide(BattlerSideFlags.GenericAlliedSide);
+                    countSide(BattlerSideFlags.GenericEnemySide);
+                    output = new Battler[count];
+                    addSide(BattlerSideFlags.PlayerSide);
+                    addSide(BattlerSideFlags.GenericAlliedSide);
+                    addSide(BattlerSideFlags.GenericEnemySide);
                     break;
                 default:
                     Util.Crash(new Exception("Tried to find neutrals for side " + side + ", but it wasn't in the table."));
                     break;
             }
-            for (int i = 0; i < FleetingCollections.battlerBuffer_0.Count; i++) if (!outputList.Contains(FleetingCollections.battlerBuffer_0[i])) outputList.Add(FleetingCollections.battlerBuffer_0[i]);
+            return output;
         }
 
         /// <summary>
@@ -452,11 +456,9 @@ namespace CnfBattleSys
         /// Side. Side side side sidddeeee.
         /// Whose side is this side? My side, your side, side's side, side side side.
         /// </summary>
-        public void GetBattlersSameSideAs(BattlerSideFlags side, List<Battler> outputList)
+        public Battler[] GetBattlersSameSideAs(BattlerSideFlags side)
         {
-            FleetingCollections.battlerBuffer_0.Clear();
-            FleetingCollections.battlerBuffer_0.AddRange(battlersBySide[side]);
-            for (int i = 0; i < FleetingCollections.battlerBuffer_0.Count; i++) if (!outputList.Contains(FleetingCollections.battlerBuffer_0[i])) outputList.Add(FleetingCollections.battlerBuffer_0[i]);
+            return battlersBySide[side];
         }
 
         /// <summary>
@@ -464,7 +466,7 @@ namespace CnfBattleSys
         /// </summary>
         public Battler[] GetBattlersWithinAOERangeOf(Battler user, Battler target, ActionTargetType targetType, float radius, Battler[] battlersToCheck)
         {
-            FleetingCollections.battlerBuffer_0.Clear();
+            List<Battler> buffer = new List<Battler>(16);
             switch (targetType)
             {
                 case ActionTargetType.LineOfSightPiercing:
@@ -475,7 +477,7 @@ namespace CnfBattleSys
                         {
                             if (hits[h].collider == battlersToCheck[b].capsuleCollider)
                             {
-                                FleetingCollections.battlerBuffer_0.Add(battlersToCheck[b]);
+                                buffer.Add(battlersToCheck[b]);
                                 break;
                             }
                         }
@@ -487,22 +489,22 @@ namespace CnfBattleSys
                     {
                         RaycastHit hit;
                         user.capsuleCollider.Raycast(new Ray(battlersToCheck[b].capsuleCollider.center, battlersToCheck[b].logicalPosition - user.logicalPosition), out hit, BattleOverseer.fieldRadius);
-                        if (hit.collider != null && hit.distance < radius + battlersToCheck[b].footprintRadius + user.footprintRadius) FleetingCollections.battlerBuffer_0.Add(battlersToCheck[b]);
+                        if (hit.collider != null && hit.distance < radius + battlersToCheck[b].footprintRadius + user.footprintRadius) buffer.Add(battlersToCheck[b]);
                     }
                     break;
                 case ActionTargetType.CircularAOE:
                     if (radius >= BattleOverseer.fieldRadius * 2) return battlersToCheck; // if you cover a wider range than the battlefield (usually infinite range for hit-all shit) then ofc there's no point in going further
                     for (int b = 0; b < battlersToCheck.Length; b++)
                     {
-                        FleetingCollections.battlerBuffer_0.Add(battlersToCheck[b]);
+                        buffer.Add(battlersToCheck[b]);
                         break; // the code below this point only makes sense once movement and collision are a thing
                         RaycastHit r;
                         target.capsuleCollider.Raycast(new Ray(battlersToCheck[b].capsuleCollider.center, battlersToCheck[b].logicalPosition - target.logicalPosition), out r, BattleOverseer.fieldRadius);
-                        if (r.collider != null && r.distance < radius + battlersToCheck[b].footprintRadius + target.footprintRadius) FleetingCollections.battlerBuffer_0.Add(battlersToCheck[b]);
+                        if (r.collider != null && r.distance < radius + battlersToCheck[b].footprintRadius + target.footprintRadius) buffer.Add(battlersToCheck[b]);
                     }
                     break;
             }
-            return FleetingCollections.battlerBuffer_0.ToArray();
+            return buffer.ToArray();
         }
     }
 }

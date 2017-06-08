@@ -27,6 +27,7 @@ public class bUI_BattlerStatusBar : MonoBehaviour
         rectTransform = GetComponent<RectTransform>();
         iconsPrototype = GetComponentInChildren<bUI_StatusIcon>();
         thisTag = gameObject.GetInstanceID().ToString();
+        GenerateIcons(); // surprising fact: if you don't call this the status bar doesn't work
     }
 
     /// <summary>

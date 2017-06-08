@@ -109,8 +109,11 @@ public class bUI_BattlerInfobox : MonoBehaviour
     /// </summary>
     public void DisplayStanceName ()
     {
-        if (stanceNamesBank == null) stanceNamesBank = TextBankManager.Instance.GetCommonTextBank(typeof(StanceType));
-        guiText_StanceName.SetText(stanceNamesBank.GetPage(puppet.battler.currentStance.stanceID).text);
+        if (guiText_StanceName != null)
+        {
+            if (stanceNamesBank == null) stanceNamesBank = TextBankManager.Instance.GetCommonTextBank(typeof(StanceType));
+            guiText_StanceName.SetText(stanceNamesBank.GetPage(puppet.battler.currentStance.stanceID).text);
+        }
     }
 
     /// <summary>
