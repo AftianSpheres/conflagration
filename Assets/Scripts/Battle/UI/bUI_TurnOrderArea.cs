@@ -101,6 +101,7 @@ public class bUI_TurnOrderArea : MonoBehaviour
             else newPanel.transform.localPosition = new Vector3(panelsRectTransform.sizeDelta.x / 2, -(panelsRectTransform.sizeDelta.y * i), 0);
             newPanel.gameObject.name = "Turn Order Panel " + i;
             newPanel.SetIndex(i);
+            newPanel.Hide();
             panels[i] = newPanel;
         }
         panelsPrototype.gameObject.SetActive(false);

@@ -38,6 +38,7 @@
             }
         }
 
+        public readonly AudioEventResolverTableType audioEventResolverTableType;
         public readonly BattlerType battlerType;
         public readonly bool isFixedStats; // if this is true, we use our base stats directly and level doesn't matter; if false, we calculate our stats based on those values.
         public readonly BattlerAIType aiType;
@@ -46,7 +47,6 @@
         public readonly float size;
         public readonly float stepTime;
         public readonly float yOffset;
-        public readonly BattlerModelType modelType;
         public readonly BattleStance[] stances;
         public readonly BattleStance metaStance;
         public readonly int baseHP;
@@ -65,9 +65,9 @@
         /// <summary>
         /// Constructor. Should only ever be called by BattlerDatabase.ImportUnitDefWithID()
         /// </summary>
-        public BattlerData (BattlerType _battlerType, bool _isFixedStats, BattlerAIType _aiType, BattlerAIFlags _aiFlags, byte _level, float _size, float _stepTime, float _yOffset, BattlerModelType _modelType, 
+        public BattlerData (BattlerType _battlerType, bool _isFixedStats, BattlerAIType _aiType, BattlerAIFlags _aiFlags, byte _level, float _size, float _stepTime, float _yOffset, 
             BattleStance[] _stances, BattleStance _metaStance, int _baseHP, ushort _baseATK, ushort _baseDEF, ushort _baseMATK, ushort _baseMDEF, ushort _baseSPE, ushort _baseHIT, ushort _baseEVA, 
-            float _baseMoveDist, float _baseMoveDelay, Growths _growths, Battler.Resistances_Raw _resistances)
+            float _baseMoveDist, float _baseMoveDelay, Growths _growths, Battler.Resistances_Raw _resistances, AudioEventResolverTableType _audioEventResolverTableType)
         {
             battlerType = _battlerType;
             isFixedStats = _isFixedStats;
@@ -77,7 +77,6 @@
             size = _size;
             stepTime = _stepTime;
             yOffset = _yOffset;
-            modelType = _modelType;
             stances = _stances;
             metaStance = _metaStance;
             baseHP = _baseHP;
@@ -92,6 +91,7 @@
             baseMoveDelay = _baseMoveDelay;
             growths = _growths;
             resistances = _resistances;
+            audioEventResolverTableType = _audioEventResolverTableType;
         }
     }
 }

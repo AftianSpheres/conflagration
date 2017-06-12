@@ -927,19 +927,19 @@ namespace CnfBattleSys
         /// <summary>
         /// Applies transformations to battler state based on specified FXPackage.
         /// </summary>
-        public void ApplyFXPackage (BattleAction.Subaction.FXPackage fxPackage)
+        public void ApplyFXPackage (BattleAction.Subaction.EffectPackage fxPackage)
         {
-            switch (fxPackage.fxType)
+            switch (fxPackage.effectType)
             {
-                case SubactionFXType.KnockTargetBackward:
+                case SubactionEffectType.KnockTargetBackward:
                     Debug.Log("If unit movement existed, we would be pushed backward now");
                     break;
-                case SubactionFXType.Buff_DamageOutputUp:
-                    ApplyStatus(StatusType.TestBuff, StatusPacket_CancelationCondition.CancelWhenDurationZero, 0, fxPackage.fxLength_Byte, new Resistances_Raw(1), 0, DamageTypeFlags.None,
-                        MiscStatusEffectFlags.None, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, fxPackage.fxStrength_Float, 1, 1, 1, 1, 1, 1, 1, 1);
+                case SubactionEffectType.Buff_DamageOutputUp:
+                    ApplyStatus(StatusType.TestBuff, StatusPacket_CancelationCondition.CancelWhenDurationZero, 0, fxPackage.length_Byte, new Resistances_Raw(1), 0, DamageTypeFlags.None,
+                        MiscStatusEffectFlags.None, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, fxPackage.strength_Float, 1, 1, 1, 1, 1, 1, 1, 1);
                     break;
                 default:
-                    Util.Crash(new System.Exception("Unregognized FXtype: " + fxPackage.fxType));
+                    Util.Crash(new System.Exception("Unregognized FXtype: " + fxPackage.effectType));
                     break;
             }
         }
@@ -1371,7 +1371,7 @@ namespace CnfBattleSys
         /// <summary>
         /// Runs hit/evade checks for given fx package against this Battler.
         /// </summary>
-        public bool TryToLandFXAgainstMe(Battler attacker, BattleAction.Subaction.FXPackage fxPackage)
+        public bool TryToLandFXAgainstMe(Battler attacker, BattleAction.Subaction.EffectPackage fxPackage)
         {
             float adjustedSuccessRate = BattleUtility.GetModifiedAccuracyFor(fxPackage, attacker, this);
             // It should also be possible for uncontested hit/evade stats to provide hit/evade bonuses on FX packages, but that requires me to have some idea of what the numbers look like

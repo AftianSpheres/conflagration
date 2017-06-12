@@ -12,23 +12,71 @@ namespace CnfBattleSys
         /// <summary>
         /// Takes a string, spits out an ActionTargetType.
         /// </summary>
-        public static ActionTargetType ParseActionTargetType(string s)
+        public static ActionTargetType ParseActionTargetType (string s)
         {
             return (ActionTargetType)Enum.Parse(typeof(ActionTargetType), s);
         }
 
         /// <summary>
+        /// Parse comma-separated list of anim event flags.
+        /// </summary>
+        public static AnimEvent.Flags ParseAnimEventFlags (string s)
+        {
+            return (AnimEvent.Flags)Enum.Parse(typeof(AnimEvent.Flags), s);
+        }
+
+        /// <summary>
         /// Takes a string, spits out the corresponding AnimEventType.
         /// </summary>
-        public static AnimEventType ParseAnimEventType(string s)
+        public static AnimEventType ParseAnimEventType (string s)
         {
             return (AnimEventType)Enum.Parse(typeof(AnimEventType), s);
         }
 
         /// <summary>
+        /// Parse comma-separated list of audio event flags.
+        /// </summary>
+        public static AudioEvent.Flags ParseAudioEventFlags(string s)
+        {
+            return (AudioEvent.Flags)Enum.Parse(typeof(AudioEvent.Flags), s);
+        }
+
+        /// <summary>
+        /// Takes a string, spits out the corresponding AudioEventType.
+        /// </summary>
+        public static AudioEventType ParseAudioEventType (string s)
+        {
+            return (AudioEventType)Enum.Parse(typeof(AudioEventType), s);
+        }
+
+        /// <summary>
+        /// Takes a string, spits out the corresponding AudioSourceType.
+        /// </summary>
+        public static AudioSourceType ParseAudioSourceType (string s)
+        {
+            return (AudioSourceType)Enum.Parse(typeof(AudioSourceType), s);
+        }
+
+        /// <summary>
+        /// Parse comma-separated list of FX event flags.
+        /// </summary>
+        public static FXEvent.Flags ParseFXEventFlags(string s)
+        {
+            return (FXEvent.Flags)Enum.Parse(typeof(FXEvent.Flags), s);
+        }
+
+        /// <summary>
+        /// String > FXEventType
+        /// </summary>
+        public static FXEventType ParseFXEventType (string s)
+        {
+            return (FXEventType)Enum.Parse(typeof(FXEventType), s);
+        }
+
+        /// <summary>
         /// Takes a string, spits out the corresponding LogicalStatType.
         /// </summary>
-        public static LogicalStatType ParseLogicalStatType(string s)
+        public static LogicalStatType ParseLogicalStatType (string s)
         {
             return (LogicalStatType)Enum.Parse(typeof(LogicalStatType), s);
         }
@@ -36,15 +84,15 @@ namespace CnfBattleSys
         /// <summary>
         /// Takes a string, spits out the corresponding SubactionFXType.
         /// </summary>
-        public static SubactionFXType ParseSubactionFXType(string s)
+        public static SubactionEffectType ParseSubactionFXType (string s)
         {
-            return (SubactionFXType)Enum.Parse(typeof(SubactionFXType), s);
+            return (SubactionEffectType)Enum.Parse(typeof(SubactionEffectType), s);
         }
 
         /// <summary>
         /// Takes a CSV string, spits out target side bitflags.
         /// </summary>
-        public static TargetSideFlags ParseTargetSideFlags(string s)
+        public static TargetSideFlags ParseTargetSideFlags (string s)
         {
             return (TargetSideFlags)Enum.Parse(typeof(TargetSideFlags), s);
         }
@@ -52,7 +100,7 @@ namespace CnfBattleSys
         /// <summary>
         /// Takes a CSV string, spits out damage type bitflags.
         /// </summary>
-        public static DamageTypeFlags ParseDamageTypeFlags(string s)
+        public static DamageTypeFlags ParseDamageTypeFlags (string s)
         {
             return (DamageTypeFlags)Enum.Parse(typeof(DamageTypeFlags), s);
         }
@@ -60,7 +108,7 @@ namespace CnfBattleSys
         /// <summary>
         /// Parses a BattlerType.
         /// </summary>
-        public static BattlerType ParseBattlerType(string s)
+        public static BattlerType ParseBattlerType (string s)
         {
             return (BattlerType)Enum.Parse(typeof(BattlerType), s);
         }
@@ -68,7 +116,7 @@ namespace CnfBattleSys
         /// <summary>
         /// Parses a BattlerAIType.
         /// </summary>
-        public static BattlerAIType ParseBattlerAIType(string s)
+        public static BattlerAIType ParseBattlerAIType (string s)
         {
             return (BattlerAIType)Enum.Parse(typeof(BattlerAIType), s);
         }
@@ -84,17 +132,9 @@ namespace CnfBattleSys
         /// <summary>
         /// Parses CSV string into BattlerSideFlags bitflags
         /// </summary>
-        public static BattlerSideFlags ParseBattlerSideFlags(string s)
+        public static BattlerSideFlags ParseBattlerSideFlags (string s)
         {
             return (BattlerSideFlags)Enum.Parse(typeof(BattlerSideFlags), s);
-        }
-
-        /// <summary>
-        /// Parse BattlerModelType from string
-        /// </summary>
-        public static BattlerModelType ParseBattlerModelType (string s)
-        {
-            return (BattlerModelType)Enum.Parse(typeof(BattlerModelType), s);
         }
 
         /// <summary>
@@ -108,7 +148,7 @@ namespace CnfBattleSys
         /// <summary>
         /// Parse for action ID
         /// </summary>
-        public static ActionType ParseActionType(string s)
+        public static ActionType ParseActionType (string s)
         {
             return (ActionType)Enum.Parse(typeof(ActionType), s);
         }
@@ -119,6 +159,14 @@ namespace CnfBattleSys
         public static VenueType ParseVenueType (string s)
         {
             return (VenueType)Enum.Parse(typeof(VenueType), s);
+        }
+
+        /// <summary>
+        /// Parse for audio event resolver table type
+        /// </summary>
+        public static AudioEventResolverTableType ParseAudioEventResolverTableType (string s)
+        {
+            return (AudioEventResolverTableType)Enum.Parse(typeof(AudioEventResolverTableType), s);
         }
 
         /// <summary>
@@ -140,7 +188,7 @@ namespace CnfBattleSys
         /// <summary>
         /// CSV string => battle action category bitflags
         /// </summary>
-        public static BattleActionCategoryFlags ParseBattleActionCategoryFlags(string s)
+        public static BattleActionCategoryFlags ParseBattleActionCategoryFlags (string s)
         {
             return (BattleActionCategoryFlags)Enum.Parse(typeof(BattleActionCategoryFlags), s);
         }
@@ -153,6 +201,84 @@ namespace CnfBattleSys
             string[] substrings = s.Split(',');
             if (substrings.Length > 2) Util.Crash(new Exception("Unrecognized vector2-as-string encoding: " + s));
             return new Vector2(float.Parse(substrings[0]), float.Parse(substrings[1]));
+        }
+
+        /// <summary>
+        /// Turns the given blockNode into an EventBlock.
+        /// </summary>
+        public static EventBlock GetEventBlockFromXml (XmlNode blockNode)
+        {
+            XmlNode subNode;
+            Func<XmlNode, AnimEvent> actOnAnimNode = (node) =>
+            {
+                AnimEventType animEventType = AnimEventType.None;
+                subNode = node.SelectSingleNode("eventType");
+                if (subNode == null) Util.Crash(subNode, typeof(DBTools), null);
+                else animEventType = ParseAnimEventType(subNode.InnerText);
+                AnimEventType fallbackType = AnimEventType.None;
+                subNode = node.SelectSingleNode("fallbackType");
+                if (subNode == null) Util.Crash(subNode, typeof(DBTools), null);
+                else fallbackType = ParseAnimEventType(subNode.InnerText);
+                AnimEvent.Flags flags = AnimEvent.Flags.None;
+                subNode = node.SelectSingleNode("flags");
+                if (subNode == null) Util.Crash(subNode, typeof(DBTools), null);
+                else flags = ParseAnimEventFlags(subNode.InnerText);
+                int priority = 0;
+                subNode = node.SelectSingleNode("priority");
+                if (subNode == null) Util.Crash(subNode, typeof(DBTools), null);
+                else priority = int.Parse(subNode.InnerText);
+                return new AnimEvent(animEventType, fallbackType, flags, priority);
+            };
+            Func<XmlNode, AudioEvent> actOnAudioNode = (node) =>
+            {
+                AudioEventType audioEventType = AudioEventType.None;
+                subNode = node.SelectSingleNode("eventType");
+                if (subNode == null) Util.Crash(subNode, typeof(DBTools), null);
+                else audioEventType = ParseAudioEventType(subNode.InnerText);
+                AudioEventType fallbackType = AudioEventType.None;
+                subNode = node.SelectSingleNode("fallbackType");
+                if (subNode == null) Util.Crash(subNode, typeof(DBTools), null);
+                else fallbackType = ParseAudioEventType(subNode.InnerText);
+                AudioSourceType audioSourceType = AudioSourceType.None;
+                subNode = node.SelectSingleNode("audioSourceType");
+                if (subNode == null) Util.Crash(subNode, typeof(DBTools), null);
+                else audioSourceType = ParseAudioSourceType(subNode.InnerText);
+                AudioEvent.Flags flags = AudioEvent.Flags.None;
+                subNode = node.SelectSingleNode("flags");
+                if (subNode == null) Util.Crash(subNode, typeof(DBTools), null);
+                else flags = ParseAudioEventFlags(subNode.InnerText);
+                int priority = 0;
+                subNode = node.SelectSingleNode("priority");
+                if (subNode == null) Util.Crash(subNode, typeof(DBTools), null);
+                else priority = int.Parse(subNode.InnerText);
+                return new AudioEvent(audioEventType, fallbackType, audioSourceType, flags, priority);
+            };
+            Func<XmlNode, FXEvent> actOnFXNode = (node) =>
+            {
+                FXEventType fxEventType = FXEventType.None;
+                subNode = node.SelectSingleNode("eventType");
+                if (subNode == null) Util.Crash(subNode, typeof(DBTools), null);
+                else fxEventType = ParseFXEventType(subNode.InnerText);
+                FXEvent.Flags flags = FXEvent.Flags.None;
+                subNode = node.SelectSingleNode("flags");
+                if (subNode == null) Util.Crash(subNode, typeof(DBTools), null);
+                else flags = ParseFXEventFlags(subNode.InnerText);
+                int priority = 0;
+                subNode = node.SelectSingleNode("priority");
+                if (subNode == null) Util.Crash(subNode, typeof(DBTools), null);
+                else priority = int.Parse(subNode.InnerText);
+                return new FXEvent(fxEventType, flags, priority);
+            };
+            XmlNodeList nodeList = blockNode.SelectNodes("animEvent");
+            AnimEvent[] animEvents = new AnimEvent[nodeList.Count];
+            for (int i = 0; i < animEvents.Length; i++) animEvents[i] = actOnAnimNode(nodeList[i]);
+            nodeList = blockNode.SelectNodes("audioEvent");
+            AudioEvent[] audioEvents = new AudioEvent[nodeList.Count];
+            for (int i = 0; i < audioEvents.Length; i++) audioEvents[i] = actOnAudioNode(nodeList[i]);
+            nodeList = blockNode.SelectNodes("fxEvent");
+            FXEvent[] fxEvents = new FXEvent[nodeList.Count];
+            for (int i = 0; i < fxEvents.Length; i++) fxEvents[i] = actOnFXNode(nodeList[i]);
+            return new EventBlock(animEvents, audioEvents, fxEvents);
         }
 
         /// <summary>

@@ -9,8 +9,9 @@ namespace CnfBattleSys
     /// </summary>
     public static class ActionDatabase
     {
+        private readonly static EventBlock emptyEventBlock = new EventBlock(new AnimEvent[0], new AudioEvent[0], new FXEvent[0]);
         private static BattleAction[] _actions;
-        private static readonly BattleAction.Subaction[] defaultSubactionArray = { new BattleAction.Subaction(0, 0, false, AnimEventType.None, AnimEventType.None, LogicalStatType.None, LogicalStatType.None, LogicalStatType.None, LogicalStatType.None, -1, -1, BattleActionCategoryFlags.None,new BattleAction.Subaction.FXPackage[0], DamageTypeFlags.None) };
+        private static readonly BattleAction.Subaction[] defaultSubactionArray = { new BattleAction.Subaction(emptyEventBlock, 0, 0, false, LogicalStatType.None, LogicalStatType.None, LogicalStatType.None, LogicalStatType.None, -1, -1, BattleActionCategoryFlags.None, new BattleAction.Subaction.EffectPackage[0], DamageTypeFlags.None) };
         const string actionIconsResourcePath = "Battle/2D/UI/AWIcon/Action/";
 
         /// <summary>
@@ -26,22 +27,22 @@ namespace CnfBattleSys
             /// <summary>
             /// The default battle action entry, used to populate invalid entries on the table or when we need a placeholder action entry somewhere else in the battle system.
             /// </summary>
-            public static readonly BattleAction defaultBattleAction = new BattleAction(ActionType.InvalidAction, 0, 0, 0, 0, 0, 0, TargetSideFlags.None, TargetSideFlags.None, ActionTargetType.None, ActionTargetType.None, AnimEventType.None, 
-                                                           AnimEventType.None, AnimEventType.None, AnimEventType.None, AnimEventType.None, BattleActionCategoryFlags.None, defaultSubactionArray);
+            public static readonly BattleAction defaultBattleAction = new BattleAction(emptyEventBlock, emptyEventBlock, emptyEventBlock, ActionType.InvalidAction, 0, 0, 0, 0, 0, 0, TargetSideFlags.None, TargetSideFlags.None, 
+                                                                                       ActionTargetType.None, ActionTargetType.None, BattleActionCategoryFlags.None, defaultSubactionArray);
 
             /// <summary>
             /// Another empty placeholder battle action - all we care about with any of these placeholder actions is _identity_. They don't do anything.
             /// This actually gets plugged into the table, so don't count it as part of the special actions count above. None is index 0, not a negative index.
             /// </summary>
-            public static readonly BattleAction noneBattleAction = new BattleAction(ActionType.None, 0, 0, 0, 0, 0, 0, TargetSideFlags.None, TargetSideFlags.None, ActionTargetType.None, ActionTargetType.None, AnimEventType.None,
-                                                           AnimEventType.None, AnimEventType.None, AnimEventType.None, AnimEventType.None, BattleActionCategoryFlags.None, defaultSubactionArray);
+            public static readonly BattleAction noneBattleAction = new BattleAction(emptyEventBlock, emptyEventBlock, emptyEventBlock, ActionType.None, 0, 0, 0, 0, 0, 0, TargetSideFlags.None, TargetSideFlags.None, 
+                                                                                    ActionTargetType.None, ActionTargetType.None, BattleActionCategoryFlags.None, defaultSubactionArray);
 
             /// <summary>
             /// The entry for the "break own stance" entry, which is a placeholder just like the other two. We don't "execute" this action in the normal sense - 
             /// if you go into action execution with this action, you go through some hardcoded special-case behavior instead of executing an action def.
             /// </summary>
-            public static readonly BattleAction selfStanceBreakAction = new BattleAction(ActionType.INTERNAL_BreakOwnStance, 0, 0, 0, 0, 0, 0, TargetSideFlags.None, TargetSideFlags.None, ActionTargetType.None, ActionTargetType.None, AnimEventType.None,
-                                                           AnimEventType.None, AnimEventType.None, AnimEventType.None, AnimEventType.None, BattleActionCategoryFlags.None, defaultSubactionArray);
+            public static readonly BattleAction selfStanceBreakAction = new BattleAction(emptyEventBlock, emptyEventBlock, emptyEventBlock, ActionType.INTERNAL_BreakOwnStance, 0, 0, 0, 0, 0, 0, TargetSideFlags.None, TargetSideFlags.None, 
+                                                                                         ActionTargetType.None, ActionTargetType.None, BattleActionCategoryFlags.None, defaultSubactionArray);
         }
 
         static ActionDatabase ()
@@ -94,6 +95,13 @@ namespace CnfBattleSys
             float baseTargetingRange = float.Parse(workingNode.InnerText);
             actOnNode("baseSPCost");
             byte baseSPCost = byte.Parse(workingNode.InnerText);
+            actOnNode("animSKip");
+            EventBlock animSkip = DBTools.GetEventBlockFromXml(workingNode);
+            actOnNode("onConclusion");
+            EventBlock onConclusion = DBTools.GetEventBlockFromXml(workingNode);
+            actOnNode("onStart");
+            EventBlock onStart = DBTools.GetEventBlockFromXml(workingNode);
+
             actOnNode("targetingSideFlags");
             TargetSideFlags targetingSideFlags = DBTools.ParseTargetSideFlags(workingNode.InnerText);
             actOnNode("targetingType");
@@ -127,21 +135,11 @@ namespace CnfBattleSys
                     }
                 }
             }
-            actOnNode("animSkipTargetHitAnim");
-            AnimEventType animSkipTargetHitAnim = DBTools.ParseAnimEventType(workingNode.InnerText);
-            actOnNode("onActionEndTargetAnim");
-            AnimEventType onActionEndTargetAnim = DBTools.ParseAnimEventType(workingNode.InnerText);
-            actOnNode("onActionEndUserAnim");
-            AnimEventType onActionEndUserAnim = DBTools.ParseAnimEventType(workingNode.InnerText);
-            actOnNode("onActionUseTargetAnim");
-            AnimEventType onActionUseTargetAnim = DBTools.ParseAnimEventType(workingNode.InnerText);
-            actOnNode("onActionUseUserAnim");
-            AnimEventType onActionUseUserAnim = DBTools.ParseAnimEventType(workingNode.InnerText);
             actOnNode("categoryFlags");
             BattleActionCategoryFlags categoryFlags = DBTools.ParseBattleActionCategoryFlags(workingNode.InnerText);
             Resources.UnloadAsset(unreadFileBuffer);
-            return new BattleAction(actionID, baseAOERadius, baseDelay, baseFollowthroughStanceChangeDelay, baseMinimumTargetingDistance, baseTargetingRange, baseSPCost, alternateTargetingSideFlags, targetingSideFlags,
-                alternateTargetType, targetingType, animSkipTargetHitAnim, onActionEndTargetAnim, onActionEndUserAnim, onActionUseTargetAnim, onActionUseUserAnim, categoryFlags, Subactions);
+            return new BattleAction(animSkip, onConclusion, onStart, actionID, baseAOERadius, baseDelay, baseFollowthroughStanceChangeDelay, baseMinimumTargetingDistance, baseTargetingRange, baseSPCost, alternateTargetingSideFlags, targetingSideFlags,
+                alternateTargetType, targetingType, categoryFlags, Subactions);
 
         }
 
@@ -156,8 +154,8 @@ namespace CnfBattleSys
                 workingNode = SubactionNode.SelectSingleNode(node);
                 if (workingNode == null) Util.Crash(new Exception(exceptionSubactionIDStr() + " has no node " + node));
             };
-            XmlNodeList fxList = SubactionNode.SelectNodes("fxPackage");
-            BattleAction.Subaction.FXPackage[] fx = new BattleAction.Subaction.FXPackage[fxList.Count];
+            XmlNodeList fxList = SubactionNode.SelectNodes("effectPackage");
+            BattleAction.Subaction.EffectPackage[] fx = new BattleAction.Subaction.EffectPackage[fxList.Count];
             sbyte thisSubactionDamageTiedToSubactionAtIndex = -1;
             sbyte thisSubactionSuccessTiedToSubactionAtIndex = -1;
             if (fx != null)
@@ -166,19 +164,17 @@ namespace CnfBattleSys
                 {
                     Func<string> exceptionFXPackageIDStr = delegate { return "Action " + actionID.ToString() + ", Subaction " + index.ToString() + ", FXpackage " + f.ToString(); };
                     XmlNode fxNode = fxList[f];
-                    fx[f] = XmlNodeToFXPackage(fxNode, workingNode, exceptionFXPackageIDStr, f);
+                    fx[f] = XmlNodeToEffectPackage(fxNode, workingNode, exceptionFXPackageIDStr, f);
                 }
             }
+            actOnNode("events");
+            EventBlock eventBlock = DBTools.GetEventBlockFromXml(workingNode);
             actOnNode("baseDamage");
             int baseDamage = int.Parse(workingNode.InnerText);
             actOnNode("baseAccuracy");
             float baseAccuracy = float.Parse(workingNode.InnerText);
             actOnNode("useAlternateTargetSet");
             bool useAlternateTargetSet = bool.Parse(workingNode.InnerText);
-            actOnNode("onSubactionHitTargetAnim");
-            AnimEventType onSubactionHitTargetAnim = DBTools.ParseAnimEventType(workingNode.InnerText);
-            actOnNode("onSubactionExecuteUserAnim");
-            AnimEventType onSubactionExecuteUserAnim = DBTools.ParseAnimEventType(workingNode.InnerText);
             actOnNode("atkStat");
             LogicalStatType atkStat = DBTools.ParseLogicalStatType(workingNode.InnerText);
             actOnNode("defStat");
@@ -205,14 +201,14 @@ namespace CnfBattleSys
                 if (thisSubactionSuccessTiedToSubactionAtIndex < 0) Util.Crash(new Exception(exceptionSubactionIDStr() + " tries to tie itself to an invalid Subaction index!"));
                 else if (thisSubactionSuccessTiedToSubactionAtIndex >= index) Util.Crash(new Exception(exceptionSubactionIDStr() + " tries to tie itself to a Subaction index that doesn't precede it!"));
             }
-            return new BattleAction.Subaction(baseDamage, baseAccuracy, useAlternateTargetSet, onSubactionHitTargetAnim, onSubactionExecuteUserAnim, atkStat, defStat, hitStat, evadeStat,
-                thisSubactionDamageTiedToSubactionAtIndex, thisSubactionSuccessTiedToSubactionAtIndex, categoryFlags ,fx, damageTypes);
+            return new BattleAction.Subaction(eventBlock, baseDamage, baseAccuracy, useAlternateTargetSet, atkStat, defStat, hitStat, evadeStat,
+                thisSubactionDamageTiedToSubactionAtIndex, thisSubactionSuccessTiedToSubactionAtIndex, categoryFlags, fx, damageTypes);
         }
 
         /// <summary>
-        /// Parses the XML node defining an FXPackage's parameters and spits out an FXPackage.
+        /// Parses the XML node defining an eEffectPackage's parameters and spits out an EffectPackage.
         /// </summary>
-        private static BattleAction.Subaction.FXPackage XmlNodeToFXPackage(XmlNode fxNode, XmlNode workingNode, Func<string> exceptionFXPackageIDStr, int index)
+        private static BattleAction.Subaction.EffectPackage XmlNodeToEffectPackage(XmlNode effectNode, XmlNode workingNode, Func<string> exceptionFXPackageIDStr, int index)
         {
             float fxStrengthFloat = float.NaN;
             float fxLengthFloat = float.NaN;
@@ -221,44 +217,46 @@ namespace CnfBattleSys
             sbyte thisFXSuccessTiedToFXAtIndex = -1;
             Action<string> actOnNode = (node) =>
             {
-                workingNode = fxNode.SelectSingleNode(node);
+                workingNode = effectNode.SelectSingleNode(node);
                 if (workingNode == null) Util.Crash(new Exception(exceptionFXPackageIDStr() + " has no node " + node));
             };
-            actOnNode("fxType");
-            SubactionFXType fxType = DBTools.ParseSubactionFXType(workingNode.InnerText);
-            actOnNode("fxHitStat");
-            LogicalStatType fxHitStat = DBTools.ParseLogicalStatType(workingNode.InnerText);
-            actOnNode("fxEvadeStat");
-            LogicalStatType fxEvadeStat = DBTools.ParseLogicalStatType(workingNode.InnerText);
+            actOnNode("events");
+            EventBlock eventBlock = DBTools.GetEventBlockFromXml(workingNode);
+            actOnNode("effectType");
+            SubactionEffectType effectType = DBTools.ParseSubactionFXType(workingNode.InnerText);
+            actOnNode("hitStat");
+            LogicalStatType hitStat = DBTools.ParseLogicalStatType(workingNode.InnerText);
+            actOnNode("evadeStat");
+            LogicalStatType evadeStat = DBTools.ParseLogicalStatType(workingNode.InnerText);
             bool applyEvenIfSubactionMisses = true;
-            workingNode = fxNode.SelectSingleNode("applyEvenIfSubactionMisses");
+            workingNode = effectNode.SelectSingleNode("applyEvenIfSubactionMisses");
             if (workingNode != null) applyEvenIfSubactionMisses = bool.Parse(workingNode.InnerText);
             actOnNode("baseSuccessRate");
             float baseSuccessRate = float.Parse(workingNode.InnerText);
             if (baseSuccessRate > 1.0f) baseSuccessRate = 1.0f;
             else if (baseSuccessRate < 0.0f) baseSuccessRate = 0.0f;
-            workingNode = fxNode.SelectSingleNode("fxLength_Float");
+            workingNode = effectNode.SelectSingleNode("length_Float");
             if (workingNode != null) fxLengthFloat = float.Parse(workingNode.InnerText);
             else
             {
-                actOnNode("fxLength_Int");
+                actOnNode("length_Int");
                 fxLengthByte = byte.Parse(workingNode.InnerText);
             }
-            workingNode = fxNode.SelectSingleNode("fxStrength_Float");
+            workingNode = effectNode.SelectSingleNode("strength_Float");
             if (workingNode != null) fxStrengthFloat = float.Parse(workingNode.InnerText);
             else
             {
-                actOnNode("fxStrength_Int");
+                actOnNode("strength_Int");
                 fxStrengthInt = int.Parse(workingNode.InnerText);
             }
-            workingNode = fxNode.SelectSingleNode("thisFXSuccessTiedToFXAtIndex");
+            workingNode = effectNode.SelectSingleNode("tieSuccessToEffectIndex");
             if (workingNode != null)
             {
                 thisFXSuccessTiedToFXAtIndex = sbyte.Parse(workingNode.InnerText);
                 if (thisFXSuccessTiedToFXAtIndex < 0) Util.Crash(new Exception(exceptionFXPackageIDStr() + " tries to tie itself to an invalid FX index!"));
                 else if (thisFXSuccessTiedToFXAtIndex >= index) Util.Crash(new Exception(exceptionFXPackageIDStr() + " tries to tie itself to an FX index that doesn't precede it!"));
             }
-            return new BattleAction.Subaction.FXPackage(fxType, fxHitStat, fxEvadeStat, applyEvenIfSubactionMisses, baseSuccessRate, fxLengthFloat, fxStrengthFloat, fxLengthByte, fxStrengthInt, thisFXSuccessTiedToFXAtIndex, 0);
+            return new BattleAction.Subaction.EffectPackage(eventBlock, effectType, hitStat, evadeStat, applyEvenIfSubactionMisses, baseSuccessRate, fxLengthFloat, fxStrengthFloat, fxLengthByte, fxStrengthInt, thisFXSuccessTiedToFXAtIndex, 0);
         }
 
         /// <summary>

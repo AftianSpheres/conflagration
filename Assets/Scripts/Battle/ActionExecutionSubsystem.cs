@@ -132,7 +132,7 @@ namespace CnfBattleSys
         /// we have to iterate over all targets and check them individually, instead of doing that within the subaction success/fail check
         /// loop.
         /// </summary>
-        private bool HandleFXPackage(BattleAction.Subaction.FXPackage fxPackage, List<Battler> t)
+        private bool HandleFXPackage(BattleAction.Subaction.EffectPackage fxPackage, List<Battler> t)
         {
             bool atLeastOneSuccess = false;
             currentSubaction_FX_SuccessArrays.Add(new bool[t.Count]);
@@ -148,10 +148,10 @@ namespace CnfBattleSys
         /// Checks to see if the fx package should be applied to target at the given index, and does that if so.
         /// Returns true if this succeeds, false otherwise.
         /// </summary>
-        private bool HandleFXPackage_ForTargetIndex(BattleAction.Subaction.FXPackage fxPackage, int targetIndex, List<Battler> t)
+        private bool HandleFXPackage_ForTargetIndex(BattleAction.Subaction.EffectPackage fxPackage, int targetIndex, List<Battler> t)
         {
             bool executionSuccess = true;
-            if (fxPackage.thisFXSuccessTiedToFXAtIndex > -1) executionSuccess = (currentSubaction_FX_SuccessArrays[fxPackage.thisFXSuccessTiedToFXAtIndex][targetIndex] == true);
+            if (fxPackage.tieSuccessToEffectIndex > -1) executionSuccess = (currentSubaction_FX_SuccessArrays[fxPackage.tieSuccessToEffectIndex][targetIndex] == true);
             else if (!fxPackage.applyEvenIfSubactionMisses && subactions_TargetHitArrays[subactionExecutionIndex][targetIndex] == false) executionSuccess = false;
             else if (fxPackage.baseSuccessRate < 1.0f) executionSuccess = t[targetIndex].TryToLandFXAgainstMe(currentActingBattler, fxPackage);
             if (executionSuccess) t[targetIndex].ApplyFXPackage(fxPackage);
@@ -180,9 +180,9 @@ namespace CnfBattleSys
                 subactions_TargetHitArrays[subactionExecutionIndex][targetIndex] = HandleSubaction_ForTargetIndex(subaction, targetIndex, t);
                 if (subactions_TargetHitArrays[subactionExecutionIndex][targetIndex] == true) atLeastOneSuccess = true;
             }
-            for (subactionFXExecutionIndex = 0; subactionFXExecutionIndex < subaction.fx.Length; subactionFXExecutionIndex++)
+            for (subactionFXExecutionIndex = 0; subactionFXExecutionIndex < subaction.effectPackages.Length; subactionFXExecutionIndex++)
             {
-                currentSubaction_FX_NonFailures.Add(HandleFXPackage(subaction.fx[subactionFXExecutionIndex], t));
+                currentSubaction_FX_NonFailures.Add(HandleFXPackage(subaction.effectPackages[subactionFXExecutionIndex], t));
                 if (currentSubaction_FX_NonFailures[subactionExecutionIndex] == true) atLeastOneSuccess = true;
             }
             return atLeastOneSuccess;

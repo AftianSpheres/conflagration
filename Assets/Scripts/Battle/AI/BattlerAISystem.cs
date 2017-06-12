@@ -370,14 +370,14 @@ namespace CnfBattleSys
                     {
                         float subactionAccMod = 0;
                         int f;
-                        for (f = 0; f < action.Subactions[s].fx.Length; f++)
+                        for (f = 0; f < action.Subactions[s].effectPackages.Length; f++)
                         {
                             float fxAccMod = 1;
-                            score += action.Subactions[s].fx[f].baseAIScoreValue;
+                            score += action.Subactions[s].effectPackages[f].baseAIScoreValue;
                             if ((flags & BattlerAIFlags.EvadeAware) == BattlerAIFlags.EvadeAware)
                             {
-                                if (action.Subactions[s].fx[f].fxEvadeStat != LogicalStatType.None) fxAccMod = BattleUtility.GetModifiedAccuracyFor(action.Subactions[s].fx[f], user, potentialTargets[i]);
-                                if (!action.Subactions[s].fx[f].applyEvenIfSubactionMisses && action.Subactions[s].evadeStat != LogicalStatType.None) fxAccMod *= BattleUtility.GetModifiedAccuracyFor(action.Subactions[s], user, potentialTargets[i]);
+                                if (action.Subactions[s].effectPackages[f].evadeStat != LogicalStatType.None) fxAccMod = BattleUtility.GetModifiedAccuracyFor(action.Subactions[s].effectPackages[f], user, potentialTargets[i]);
+                                if (!action.Subactions[s].effectPackages[f].applyEvenIfSubactionMisses && action.Subactions[s].evadeStat != LogicalStatType.None) fxAccMod *= BattleUtility.GetModifiedAccuracyFor(action.Subactions[s], user, potentialTargets[i]);
                             }
                             // Eventually I need to add status resistances, at which point the difficulty or ease of landing that status on that target needs to be factored into the accuracy mod.
                             subactionAccMod += fxAccMod;

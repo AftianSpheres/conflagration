@@ -46,12 +46,12 @@
         /// <summary>
         /// Gets modified accuracy value for a single FX package based on attacker/target combination.
         /// </summary>
-        public static float GetModifiedAccuracyFor (BattleAction.Subaction.FXPackage fxPackage, Battler attacker, Battler target)
+        public static float GetModifiedAccuracyFor (BattleAction.Subaction.EffectPackage fxPackage, Battler attacker, Battler target)
         {
             int evadeStat = -1;
-            if (fxPackage.fxEvadeStat != LogicalStatType.None) evadeStat = target.GetLogicalStatValue(fxPackage.fxEvadeStat);
+            if (fxPackage.evadeStat != LogicalStatType.None) evadeStat = target.GetLogicalStatValue(fxPackage.evadeStat);
             int hitStat = -1;
-            if (fxPackage.fxHitStat != LogicalStatType.None) hitStat = attacker.GetLogicalStatValue(fxPackage.fxHitStat);
+            if (fxPackage.hitStat != LogicalStatType.None) hitStat = attacker.GetLogicalStatValue(fxPackage.hitStat);
             float adjustedSuccessRate = fxPackage.baseSuccessRate;
             if (evadeStat != -1 && hitStat != -1) // this is contested, so let's work out the contest
             {

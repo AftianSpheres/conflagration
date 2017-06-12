@@ -22,6 +22,7 @@ public class bUI_MessagePopup : MonoBehaviour
     {
         bgImage = GetComponent<Image>();
         contents = GetComponentInChildren<TextMeshProUGUI>();
+        Close();
     }
 
     /// <summary>

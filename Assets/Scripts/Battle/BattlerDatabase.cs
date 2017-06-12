@@ -25,14 +25,14 @@ namespace CnfBattleSys
             /// <summary>
             /// "Invalid data" battler data entry.
             /// </summary>
-            public static readonly BattlerData defaultBattler = new BattlerData(BattlerType.InvalidUnit, true, BattlerAIType.None, BattlerAIFlags.None, 0, 0, 1, 0, BattlerModelType.None, new BattleStance[0], StanceDatabase.SpecialStances.defaultStance,
-                10, 1, 1, 1, 1, 1, 1, 1, 0, 0, new BattlerData.Growths(1, 1, 1, 1, 1, 1, 1, 1), new Battler.Resistances_Raw(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1));
+            public static readonly BattlerData defaultBattler = new BattlerData(BattlerType.InvalidUnit, true, BattlerAIType.None, BattlerAIFlags.None, 0, 0, 1, 0, new BattleStance[0], StanceDatabase.SpecialStances.defaultStance,
+                10, 1, 1, 1, 1, 1, 1, 1, 0, 0, new BattlerData.Growths(1, 1, 1, 1, 1, 1, 1, 1), new Battler.Resistances_Raw(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1), AudioEventResolverTableType.None);
 
             /// <summary>
             /// "No battler" battler data entry. This gets plugged into the table, and shouldn't be included in count.
             /// </summary>
-            public static readonly BattlerData noneBattler = new BattlerData(BattlerType.None, true, BattlerAIType.None, BattlerAIFlags.None, 0, 0, 1, 0, BattlerModelType.None, new BattleStance[0], StanceDatabase.SpecialStances.defaultStance,
-                10, 1, 1, 1, 1, 1, 1, 1, 0, 0, new BattlerData.Growths(1, 1, 1, 1, 1, 1, 1, 1), new Battler.Resistances_Raw(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1));
+            public static readonly BattlerData noneBattler = new BattlerData(BattlerType.None, true, BattlerAIType.None, BattlerAIFlags.None, 0, 0, 1, 0, new BattleStance[0], StanceDatabase.SpecialStances.defaultStance,
+                10, 1, 1, 1, 1, 1, 1, 1, 0, 0, new BattlerData.Growths(1, 1, 1, 1, 1, 1, 1, 1), new Battler.Resistances_Raw(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1), AudioEventResolverTableType.None);
         }
 
         static BattlerDatabase()
@@ -90,8 +90,8 @@ namespace CnfBattleSys
             float stepTime = float.Parse(workingNode.InnerText);
             actOnNode("yOffset");
             float yOffset = float.Parse(workingNode.InnerText);
-            actOnNode("model");
-            BattlerModelType modelType = DBTools.ParseBattlerModelType(workingNode.InnerText);
+            actOnNode("audioEventResolverTable");
+            AudioEventResolverTableType audioEventResolverTableType = DBTools.ParseAudioEventResolverTableType(workingNode.InnerText);
             actOnNode("stances");
             XmlNodeList stanceNodes = workingNode.SelectNodes("stance");
             BattleStance[] stances = new BattleStance[stanceNodes.Count];
@@ -131,8 +131,8 @@ namespace CnfBattleSys
                 growths = DBTools.GetGrowthsFromXML(secondaryNode, workingNode);
             }
             Resources.UnloadAsset(unreadFileBuffer);
-            return new BattlerData(battlerType, isFixedStats, aiType, aiFlags, level, size, stepTime, yOffset, modelType, stances, metaStance,
-                baseHP, baseATK, baseDEF, baseMATK, baseMDEF, baseSPE, baseHIT, baseEVA, baseMoveDist, baseMoveDelay, growths, resistances);
+            return new BattlerData(battlerType, isFixedStats, aiType, aiFlags, level, size, stepTime, yOffset, stances, metaStance,
+                baseHP, baseATK, baseDEF, baseMATK, baseMDEF, baseSPE, baseHIT, baseEVA, baseMoveDist, baseMoveDelay, growths, resistances, audioEventResolverTableType);
         }
 
         /// <summary>

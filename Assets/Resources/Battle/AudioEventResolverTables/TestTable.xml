@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<!--Test audio event resolution table-->
+<audioEvents>
+  <resolve type = "TestSFX">
+    <clip>ShortBeep</clip>
+    <clip>LongBeep</clip>
+  </resolve>
+  <resolve type = "TestVox">
+    <clip>TestVox</clip>
+  </resolve>
+</audioEvents>

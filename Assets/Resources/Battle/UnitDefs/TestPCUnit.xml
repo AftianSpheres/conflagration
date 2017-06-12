@@ -10,6 +10,7 @@
   <stepTime>0.25</stepTime>
   <yOffset>2.4</yOffset>
   <model>TestModelSimple</model>
+  <audioEventResolverTable>TestTable</audioEventResolverTable>
   <stances>
     <stance>TestStance_Melee</stance>
     <stance>TestStance_Ranged</stance>

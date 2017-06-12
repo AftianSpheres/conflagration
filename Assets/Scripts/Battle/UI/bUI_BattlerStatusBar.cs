@@ -80,6 +80,8 @@ public class bUI_BattlerStatusBar : MonoBehaviour
             newIcon.Hide();
             icons[i] = newIcon;
         }
+        iconsPrototype.gameObject.SetActive(false);
+        Destroy(iconsPrototype.gameObject);
     }
 
     /// <summary>

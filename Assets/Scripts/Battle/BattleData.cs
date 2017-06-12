@@ -110,7 +110,6 @@ namespace CnfBattleSys
             }
             DeriveNormalizedSpeed();
             for (int b = 0; b < allBattlers.Length; b++) allBattlers[b].ApplyDelay(1.0f); // Applying the starting delay of 1.0 gives each battler something to apply its speed factor to, and lets us build starting turn order
-            ChangeState(State.BetweenTurns);
             actionExecutionSubsystem = new ActionExecutionSubsystem(this);
             turnManagementSubsystem = new TurnManagementSubsystem(this);
         }
@@ -183,8 +182,6 @@ namespace CnfBattleSys
                     break;
                 }
             }
-            BattlerPuppet puppet = BattleStage.instance.GetAPuppet(); // I should engineer a system to let me set up a battle in advance of loading the BattleStage and then just attach puppets to prebaked shit
-            puppet.AttachBattler(battler);
         }
 
         /// <summary>

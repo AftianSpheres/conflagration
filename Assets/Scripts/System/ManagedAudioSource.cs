@@ -64,4 +64,15 @@ public class ManagedAudioSource : MonoBehaviour
         }
         source.volume = baseVolume * volume;
     }
+
+    /// <summary>
+    /// Sets the type of this managedAudioSource to clipType, conform,
+    /// and play the given clip.
+    /// </summary>
+    public void PlayOneShotAs (AudioClip clip, AudioSourceType clipType)
+    {
+        audioSourceType = clipType;
+        ConformToManager();
+        source.PlayOneShot(clip);
+    }
 }
