@@ -95,7 +95,7 @@ namespace CnfBattleSys
             float baseTargetingRange = float.Parse(workingNode.InnerText);
             actOnNode("baseSPCost");
             byte baseSPCost = byte.Parse(workingNode.InnerText);
-            actOnNode("animSKip");
+            actOnNode("animSkip");
             EventBlock animSkip = DBTools.GetEventBlockFromXml(workingNode);
             actOnNode("onConclusion");
             EventBlock onConclusion = DBTools.GetEventBlockFromXml(workingNode);

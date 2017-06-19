@@ -1,10 +1,8 @@
 ﻿#if UNITY_EDITOR
-using System;
 using System.CodeDom;
 using System.CodeDom.Compiler;
 using System.IO;
 using System.Text;
-using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEditor;
@@ -72,6 +70,16 @@ public class GenerateDatatableFromBuildSettings : IPreprocessBuild
     [PostProcessScene]
     public static void OnPostProcessScene()
     {
+        GenerateDatatable();
+    }
+
+    /// <summary>
+    /// Clears the StringWriter to force a rebuild,
+    /// then rebuilds.
+    /// </summary>
+    public static void Refire()
+    {
+        writer = null;
         GenerateDatatable();
     }
 

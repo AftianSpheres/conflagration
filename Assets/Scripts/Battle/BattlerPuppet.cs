@@ -30,11 +30,14 @@ public class BattlerPuppet : MonoBehaviour
     public bUI_InfoboxShell infoboxShell { get; private set; }
     public ManagedAudioSource managedAudioSource { get; private set; }
     public AudioEventResolverTable audioEventResolverTable { get; private set; }
+    public Transform fxControllersParent { get; private set; }
     public CapsuleCollider capsuleCollider;
     public Animator animator;
-    public MeshRenderer meshRenderer;
-    public MeshFilter meshFilter;
+    public SkinnedMeshRenderer skinnedMeshRenderer;
+    private Dictionary<AnimEventType, AnimEventResolver> animEventResolverTable;
+    public bool loaded { get; private set; }
     public bool loading { get; private set; }
+    private AnimatorMetadataContainer animatorMetadataContainer;
     private Vector3 offset;
     private float stepTime;
     private LinkedList<Action> StatusPacketsModified;
@@ -48,6 +51,25 @@ public class BattlerPuppet : MonoBehaviour
         thisTag = GetInstanceID().ToString();
         StatusPacketsModified = new LinkedList<Action>();
         managedAudioSource = GetComponent<ManagedAudioSource>();
+        fxControllersParent = Util.CreateEmptyChild(transform).transform;
+        fxControllersParent.gameObject.name = "FX Controllers";
+        animEventResolverTable = new Dictionary<AnimEventType, AnimEventResolver>();
+    }
+
+    /// <summary>
+    /// MonoBehaviour.Start ()
+    /// </summary>
+    void Start()
+    {
+        Timing.RunCoroutine(_Load(), thisTag);    
+    }
+
+    /// <summary>
+    /// MonoBehaviour.OnDestroy ()
+    /// </summary>
+    void OnDestroy()
+    {
+        Timing.KillCoroutines(thisTag);
     }
 
     /// <summary>
@@ -65,7 +87,7 @@ public class BattlerPuppet : MonoBehaviour
     public void AttachBattler (Battler _battler)
     {
         battler = _battler;
-        battler.GivePuppet(this);
+        BattleStage.instance.TiePuppetToBattler(_battler, this);
         SyncPosition();
         gameObject.name = "BattlerPuppet " + _battler.battlerType.ToString() + ": " + _battler.index;
     }
@@ -121,24 +143,31 @@ public class BattlerPuppet : MonoBehaviour
             yield return 0;
         }
         SyncPosition();
-        DispatchAnimEvent(exitEvent);
+        //DispatchAnimEvent(exitEvent);
     }
 
     /// <summary>
-    /// Stub.
-    /// TO-DO: This returns true if the animator has an animation of the same name as the animEventType.
+    /// Returns true if either primary or fallback types of this anim event can be resolved.
     /// </summary>
-    private bool HasAnimFor (AnimEventType animEventType)
+    /// <param name="animEvent"></param>
+    /// <returns></returns>
+    public bool AnimEventIsResolveable (AnimEvent animEvent)
     {
-        return true;
+        return (animEventResolverTable.ContainsKey(animEvent.animEventType) || animEventResolverTable.ContainsKey(animEvent.fallbackType));
+    }
+
+    public void DispatchAnimEvent (AnimEventType aet)
+    {
+        Util.Crash("this is just to compile");
     }
 
     /// <summary>
-    /// Stubbed. This just forwards the animEvent straight to the BattleStage right now.
+    /// Dispatch the given anim event to the 
     /// </summary>
-    public void DispatchAnimEvent(AnimEventType animEventType)
+    public void DispatchAnimEvent(AnimEvent animEvent)
     {
-        BattleStage.instance.PrepareAnimEvent(animEventType, battler);
+        
+        //BattleStage.instance.PrepareAnimEvent(animEventType, battler);
     }
 
     /// <summary>
@@ -171,7 +200,7 @@ public class BattlerPuppet : MonoBehaviour
     /// </summary>
     public bool ProcessMove(Vector3 moveVector, float speed, AnimEventType moveEvent, AnimEventType exitEvent)
     {
-        bool r = HasAnimFor(moveEvent);
+        bool r = true; // HasAnimFor(moveEvent);
         if (r == true)
         {
             Timing.RunCoroutine(_Move(moveVector, speed, exitEvent));
@@ -192,56 +221,59 @@ public class BattlerPuppet : MonoBehaviour
     }
 
     /// <summary>
-    ///
+    /// Coroutine: Loads all resources this battler will require.
     /// </summary>
-    private IEnumerator<float> _Load()
+    public IEnumerator<float> _Load()
     {
-        // ACTUALLY YOU KNOW WHAT MAKES A HELL OF A LOT MORE SENSE
-        // BattlerPuppet should be an abstract class.
-        // When you generate a puppet for a battler,
-        // you consult a big-ass lookup table to identify
-        // which BattlerPuppet class it is?
-        // idk...
-        // there def. needs to be some way to resolve sfx types anyhow.
-        // ie. "genericHitSfx" is handled by the puppet and resolved to "randomly select thisUnitHitSfx1 or "thisUnitHitSfx2"
-        // so for the metadata table: there's a list of animation and fx events that this puppet can resolve,
-        // and then information on how it resolves those. ie. "animEvent.Foo" > "foo", "foo2" has you call one of those two anims when given animEvent.Foo
-        // also let's split anim events up into "field" anims and "battler" anims
-        // so it's StageAnimEvent, BattlerAnimEvent, StageFXEvent, BattlerFXEvent, StageSFXEvent, BattlerSFXEvent?
-        // where a stage anim or w/e can call events on battlers...
-        // for fx: all you do is instantiate a prefab w/ a BattleFXController-derived monobehaviour on that and wait until it destroys itself.
-        // actually, nah - instantiate all the fx prefabs as children of either the fxparent (for the stage) or the individual puppets - use
-        // fxcontroller interfaces to "start" fx (normalize state and start executing animations and shit) and wait until it's finished (at
-        // which point the controller automatically hides the object again
-        // destroying these would be costly
-        // stage anims don't really exist actually, do they?
-        // stages don't animate.
-        // and fx controllers should be able to call anims on their own, so
-        // it's just stagefx/battlerfx/battleranim
+        if (loaded) yield break;
         loading = true;
         bool operationCompleted = false;
-        Action whenLoaderAvailable = () => { Timing.RunCoroutine(TableLoader.instance._AwaitTableLoad(battlerData.audioEventResolverTableType, () => { operationCompleted = true; })); };
-        Timing.RunCoroutine(TableLoader._OnceAvailable(whenLoaderAvailable));
+        Action whenLoaderAvailable = () => 
+        {
+            Timing.RunCoroutine(BattleEventResolverTables.instance._AwaitAudioEventResolverTableLoad(battlerData.audioEventResolverTableType, () => { operationCompleted = true; }));
+        };
+        Action<BattleAction> loadForBattleAction = (action) =>
+        {
+            LoadForEventBlock(action.animSkip);
+            LoadForEventBlock(action.onStart);
+            LoadForEventBlock(action.onConclusion);
+            for (int sa = 0; sa < action.subactions.Length; sa++)
+            {
+                for (int f = 0; f < action.subactions[sa].effectPackages.Length; f++) LoadForEventBlock(action.subactions[sa].effectPackages[f].eventBlock);
+                LoadForEventBlock(action.subactions[sa].eventBlock);
+            }
+        };
+        Timing.RunCoroutine(BattleEventResolverTables._OnceAvailable(whenLoaderAvailable));
         while (!operationCompleted) yield return 0;
         for (int s = 0; s < battler.stances.Length; s++)
         {
             for (int a = 0; a < battler.stances[s].actionSet.Length; a++)
             {
-                 
-                // get effects and shit
+                loadForBattleAction(battler.stances[s].actionSet[a]);
             }
         }
         for (int a = 0; a < battler.metaStance.actionSet.Length; a++)
         {
-            // don't forget about this
-            // actually there should be an AttackAnimPlayer behaviour and we should just pass action IDs
-            // into it, and it should batch all of the resources it'll need
-            // so this is just bUI_AttackAnimEngine.LoadIn(battler.metaStance.actionSet[a]);
+            loadForBattleAction(battler.metaStance.actionSet[a]);
         }
-        // load model corresponding to modelID 
-        // and a package of sound effects and things
-        // + visual effects for all your attack anims and shit...
-        // load animator controller for that model
-        // animator data to animevent...
+        loading = false;
+        loaded = true;
+    }
+
+    /// <summary>
+    /// Crawl through the event block and make any requests you
+    /// need to for its contents.
+    /// </summary>
+    private void LoadForEventBlock (EventBlock eventBlock)
+    {
+        for (int l = 0; l < eventBlock.layers.Length; l++)
+        {
+            for (int f = 0; f < eventBlock.layers[l].fxEvents.Length; f++) BattleEventResolverTables.instance.RequestFXLoad(eventBlock.layers[l].fxEvents[f].fxEventType);
+        }
+    }
+
+    private void BuildAnimEventResolverTable ()
+    {
+     
     }
 }

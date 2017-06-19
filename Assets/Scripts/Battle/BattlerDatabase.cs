@@ -26,13 +26,13 @@ namespace CnfBattleSys
             /// "Invalid data" battler data entry.
             /// </summary>
             public static readonly BattlerData defaultBattler = new BattlerData(BattlerType.InvalidUnit, true, BattlerAIType.None, BattlerAIFlags.None, 0, 0, 1, 0, new BattleStance[0], StanceDatabase.SpecialStances.defaultStance,
-                10, 1, 1, 1, 1, 1, 1, 1, 0, 0, new BattlerData.Growths(1, 1, 1, 1, 1, 1, 1, 1), new Battler.Resistances_Raw(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1), AudioEventResolverTableType.None);
+                10, 1, 1, 1, 1, 1, 1, 1, 0, 0, new BattlerData.Growths(1, 1, 1, 1, 1, 1, 1, 1), new Battler.Resistances_Raw(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1), AudioEventResolverTableType.None, 1);
 
             /// <summary>
             /// "No battler" battler data entry. This gets plugged into the table, and shouldn't be included in count.
             /// </summary>
             public static readonly BattlerData noneBattler = new BattlerData(BattlerType.None, true, BattlerAIType.None, BattlerAIFlags.None, 0, 0, 1, 0, new BattleStance[0], StanceDatabase.SpecialStances.defaultStance,
-                10, 1, 1, 1, 1, 1, 1, 1, 0, 0, new BattlerData.Growths(1, 1, 1, 1, 1, 1, 1, 1), new Battler.Resistances_Raw(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1), AudioEventResolverTableType.None);
+                10, 1, 1, 1, 1, 1, 1, 1, 0, 0, new BattlerData.Growths(1, 1, 1, 1, 1, 1, 1, 1), new Battler.Resistances_Raw(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1), AudioEventResolverTableType.None, 1);
         }
 
         static BattlerDatabase()
@@ -118,6 +118,8 @@ namespace CnfBattleSys
             float baseMoveDist = float.Parse(workingNode.InnerText);
             actOnNode("baseMoveDelay");
             float baseMoveDelay = float.Parse(workingNode.InnerText);
+            actOnNode("fxScale");
+            float fxScale = float.Parse(workingNode.InnerText);
             XmlNode secondaryNode = rootNode.SelectSingleNode("resistances");
             Battler.Resistances_Raw resistances = DBTools.GetResistancesFromXML(secondaryNode, workingNode);
             BattlerData.Growths growths;
@@ -132,7 +134,7 @@ namespace CnfBattleSys
             }
             Resources.UnloadAsset(unreadFileBuffer);
             return new BattlerData(battlerType, isFixedStats, aiType, aiFlags, level, size, stepTime, yOffset, stances, metaStance,
-                baseHP, baseATK, baseDEF, baseMATK, baseMDEF, baseSPE, baseHIT, baseEVA, baseMoveDist, baseMoveDelay, growths, resistances, audioEventResolverTableType);
+                baseHP, baseATK, baseDEF, baseMATK, baseMDEF, baseSPE, baseHIT, baseEVA, baseMoveDist, baseMoveDelay, growths, resistances, audioEventResolverTableType, fxScale);
         }
 
         /// <summary>

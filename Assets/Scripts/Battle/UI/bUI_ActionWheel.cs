@@ -94,7 +94,7 @@ public class bUI_ActionWheel : MonoBehaviour
                     Util.Crash(new Exception("Invalid action wheel decision type: " + decisionType.ToString()));
                     break;
             }
-            if (wheel.currentDecision == this) Timing.RunCoroutine(wheel._CallOnceAnimatorsFinish(wheel.Close), thisTag);
+            if (wheel.currentDecision == this) Timing.RunCoroutine(wheel._CallOnceAnimatorsFinish(wheel.Close), wheel.thisTag);
         }
 
         /// <summary>
@@ -178,13 +178,14 @@ public class bUI_ActionWheel : MonoBehaviour
     private readonly static int idleHash = Animator.StringToHash("Base Layer.Idle");
     const float placeRotationTime = .4f;
     const int maximumNumberOfOptions = 9;
-    const string thisTag = "_bUI_ActionWheel_";
+    protected string thisTag;
 
     /// <summary>
     /// MonoBehaviour.Awake ()
     /// </summary>
     void Awake ()
     {
+        thisTag = GetInstanceID().ToString();
         animator = GetComponent<Animator>();
         audioSource = GetComponent<AudioSource>();
         infobox = GetComponentInChildren<bUI_ActionWheelInfobox>();
@@ -263,6 +264,7 @@ public class bUI_ActionWheel : MonoBehaviour
         for (int i = 0; i < activeButtons.Length; i++) activeButtons[i].OnWheelClose();
         if (!audioSource.isPlaying) audioSource.PlayOneShot(soundFX_close);
         UnsetPreviews();
+        Timing.RunCoroutine(_CallOnceAnimatorsFinish(onCompletion), thisTag);
     }
 
     /// <summary>

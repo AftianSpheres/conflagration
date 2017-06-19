@@ -85,6 +85,7 @@ public class BattleStage : MonoBehaviour
 
     private LocalState localState = LocalState.Offline;
     private BattlerPuppet[] puppets;
+    private Dictionary<Battler, BattlerPuppet> puppetsDict;
     private List<AnimEvent> activeAnimEvents;
     /// <summary>
     /// This is used FIFO, generally speaking, but it can't be a queue because we need to be able to break strict FIFO for handling priority.
@@ -92,15 +93,17 @@ public class BattleStage : MonoBehaviour
     private List<AnimEvent> unhandledAnimEvents;
     private List<StageEvent> allActiveStageEvents;
     private List<StageEvent> stageEventsBuffer;
-    private LinkedList<FXEventType> fxEventsToLoad;
-    private Transform fxParent;
+   
     /// <summary>
     /// BattleStage isn't actually a singleton, but it interacts with a lot of static classes on a message-passing basis,
     /// so it's useful for those to be able to address the current instance without being given a reference to a specific
     /// BattleStage. There should never be more than one of these in a scene at a time, anyway.
     /// </summary>
     public static BattleStage instance { get; private set; }
-    public Vector3 fxScaleMod = Vector3.one;
+    public float fxScale = 30;
+    public Transform battlerPuppetsParent { get; private set; }
+    public Transform fxControllersParent { get; private set; }
+    private string thisTag;
 
 	/// <summary>
     /// MonoBehaviour.Awake ()
@@ -108,10 +111,11 @@ public class BattleStage : MonoBehaviour
 	void Awake ()
     {
         instance = this;
-        fxParent = Instantiate(default(GameObject), transform).transform;
-        fxParent.localPosition = Vector3.zero;
-        fxParent.localScale = Vector3.one;
-        fxParent.gameObject.name = "FX";
+        thisTag = GetInstanceID().ToString();
+        battlerPuppetsParent = Util.CreateEmptyChild(transform).transform;
+        fxControllersParent = Util.CreateEmptyChild(transform).transform;
+        battlerPuppetsParent.gameObject.name = "Battlers";
+        fxControllersParent.gameObject.name = "FX Controllers";
         activeAnimEvents = new List<AnimEvent>();
         unhandledAnimEvents = new List<AnimEvent>();
         allActiveStageEvents = new List<StageEvent>();
@@ -123,6 +127,7 @@ public class BattleStage : MonoBehaviour
     /// </summary>
     void OnDestroy()
     {
+        Timing.KillCoroutines(thisTag);
         if (instance == this) instance = null;
     }
 
@@ -249,15 +254,6 @@ public class BattleStage : MonoBehaviour
     }
 
     /// <summary>
-    /// Adds the given fx type to the list of fx prefabs for the BattleStage to load in
-    /// and instantiate at the first opportunity.
-    /// </summary>
-    public void RequestFXLoad (FXEventType fxEventType)
-    {
-        if (!fxEventsToLoad.Contains(fxEventType)) fxEventsToLoad.AddLast(fxEventType);
-    }
-
-    /// <summary>
     /// Called after an anim event has finished.
     /// Removes it from the lists the BattleStage uses to track what's running.
     /// </summary>
@@ -308,7 +304,25 @@ public class BattleStage : MonoBehaviour
     }
 
     /// <summary>
-    /// This is a "fake" coroutine we use just to be able to instantly mark stage events as done.
+    /// Gets the puppet tied to this battler, assuming one exists
+    /// </summary>
+    public BattlerPuppet GetPuppetAssociatedWithBattler(Battler battler)
+    {
+        if (!puppetsDict.ContainsKey(battler)) Util.Crash("No puppet in current battle scene tied to battler " + battler.battlerType + " " + battler.side + " " + battler.index);
+        return puppetsDict[battler];
+    }
+
+    /// <summary>
+    /// Add the given battler:puppet pairing to the dict.
+    /// </summary>
+    public void TiePuppetToBattler (Battler battler, BattlerPuppet puppet)
+    {
+        puppetsDict[battler] = puppet;
+        puppet.capsuleCollider.radius = battler.footprintRadius;
+    }
+
+    /// <summary>
+    /// Coroutine: This is a "fake" coroutine we use just to be able to instantly mark stage events as done.
     /// </summary>
     private IEnumerator<float> _FinishStageEventInstantly (StageEvent stageEvent)
     {
@@ -316,6 +330,9 @@ public class BattleStage : MonoBehaviour
         yield break;
     }
 
+    /// <summary>
+    /// Coroutine: Load in all resources that battlers will require during this battle.
+    /// </summary>
     private IEnumerator<float> _LoadForBattlers (Battler[] battlers)
     {
         puppets = new BattlerPuppet[battlers.Length];
@@ -329,25 +346,9 @@ public class BattleStage : MonoBehaviour
                 Util.Crash("No battler puppet prefab for battler id of " + battlers[b].battlerType);
                 yield break;
             }
-            BattlerPuppet prefab = (BattlerPuppet)request.asset;
-            while (prefab.loading) yield return 0;
-            puppets[b] = prefab;
-        }
-    }
-
-    private IEnumerator<float> _LoadForFXEvent (FXEvent fxEvent)
-    {
-        const string prefabsPath = "Battle/Prefabs/FX/";
-        ResourceRequest request = Resources.LoadAsync<BattleFXController>(prefabsPath + fxEvent.fxEventType);
-        while (request.progress < 1.0f) yield return request.progress;
-        if ((fxEvent.flags & FXEvent.Flags.ApplyToStage) == FXEvent.Flags.ApplyToStage)
-        {
-            BattleFXController newController = (BattleFXController)Instantiate(request.asset, fxParent);
-            // a dict to correlate controller references to fx ids
-        }
-        if ((fxEvent.flags & FXEvent.Flags.ApplyToTargets) == FXEvent.Flags.ApplyToTargets || (fxEvent.flags & FXEvent.Flags.ApplyToUser) == FXEvent.Flags.ApplyToUser)
-        {
-
+            puppets[b] = Instantiate((BattlerPuppet)request.asset, battlerPuppetsParent);
+            yield return Timing.WaitUntilDone(Timing.RunCoroutine(puppets[b]._Load(), thisTag));
+            while (puppets[b].loading) yield return 0;
         }
     }
 }

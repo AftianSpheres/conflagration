@@ -10,12 +10,16 @@ namespace CnfBattleSys
     /// Loads in audio event (etc.) resolver tables
     /// and stores references to those for puppets to use.
     /// </summary>
-    public class TableLoader : MonoBehaviour
+    public class BattleEventResolverTables : MonoBehaviour
     {
-        public static TableLoader instance { get; private set; }
+        public static BattleEventResolverTables instance { get; private set; }
+        public bool loading { get { return fxEventsInLoading.Count > 0 || audioEventResolverTablesInLoading.Count > 0; } }
         private Dictionary<AudioEventResolverTableType, AudioEventResolverTable> audioEventResolverTables;
-        private LinkedList<AudioEventResolverTableType> tablesInLoading;
+        private Dictionary<FXEventType, BattleFXController[]> fxEventResolverTable;
+        private LinkedList<AudioEventResolverTableType> audioEventResolverTablesInLoading;
+        private LinkedList<FXEventType> fxEventsInLoading;
         private string thisTag;
+        
 
         /// <summary>
         /// MonoBehaviour.Awake ()
@@ -24,7 +28,8 @@ namespace CnfBattleSys
         {
             thisTag = GetInstanceID().ToString();
             audioEventResolverTables = new Dictionary<AudioEventResolverTableType, AudioEventResolverTable>(32);
-            tablesInLoading = new LinkedList<AudioEventResolverTableType>();
+            audioEventResolverTablesInLoading = new LinkedList<AudioEventResolverTableType>();
+            fxEventsInLoading = new LinkedList<FXEventType>();
         }
 
         /// <summary>
@@ -55,25 +60,56 @@ namespace CnfBattleSys
             return audioEventResolverTables[tableType];
         }
 
+        public bool FireOffFXEventOn (FXEvent fxEvent, BattlerPuppet puppet)
+        {
+            bool resolveable = false;
+            if (fxEventResolverTable.ContainsKey(fxEvent.fxEventType))
+            {
+                for (int i = 0; i < fxEventResolverTable[fxEvent.fxEventType].Length; i++)
+                {
+                    if (fxEventResolverTable[fxEvent.fxEventType][i].transform.parent == puppet.fxControllersParent)
+                    {
+                        resolveable = true;
+                        fxEventResolverTable[fxEvent.fxEventType][i].Commence();
+                        break;
+                    }
+                }
+            }
+            if (!resolveable && fxEvent.isMandatory) Util.Crash("Failed to resolve mandatory FX event of type " + fxEvent.fxEventType);
+            return resolveable;
+        }
+
+        /// <summary>
+        /// Adds the given fx type to the list of fx prefabs to load in
+        /// and instantiate at the first opportunity. If it's already been requested,
+        /// this does nothing silently, so you don't need to worry about checking for
+        /// what's already been loaded - if you need an FxEventType, fire off
+        /// RequestFXLoad() and it'll start loading if it's not loaded.
+        /// </summary>
+        public void RequestFXLoad(FXEventType fxEventType)
+        {
+            if (!fxEventsInLoading.Contains(fxEventType)) fxEventsInLoading.AddLast(fxEventType);
+        }
+
         /// <summary>
         /// Coroutine: Load in the given table type, if necessary. Wait until the table is loaded, if it hasn't finished loading yet.
         /// Call the given Action once the table is loaded.
         /// </summary>
-        public IEnumerator<float> _AwaitTableLoad (AudioEventResolverTableType tableType, Action callOnceTableLoaded)
+        public IEnumerator<float> _AwaitAudioEventResolverTableLoad (AudioEventResolverTableType tableType, Action callOnceTableLoaded)
         {
-            if (!audioEventResolverTables.ContainsKey(tableType) && !tablesInLoading.Contains(tableType)) Timing.RunCoroutine(_LoadTable(tableType), thisTag);
-            while (tablesInLoading.Contains(tableType)) yield return 0;
+            if (!audioEventResolverTables.ContainsKey(tableType) && !audioEventResolverTablesInLoading.Contains(tableType)) Timing.RunCoroutine(_LoadAudioEventResolverTable(tableType), thisTag);
+            while (audioEventResolverTablesInLoading.Contains(tableType)) yield return 0;
             callOnceTableLoaded();
         }
 
         /// <summary>
         /// Coroutine: Load in the AudioEventResolverTable for the given table type.
         /// </summary>
-        private IEnumerator<float> _LoadTable (AudioEventResolverTableType tableType)
+        private IEnumerator<float> _LoadAudioEventResolverTable (AudioEventResolverTableType tableType)
         {
             const string clipsPath = "Audio/Battle/";
             const string xmlPath = "Battle/AudioEventResolverTypes/";
-            tablesInLoading.AddLast(tableType);
+            audioEventResolverTablesInLoading.AddLast(tableType);
             ResourceRequest request = Resources.LoadAsync<TextAsset>(xmlPath + tableType);
             while (request.progress < 1.0f) yield return 0;
             if (request.asset == null)
@@ -114,7 +150,42 @@ namespace CnfBattleSys
                 }
             }
             audioEventResolverTables[tableType] = new AudioEventResolverTable(audioEventTypes, clipSets);
-            tablesInLoading.Remove(tableType);
+            audioEventResolverTablesInLoading.Remove(tableType);
+        }
+
+        /// <summary>
+        /// Loads in the prefab for the given fx event, instantiates however many we need, and attaches them to the appropriate gameObjects
+        /// to allow that fx event to be resolved during the battle.
+        /// </summary>
+        private IEnumerator<float> _LoadFXEvent(FXEvent fxEvent)
+        {
+            const string prefabsPath = "Battle/Prefabs/FX/";
+            ResourceRequest request = Resources.LoadAsync<BattleFXController>(prefabsPath + fxEvent.fxEventType);
+            while (request.progress < 1.0f) yield return request.progress;
+            if (request.asset == null)
+            {
+                Util.Crash("No fx controller prefab for fx id of " + fxEvent.fxEventType);
+                yield break;
+            }
+            Battler[] allBattlers = BattleOverseer.currentBattle.allBattlers;
+            BattleFXController prefab = (BattleFXController)request.asset;
+            int len = 0;
+            len += allBattlers.Length; // controllers attached to all battlers 
+            len++; // controller attached to stage 
+            BattleFXController[] controllers = new BattleFXController[len];
+            BattleFXController newController;
+            for (int i = 0; i < allBattlers.Length; i++)
+            {
+                newController = Instantiate(prefab, allBattlers[i].puppet.fxControllersParent);
+                if (fxEvent.isScalable) newController.transform.localScale *= allBattlers[i].fxScale;
+                controllers[i] = newController;
+            }
+            // Don't forget about the stage copy!
+            newController = Instantiate(prefab, BattleStage.instance.fxControllersParent);
+            if (fxEvent.isScalable) newController.transform.localScale *= BattleStage.instance.fxScale;
+            controllers[controllers.Length - 1] = newController;
+            // And we're done
+            fxEventResolverTable[fxEvent.fxEventType] = controllers;
         }
     }
 }

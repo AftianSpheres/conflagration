@@ -823,6 +823,7 @@ namespace CnfBattleSys
         public readonly BattleStance[] stances;
         public BattleStance metaStance { get; private set; } // a second stance that goes "on top" of the main one adding actions/bonus/multis
         public float footprintRadius { get; private set; }
+        public float fxScale { get; private set; }
         public Resistances resistances { get; private set; }
 
         // Things derived from a specific formation instance
@@ -840,14 +841,13 @@ namespace CnfBattleSys
         public TurnActions turnActions { get; private set; }
         public BattleAction lastActionExecuted { get; private set; }
         public BattleStance lockedStance { get; private set; }
-        private BattleData battle;
 
-        // Collider, which is ugly, but using Unity colliders is the simplest way to do AOE checks and shit
-        public CapsuleCollider capsuleCollider { get; private set; }
-
-        public BattlerPuppet puppet { get; private set; }
+        // Communication with Unity things. Since these call into functions on the current instance of BattleStage, we don't have any persistent references to battle UI things here.
+        public CapsuleCollider capsuleCollider { get { return puppet.capsuleCollider; } }
+        public BattlerPuppet puppet { get { return BattleStage.instance.GetPuppetAssociatedWithBattler(this); } }
 
         // Magic
+        private BattleData battle;
         public float speedFactor { get { return stats.Spe / battle.normalizedSpeed; } }
         public int index { get; private set; }
 
@@ -861,6 +861,7 @@ namespace CnfBattleSys
             level = fm.battlerData.level;
             aiType = fm.battlerData.aiType;
             aiFlags = fm.battlerData.aiFlags;
+            fxScale = fm.battlerData.fxScale;
             int baseHP = fm.battlerData.baseHP;
             int baseATK = fm.battlerData.baseATK;
             int baseDEF = fm.battlerData.baseDEF;
@@ -1292,16 +1293,6 @@ namespace CnfBattleSys
             if ((damageType & DamageTypeFlags.Ice) == DamageTypeFlags.Ice && (resistanceAware | resistances.ice > 1) && (weaknessAware | resistances.ice < 1)) r *= resistances.ice;
             if ((damageType & DamageTypeFlags.Spirit) == DamageTypeFlags.Spirit && (resistanceAware | resistances.spirit > 1) && (weaknessAware | resistances.spirit < 1)) r *= resistances.spirit;
             return r;
-        }
-
-        /// <summary>
-        /// Gives this Battler control over the specified puppet.
-        /// </summary>
-        public void GivePuppet (BattlerPuppet _puppet)
-        {
-            puppet = _puppet;
-            capsuleCollider = puppet.capsuleCollider;
-            capsuleCollider.radius = footprintRadius;
         }
 
         /// <summary>

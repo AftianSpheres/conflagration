@@ -57,6 +57,11 @@
         /// </summary>
         public readonly int priority;
 
+        public bool onBattlers { get { return (flags & Flags.ApplyToTargets) == Flags.ApplyToTargets || (flags & Flags.ApplyToUser) == Flags.ApplyToUser; } }
+        public bool onStage { get { return (flags & Flags.ApplyToStage) == Flags.ApplyToStage; } }
+        public bool isMandatory { get { return (flags & Flags.IsMandatory) == Flags.IsMandatory; } }
+        public bool isScalable { get { return (flags & Flags.Scalable) == Flags.Scalable; } }
+
         public FXEvent (FXEventType _fxEventType, Flags _flags, int _priority)
         {
             fxEventType = _fxEventType;

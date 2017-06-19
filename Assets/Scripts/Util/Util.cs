@@ -69,6 +69,20 @@ public static class Util
     }
 
     /// <summary>
+    /// Creates an empty gameobject, child of transform.
+    /// (Are you my mummy?)
+    /// </summary>
+    public static GameObject CreateEmptyChild (Transform transform)
+    {
+        GameObject go = new GameObject();
+        go.transform.parent = transform;
+        go.transform.localPosition = Vector3.zero;
+        go.transform.localScale = Vector3.one;
+        go.transform.localRotation = Quaternion.identity;
+        return go;
+    }
+
+    /// <summary>
     /// Calculate damage given attacker level, attack stat, defense stat, base damage, and deviation.
     /// Deviation is the amount of randomness permitted in the calculation, and generally should be between 0 and 1.
     /// More deviation = more random.

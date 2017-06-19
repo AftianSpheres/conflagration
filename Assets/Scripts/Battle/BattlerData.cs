@@ -44,6 +44,7 @@
         public readonly BattlerAIType aiType;
         public readonly BattlerAIFlags aiFlags;
         public readonly byte level;
+        public readonly float fxScale;
         public readonly float size;
         public readonly float stepTime;
         public readonly float yOffset;
@@ -67,7 +68,7 @@
         /// </summary>
         public BattlerData (BattlerType _battlerType, bool _isFixedStats, BattlerAIType _aiType, BattlerAIFlags _aiFlags, byte _level, float _size, float _stepTime, float _yOffset, 
             BattleStance[] _stances, BattleStance _metaStance, int _baseHP, ushort _baseATK, ushort _baseDEF, ushort _baseMATK, ushort _baseMDEF, ushort _baseSPE, ushort _baseHIT, ushort _baseEVA, 
-            float _baseMoveDist, float _baseMoveDelay, Growths _growths, Battler.Resistances_Raw _resistances, AudioEventResolverTableType _audioEventResolverTableType)
+            float _baseMoveDist, float _baseMoveDelay, Growths _growths, Battler.Resistances_Raw _resistances, AudioEventResolverTableType _audioEventResolverTableType, float _fxScale)
         {
             battlerType = _battlerType;
             isFixedStats = _isFixedStats;
@@ -92,6 +93,7 @@
             growths = _growths;
             resistances = _resistances;
             audioEventResolverTableType = _audioEventResolverTableType;
+            fxScale = _fxScale;
         }
     }
 }

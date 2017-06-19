@@ -154,7 +154,7 @@
         public readonly ActionTargetType alternateTargetType;
         public readonly ActionTargetType targetingType;
         public readonly BattleActionCategoryFlags categoryFlags;
-        public readonly Subaction[] Subactions;
+        public readonly Subaction[] subactions;
 
         /// <summary>
         /// Constructs a BattleAction struct, given, uh, the entire contents of the BattleAction struct.
@@ -178,7 +178,7 @@
             targetingSideFlags = _targetingSideFlags;
             targetingType = _targetingType;
             categoryFlags = _categoryFlags;
-            Subactions = _Subactions;
+            subactions = _Subactions;
         }
     }
 }

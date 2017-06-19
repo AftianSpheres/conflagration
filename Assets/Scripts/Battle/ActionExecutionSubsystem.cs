@@ -209,8 +209,8 @@ namespace CnfBattleSys
                         }
                     }
                 }
-                else if (actionInExecution.Subactions[subaction.thisSubactionSuccessTiedToSubactionAtIndex].useAlternateTargetSet && actionInExecution.alternateTargetType == ActionTargetType.Self ||
-                    !actionInExecution.Subactions[subaction.thisSubactionSuccessTiedToSubactionAtIndex].useAlternateTargetSet && actionInExecution.targetingType == ActionTargetType.Self)
+                else if (actionInExecution.subactions[subaction.thisSubactionSuccessTiedToSubactionAtIndex].useAlternateTargetSet && actionInExecution.alternateTargetType == ActionTargetType.Self ||
+                    !actionInExecution.subactions[subaction.thisSubactionSuccessTiedToSubactionAtIndex].useAlternateTargetSet && actionInExecution.targetingType == ActionTargetType.Self)
                 {
                     executionSuccess = subactions_TargetHitArrays[subaction.thisSubactionSuccessTiedToSubactionAtIndex][0];
                     // if we're _tied_ to a self-targeting subaction, that's always index 0
@@ -235,12 +235,12 @@ namespace CnfBattleSys
         public bool StepSubactions(int steps)
         {
             bool atLeastOneSuccess = false;
-            for (int i = 0; i < steps & subactionExecutionIndex < actionInExecution.Subactions.Length; i++)
+            for (int i = 0; i < steps & subactionExecutionIndex < actionInExecution.subactions.Length; i++)
             {
-                if (HandleSubaction(actionInExecution.Subactions[subactionExecutionIndex])) atLeastOneSuccess = true;
+                if (HandleSubaction(actionInExecution.subactions[subactionExecutionIndex])) atLeastOneSuccess = true;
                 subactionExecutionIndex++;
             }
-            if (subactionExecutionIndex == actionInExecution.Subactions.Length) StopExecutingAction();
+            if (subactionExecutionIndex == actionInExecution.subactions.Length) StopExecutingAction();
             return atLeastOneSuccess;
         }
 
