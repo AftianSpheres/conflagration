@@ -52,16 +52,6 @@ namespace CnfBattleSys
             BattleStage.instance.StartOfBattle();
         }
 
-        /// <summary>
-        /// Passthrough to CurrentActionExecutionSubsystem.StepSubactions; keeps from exposing BattleOverseer internal structure.
-        /// Executes steps subactions from the current action's subaction set, or however many are left.
-        /// Returns true if any of the subactions we step through do anything at all.
-        /// </summary>
-        public static bool StepSubactions (int steps = 1)
-        {
-            return currentBattle.actionExecutionSubsystem.StepSubactions(steps);
-        }
-
         // Bits and pieces for use within the battle loop
 
         /// <summary>
@@ -82,16 +72,6 @@ namespace CnfBattleSys
         internal static void ExtendCurrentTurn()
         {
             currentBattle.turnManagementSubsystem.ExtendCurrentTurn();
-        }
-
-        /// <summary>
-        /// Passthrough to CurrentActionExecutionSubsystem.FinishCurrentAction; keeps from exposing BattleOverseer internal structure.
-        /// Handles all remaining subactions, then stops executing the current action.
-        /// Returns true if any subaction does anything.
-        /// </summary>
-        public static bool FinishCurrentAction()
-        {
-            return currentBattle.actionExecutionSubsystem.FinishCurrentAction();
         }
 
         /// <summary>

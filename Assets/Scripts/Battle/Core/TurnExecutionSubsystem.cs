@@ -108,7 +108,7 @@ namespace CnfBattleSys
         /// </summary>
         public void EndTurn()
         {
-            battle.actionExecutionSubsystem.FinishCurrentAction();
+            battle.actionExecutionSubsystem.FireRemainingSubactions();
             currentTurnBattler = null;
             battle.ChangeState(BattleData.State.BetweenTurns);
             battle.DeriveNormalizedSpeed();

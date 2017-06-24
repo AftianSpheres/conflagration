@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System;
+using System.Collections.Generic;
 using System.Xml;
 
 namespace CnfBattleSys
@@ -11,7 +12,7 @@ namespace CnfBattleSys
     {
         private readonly static EventBlock emptyEventBlock = new EventBlock(new AnimEvent[0], new AudioEvent[0], new FXEvent[0]);
         private static BattleAction[] _actions;
-        private static readonly BattleAction.Subaction[] defaultSubactionArray = { new BattleAction.Subaction(emptyEventBlock, 0, 0, false, LogicalStatType.None, LogicalStatType.None, LogicalStatType.None, LogicalStatType.None, -1, -1, BattleActionCategoryFlags.None, new BattleAction.Subaction.EffectPackage[0], DamageTypeFlags.None) };
+        private static readonly Dictionary<string, BattleAction.Subaction> defaultSubactionsDict = new Dictionary<string, BattleAction.Subaction>();
         const string actionIconsResourcePath = "Battle/2D/UI/AWIcon/Action/";
 
         /// <summary>
@@ -28,21 +29,21 @@ namespace CnfBattleSys
             /// The default battle action entry, used to populate invalid entries on the table or when we need a placeholder action entry somewhere else in the battle system.
             /// </summary>
             public static readonly BattleAction defaultBattleAction = new BattleAction(emptyEventBlock, emptyEventBlock, emptyEventBlock, ActionType.InvalidAction, 0, 0, 0, 0, 0, 0, TargetSideFlags.None, TargetSideFlags.None, 
-                                                                                       ActionTargetType.None, ActionTargetType.None, BattleActionCategoryFlags.None, defaultSubactionArray);
+                                                                                       ActionTargetType.None, ActionTargetType.None, BattleActionCategoryFlags.None, defaultSubactionsDict);
 
             /// <summary>
             /// Another empty placeholder battle action - all we care about with any of these placeholder actions is _identity_. They don't do anything.
             /// This actually gets plugged into the table, so don't count it as part of the special actions count above. None is index 0, not a negative index.
             /// </summary>
             public static readonly BattleAction noneBattleAction = new BattleAction(emptyEventBlock, emptyEventBlock, emptyEventBlock, ActionType.None, 0, 0, 0, 0, 0, 0, TargetSideFlags.None, TargetSideFlags.None, 
-                                                                                    ActionTargetType.None, ActionTargetType.None, BattleActionCategoryFlags.None, defaultSubactionArray);
+                                                                                    ActionTargetType.None, ActionTargetType.None, BattleActionCategoryFlags.None, defaultSubactionsDict);
 
             /// <summary>
             /// The entry for the "break own stance" entry, which is a placeholder just like the other two. We don't "execute" this action in the normal sense - 
             /// if you go into action execution with this action, you go through some hardcoded special-case behavior instead of executing an action def.
             /// </summary>
             public static readonly BattleAction selfStanceBreakAction = new BattleAction(emptyEventBlock, emptyEventBlock, emptyEventBlock, ActionType.INTERNAL_BreakOwnStance, 0, 0, 0, 0, 0, 0, TargetSideFlags.None, TargetSideFlags.None, 
-                                                                                         ActionTargetType.None, ActionTargetType.None, BattleActionCategoryFlags.None, defaultSubactionArray);
+                                                                                         ActionTargetType.None, ActionTargetType.None, BattleActionCategoryFlags.None, defaultSubactionsDict);
         }
 
         static ActionDatabase ()
@@ -65,6 +66,7 @@ namespace CnfBattleSys
         }
 
         /// <summary>
+        /// This is basically dead and I'm just getting it to not-break-the-build until I get the new action datatable online.
         /// Loads in an action def from the XML file.
         /// </summary>
         private static BattleAction ImportActionDefWithID(ActionType actionID, XmlDocument doc, XmlNode workingNode)
@@ -101,7 +103,6 @@ namespace CnfBattleSys
             EventBlock onConclusion = DBTools.GetEventBlockFromXml(workingNode);
             actOnNode("onStart");
             EventBlock onStart = DBTools.GetEventBlockFromXml(workingNode);
-
             actOnNode("targetingSideFlags");
             TargetSideFlags targetingSideFlags = DBTools.ParseTargetSideFlags(workingNode.InnerText);
             actOnNode("targetingType");
@@ -125,25 +126,26 @@ namespace CnfBattleSys
             {
                 XmlNode SubactionNode = SubactionsList[s];
                 Subactions[s] = XmlNodeToSubaction(SubactionNode, workingNode, s, actionID);
-                if (Subactions[s].thisSubactionSuccessTiedToSubactionAtIndex > -1)
-                {
-                    if (Subactions[s].useAlternateTargetSet != Subactions[Subactions[s].thisSubactionSuccessTiedToSubactionAtIndex].useAlternateTargetSet)
-                    {
-                        if (alternateTargetType != ActionTargetType.Self && targetingType != ActionTargetType.Self) // we have a special case for tying multiple action successes to one on yourself or vice verse
-                            Util.Crash(new Exception("Illegal subaction config: tried to tie subaction " + s + " to subaction " + Subactions[s].thisSubactionSuccessTiedToSubactionAtIndex + ", but their target sets are mismatched."));
-                            // but if that's not true this will break horribly, so we crash to keep that from happening
-                    }
-                }
+                //if (Subactions[s].thisSubactionSuccessTiedToSubactionAtIndex > -1)
+                //{
+                //    if (Subactions[s].useAlternateTargetSet != Subactions[Subactions[s].thisSubactionSuccessTiedToSubactionAtIndex].useAlternateTargetSet)
+                //    {
+                //        if (alternateTargetType != ActionTargetType.Self && targetingType != ActionTargetType.Self) // we have a special case for tying multiple action successes to one on yourself or vice verse
+                //            Util.Crash(new Exception("Illegal subaction config: tried to tie subaction " + s + " to subaction " + Subactions[s].thisSubactionSuccessTiedToSubactionAtIndex + ", but their target sets are mismatched."));
+                //            // but if that's not true this will break horribly, so we crash to keep that from happening
+                //    }
+                //}
             }
             actOnNode("categoryFlags");
             BattleActionCategoryFlags categoryFlags = DBTools.ParseBattleActionCategoryFlags(workingNode.InnerText);
             Resources.UnloadAsset(unreadFileBuffer);
             return new BattleAction(animSkip, onConclusion, onStart, actionID, baseAOERadius, baseDelay, baseFollowthroughStanceChangeDelay, baseMinimumTargetingDistance, baseTargetingRange, baseSPCost, alternateTargetingSideFlags, targetingSideFlags,
-                alternateTargetType, targetingType, categoryFlags, Subactions);
+                alternateTargetType, targetingType, categoryFlags, defaultSubactionsDict);
 
         }
 
         /// <summary>
+        /// CORPSEY.
         /// Parses an XML node and spits out a Subaction.
         /// </summary>
         private static BattleAction.Subaction XmlNodeToSubaction(XmlNode SubactionNode, XmlNode workingNode, int index, ActionType actionID)
@@ -201,8 +203,9 @@ namespace CnfBattleSys
                 if (thisSubactionSuccessTiedToSubactionAtIndex < 0) Util.Crash(new Exception(exceptionSubactionIDStr() + " tries to tie itself to an invalid Subaction index!"));
                 else if (thisSubactionSuccessTiedToSubactionAtIndex >= index) Util.Crash(new Exception(exceptionSubactionIDStr() + " tries to tie itself to a Subaction index that doesn't precede it!"));
             }
-            return new BattleAction.Subaction(eventBlock, baseDamage, baseAccuracy, useAlternateTargetSet, atkStat, defStat, hitStat, evadeStat,
-                thisSubactionDamageTiedToSubactionAtIndex, thisSubactionSuccessTiedToSubactionAtIndex, categoryFlags, fx, damageTypes);
+            return default(BattleAction.Subaction);
+            //return new BattleAction.Subaction(eventBlock, baseDamage, baseAccuracy, useAlternateTargetSet, atkStat, defStat, hitStat, evadeStat,
+                //thisSubactionDamageTiedToSubactionAtIndex, thisSubactionSuccessTiedToSubactionAtIndex, categoryFlags, fx, damageTypes);
         }
 
         /// <summary>

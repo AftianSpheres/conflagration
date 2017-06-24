@@ -137,7 +137,9 @@ namespace CnfBattleSys
                         Util.Crash(new Exception("Can't advance battle state: waiting for player input."));
                         break;
                     case State.ExecutingAction:
-                        actionExecutionSubsystem.StepSubactions(1);
+                        // Subactions are called by name now!
+                        // We need to have BattleAnimControllers...
+                        //actionExecutionSubsystem.StepSubactions(1);
                         break;
                     case State.BattleWon:
                         Util.Crash(new Exception("Can't advance battle state: battle is already won."));

@@ -8,6 +8,7 @@ using UnityEditor;
 using UnityEditor.Animations;
 using UnityEditor.Build;
 using UnityEditor.Callbacks;
+using ExtendedAnimationManagement;
 
 /// <summary>
 /// Generates AnimatorMetadataLookupTable.cs and registers all AnimatorController assets.

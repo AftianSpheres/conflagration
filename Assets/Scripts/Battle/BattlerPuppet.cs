@@ -237,10 +237,13 @@ public class BattlerPuppet : MonoBehaviour
             LoadForEventBlock(action.animSkip);
             LoadForEventBlock(action.onStart);
             LoadForEventBlock(action.onConclusion);
-            for (int sa = 0; sa < action.subactions.Length; sa++)
+            string[] keys = new string[action.subactions.Keys.Count];
+            action.subactions.Keys.CopyTo(keys, 0);
+            for (int sa = 0; sa < keys.Length; sa++)
             {
-                for (int f = 0; f < action.subactions[sa].effectPackages.Length; f++) LoadForEventBlock(action.subactions[sa].effectPackages[f].eventBlock);
-                LoadForEventBlock(action.subactions[sa].eventBlock);
+                string key = keys[sa];
+                for (int f = 0; f < action.subactions[key].effectPackages.Length; f++) LoadForEventBlock(action.subactions[key].effectPackages[f].eventBlock);
+                LoadForEventBlock(action.subactions[key].eventBlock);
             }
         };
         Timing.RunCoroutine(BattleEventResolverTables._OnceAvailable(whenLoaderAvailable));

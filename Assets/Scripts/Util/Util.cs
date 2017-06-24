@@ -192,6 +192,20 @@ public static class Util
     }
 
     /// <summary>
+    /// Return a dictionary populates based on the given arrays of keys and values.
+    /// </summary>
+    public static Dictionary<T0, T1> PopulateDictWith<T0, T1> (T0[] keysArray, T1[] valuesArray)
+    {
+        Dictionary<T0, T1> dict = new Dictionary<T0, T1>();
+        if (keysArray.Length != valuesArray.Length) Crash("Keys array and values array must be same length");
+        else
+        {
+            for (int i = 0; i < keysArray.Length; i++) dict.Add(keysArray[i], valuesArray[i]);
+        }
+        return dict;
+    }
+
+    /// <summary>
     /// Waits one frame, then crashes.
     /// If the editor resumes after crashing we'll Debug.Break() once every frame until
     /// it's shut off. If you call Crash () it's assumed that you do in fact want to crash.

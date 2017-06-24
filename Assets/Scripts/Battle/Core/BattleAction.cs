@@ -1,4 +1,6 @@
-﻿namespace CnfBattleSys
+﻿using System.Collections.Generic;
+
+namespace CnfBattleSys
 {
     /// <summary>
     /// Defines a single battle action.
@@ -99,13 +101,14 @@
             /// If greater than -1, we skip damage calculation and just use the per-target
             /// final damage figures of the Subaction at the specified index.
             /// </summary>
-            public readonly sbyte thisSubactionDamageTiedToSubactionAtIndex;
+            public readonly string damageDeterminantName;
+            public readonly string predicateName;
             /// <summary>
             /// Must be lower than the Subaction's index in the BattleAction.Subactions array.
             /// If greater than -1, we skip damage calculation and just use the per-target
             /// success values of the Subaction at the specified index.
             /// </summary>
-            public readonly sbyte thisSubactionSuccessTiedToSubactionAtIndex;
+            public readonly string successDeterminantName;
             public readonly EffectPackage[] effectPackages;
 
             /// <summary>
@@ -114,7 +117,7 @@
             /// </summary>
             public Subaction(EventBlock _eventBlock, int _baseDamage, float _baseAccuracy, bool _useAlternateTargetSet,
                              LogicalStatType _atkStat, LogicalStatType _defStat, LogicalStatType _hitStat, LogicalStatType _evadeStat,
-                             sbyte _thisSubactionDamageTiedToSubactionAtIndex, sbyte _thisSubactionSuccessTiedToSubactionAtIndex,
+                             string _damageDeterminantName, string _predicateName, string _successDeterminantName,
                              BattleActionCategoryFlags _categoryFlags, EffectPackage[] _fx, DamageTypeFlags _damageTypes)
             {
                 eventBlock = _eventBlock;
@@ -125,8 +128,9 @@
                 defStat = _defStat;
                 hitStat = _hitStat;
                 evadeStat = _evadeStat;
-                thisSubactionDamageTiedToSubactionAtIndex = _thisSubactionDamageTiedToSubactionAtIndex;
-                thisSubactionSuccessTiedToSubactionAtIndex = _thisSubactionSuccessTiedToSubactionAtIndex;
+                damageDeterminantName = _damageDeterminantName;
+                predicateName = _predicateName;
+                successDeterminantName = _successDeterminantName;
                 categoryFlags = _categoryFlags;
                 effectPackages = _fx;
                 damageTypes = _damageTypes;
@@ -154,7 +158,10 @@
         public readonly ActionTargetType alternateTargetType;
         public readonly ActionTargetType targetingType;
         public readonly BattleActionCategoryFlags categoryFlags;
-        public readonly Subaction[] subactions;
+        /// <summary>
+        /// Dictionary containing the subactions that compose this BattleAction.
+        /// </summary>
+        public readonly Dictionary<string, Subaction> subactions;
 
         /// <summary>
         /// Constructs a BattleAction struct, given, uh, the entire contents of the BattleAction struct.
@@ -162,9 +169,9 @@
         /// </summary>
         public BattleAction(EventBlock _animSkip, EventBlock _onConclusion, EventBlock _onStart, ActionType _actionID, float _baseAOERadius, float _baseDelay, float _baseFollowthroughStanceChangeDelay, float _baseMinimumTargetingDistance, 
             float _basetargetingRange, byte _baseSPCost, TargetSideFlags _alternateTargetSideFlags, TargetSideFlags _targetingSideFlags, ActionTargetType _alternateTargetType, ActionTargetType _targetingType,
-            BattleActionCategoryFlags _categoryFlags, Subaction[] _Subactions)
+            BattleActionCategoryFlags _categoryFlags, Dictionary<string, Subaction> _subactions)
         {
-            if (_Subactions.Length == 0) Util.Crash(new System.Exception("Tried to create a battle Action with no Subactions, which should never happen."));
+            if (_subactions.Count == 0) Util.Crash(new System.Exception("Tried to create a battle Action with no Subactions, which should never happen."));
             animSkip = _animSkip;
             onConclusion = _onConclusion;
             onStart = _onStart;
@@ -178,7 +185,7 @@
             targetingSideFlags = _targetingSideFlags;
             targetingType = _targetingType;
             categoryFlags = _categoryFlags;
-            subactions = _Subactions;
+            subactions = _subactions;
         }
     }
 }
