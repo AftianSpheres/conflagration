@@ -30,10 +30,11 @@ namespace BattleActionTool
         {
             for (int i = parent.ChildNodes.Count; i > -1; i--)
             {
+                if (parent.ChildNodes[i] == null) continue;
                 XmlNode node = parent.ChildNodes[i];
                 if (!validChildren.Contains(node))
                 {
-                    Debug.Log("Invalid child " + node.Name + " in " + parent.Name);
+                    //Debug.Log("Invalid child " + node.Name + " in " + parent.Name);
                     parent.RemoveChild(node);
                 }
             }
@@ -42,10 +43,14 @@ namespace BattleActionTool
         /// <summary>
         /// Select the node if it exists; create it if it doesn't.
         /// </summary>
-        public static XmlNode HandleChildNode(XmlNode parent, string name, Action<XmlNode> callback, List<XmlNode> validChildren, XmlNodeType nodeType = XmlNodeType.None)
+        public static XmlNode HandleChildNode(XmlNode parent, string name, Action<XmlNode> callback, List<XmlNode> validChildren, XmlNodeType nodeType = XmlNodeType.Element)
         {
             XmlNode node = parent.SelectSingleNode(name);
-            if (node == null) node = parent.AppendChild(parent.OwnerDocument.CreateNode(nodeType, name, parent.NamespaceURI));
+            if (node == null)
+            {
+                if (nodeType == XmlNodeType.Attribute) node = parent.Attributes.Append(parent.OwnerDocument.CreateAttribute(name));
+                else node = parent.AppendChild(parent.OwnerDocument.CreateNode(nodeType, name, parent.NamespaceURI));
+            }
             callback(node);
             validChildren.Add(node);
             return node;

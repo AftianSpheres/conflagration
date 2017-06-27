@@ -1,0 +1,13 @@
+<BattleAction info="">
+  <baseAOERadius>0</baseAOERadius>
+  <baseDelay>0</baseDelay>
+  <baseFollowthroughStanceChangeDelay>0</baseFollowthroughStanceChangeDelay>
+  <baseMinimumTargetingDistance>0</baseMinimumTargetingDistance>
+  <baseTargetingRange>0</baseTargetingRange>
+  <baseSPCost>0</baseSPCost>
+  <alternateTargetSideFlags>None</alternateTargetSideFlags>
+  <targetSideFlags>None</targetSideFlags>
+  <alternateTargetType>None</alternateTargetType>
+  <targetType>None</targetType>
+  <categoryFlags>None</categoryFlags>
+</BattleAction>

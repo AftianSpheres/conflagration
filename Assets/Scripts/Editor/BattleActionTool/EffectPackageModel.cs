@@ -43,7 +43,7 @@ namespace BattleActionTool
         {
             subactionModel = _subactionModel;
             doc = subactionModel.xmlNode.OwnerDocument;
-            xmlNode = subactionModel.xmlNode.AppendChild(doc.CreateNode(XmlNodeType.None, name, doc.NamespaceURI));
+            xmlNode = subactionModel.xmlNode.AppendChild(doc.CreateNode(XmlNodeType.Element, name, doc.NamespaceURI));
         }
 
         /// <summary>

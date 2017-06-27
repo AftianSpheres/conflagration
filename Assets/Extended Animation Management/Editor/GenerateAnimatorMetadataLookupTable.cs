@@ -77,7 +77,12 @@ public class GenerateAnimatorMetadataLookupTable : IPreprocessBuild
             options.BlankLinesBetweenMembers = false;
             cu.Namespaces.Add(namespaceDeclaration);
             csProvider.GenerateCodeFromCompileUnit(cu, writer, options);
-            File.WriteAllText(Application.dataPath + path + outputName, writer.ToString().Replace("public class AnimatorMetadataLookupTable", "public static class AnimatorMetadataLookupTable")); // this will never not be the worst
+            FileStream fs = File.OpenWrite(Application.dataPath + path + outputName);
+            StreamWriter sw = new StreamWriter(fs);
+            fs.Position = 0;
+            sw.Write(writer.ToString().Replace("public class AnimatorMetadataLookupTable", "public static class AnimatorMetadataLookupTable")); // this will never not be the worst
+            sw.Dispose();
+            fs.Dispose();
             AssetDatabase.Refresh();
             Debug.Log("Generated AnimatorMetadataLookupTable.cs");
         }

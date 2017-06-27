@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml;
 using CnfBattleSys;
+using UnityEngine;
+using UnityEditor;
 
 namespace BattleActionTool
 {
@@ -40,7 +42,7 @@ namespace BattleActionTool
         /// </summary>
         public BattleActionModel(ActionType _actionID)
         {
-            filePath = PATH + _actionID.ToString();
+            filePath = PATH + _actionID.ToString() +".xml";
             actionID = _actionID;
             doc = new XmlDocument();
             string xml = null;
@@ -48,7 +50,7 @@ namespace BattleActionTool
             {
                 StreamReader handle = File.OpenText(filePath);
                 xml = handle.ReadToEnd();
-                handle.Close();             
+                handle.Dispose();             
             }
             bool loaded = false;
             if (xml != null)
@@ -64,6 +66,7 @@ namespace BattleActionTool
                     loaded = false; // this is redundant, just for clarity - if you can't load the xml, you don't set loaded, and you don't try to set anything from the xml you didn't load
                 }
             }
+            subactionModels = new List<SubactionModel>();
             if (loaded)
             {
                 XmlNodeList subactionModelNodes = xmlNode.SelectNodes(SubactionModel.name);
@@ -88,8 +91,7 @@ namespace BattleActionTool
             else
             {
                 doc.CreateXmlDeclaration("1.0", "Unicode", "yes");
-                xmlNode = doc.AppendChild(doc.CreateNode(XmlNodeType.None, name, doc.NamespaceURI));
-                subactionModels = new List<SubactionModel>();
+                xmlNode = doc.AppendChild(doc.CreateNode(XmlNodeType.Element, name, doc.NamespaceURI));      
             }
         }
 
@@ -116,8 +118,8 @@ namespace BattleActionTool
             CodePrimitiveExpression baseSPCostDeclaration = new CodePrimitiveExpression(baseSPCost);
             CodeFieldReferenceExpression alternateTargetSideFlagsDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(TargetSideFlags)), alternateTargetSideFlags.ToString().Replace(", ", " | "));
             CodeFieldReferenceExpression targetSideFlagsDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(TargetSideFlags)), targetSideFlags.ToString().Replace(", ", " | "));
-            CodeFieldReferenceExpression alternateTargetTypeDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(ActionTargetType)), alternateTargetType.ToString().Replace(", ", " | "));
-            CodeFieldReferenceExpression targetTypeDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(ActionTargetType)), targetType.ToString().Replace(", ", " | "));
+            CodeFieldReferenceExpression alternateTargetTypeDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(ActionTargetType)), alternateTargetType.ToString());
+            CodeFieldReferenceExpression targetTypeDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(ActionTargetType)), targetType.ToString());
             CodeFieldReferenceExpression categoryFlagsDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(BattleActionCategoryFlags)), categoryFlags.ToString().Replace(", ", " | "));
             return new CodeObjectCreateExpression(typeof(BattleAction), new CodeExpression[] { animSkipDeclaration, onConclusionDeclaration, onStartDeclaration, actionIDDeclaration, baseAOERadiusDeclaration,
                                                   baseDelayDeclaration, baseFollowthroughStanceChangeDelayDeclaration, baseMinimumTargetingDistanceDeclaration, baseTargetingRangeDeclaration, baseSPCostDeclaration,
@@ -165,6 +167,8 @@ namespace BattleActionTool
             else fs = File.Create(filePath);
             fs.SetLength(0); // empty this mofo
             doc.Save(fs);
+            fs.Dispose();
+            AssetDatabase.Refresh();
         }
 
         /// <summary>

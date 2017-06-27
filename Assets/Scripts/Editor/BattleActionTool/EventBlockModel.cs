@@ -13,7 +13,7 @@ namespace BattleActionTool
         /// <summary>
         /// Models a single AnimEvent.
         /// </summary>
-        private class AnimEventModel
+        public class AnimEventModel
         {
             public readonly EventBlockModel eventBlockModel;
             public readonly XmlNode xmlNode;
@@ -33,7 +33,7 @@ namespace BattleActionTool
             {
                 eventBlockModel = _eventBlockModel;
                 doc = eventBlockModel.xmlNode.OwnerDocument;
-                xmlNode = eventBlockModel.xmlNode.AppendChild(doc.CreateNode(XmlNodeType.None, name, doc.NamespaceURI));
+                xmlNode = eventBlockModel.xmlNode.AppendChild(doc.CreateNode(XmlNodeType.Element, name, doc.NamespaceURI));
             }
 
             /// <summary>
@@ -83,7 +83,7 @@ namespace BattleActionTool
         /// <summary>
         /// Models a single AudioEvent.
         /// </summary>
-        private class AudioEventModel
+        public class AudioEventModel
         {
             public readonly EventBlockModel eventBlockModel;
             public readonly XmlNode xmlNode;
@@ -105,7 +105,7 @@ namespace BattleActionTool
             {
                 eventBlockModel = _eventBlockModel;
                 doc = eventBlockModel.xmlNode.OwnerDocument;
-                xmlNode = eventBlockModel.xmlNode.AppendChild(doc.CreateNode(XmlNodeType.None, name, doc.NamespaceURI));
+                xmlNode = eventBlockModel.xmlNode.AppendChild(doc.CreateNode(XmlNodeType.Element, name, doc.NamespaceURI));
             }
 
             /// <summary>
@@ -130,12 +130,12 @@ namespace BattleActionTool
             /// </summary>
             public CodeObjectCreateExpression DumpToCSDeclaration()
             {
-                CodeFieldReferenceExpression animEventTypeDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(AudioEventType)), audioEventType.ToString());
+                CodeFieldReferenceExpression audioEventTypeDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(AudioEventType)), audioEventType.ToString());
                 CodeFieldReferenceExpression fallbackTypeDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(AudioEventType)), fallbackType.ToString());
                 CodeFieldReferenceExpression clipTypeDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(AudioSourceType)), clipType.ToString());
                 CodeFieldReferenceExpression flagsDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(AudioEvent.Flags)), flags.ToString().Replace(", ", " | "));
                 CodePrimitiveExpression priorityDeclaration = new CodePrimitiveExpression(priority);
-                return new CodeObjectCreateExpression(typeof(AnimEvent), new CodeExpression[] { animEventTypeDeclaration, fallbackTypeDeclaration, flagsDeclaration, priorityDeclaration });
+                return new CodeObjectCreateExpression(typeof(AnimEvent), new CodeExpression[] { audioEventTypeDeclaration, fallbackTypeDeclaration, clipTypeDeclaration, flagsDeclaration, priorityDeclaration });
             }
 
             /// <summary>
@@ -158,7 +158,7 @@ namespace BattleActionTool
         /// <summary>
         /// Models a single FXEvent.
         /// </summary>
-        private class FXEventModel
+        public class FXEventModel
         {
             public readonly EventBlockModel eventBlockModel;
             public readonly XmlNode xmlNode;
@@ -178,7 +178,7 @@ namespace BattleActionTool
             {
                 eventBlockModel = _eventBlockModel;
                 doc = eventBlockModel.xmlNode.OwnerDocument;
-                xmlNode = eventBlockModel.xmlNode.AppendChild(doc.CreateNode(XmlNodeType.None, name, doc.NamespaceURI));
+                xmlNode = eventBlockModel.xmlNode.AppendChild(doc.CreateNode(XmlNodeType.Element, name, doc.NamespaceURI));
             }
 
             /// <summary>
@@ -226,21 +226,19 @@ namespace BattleActionTool
         public readonly XmlNode xmlNode;
         public EventBlock eventBlock { get { return new EventBlock(DumpAnimEvents(), DumpAudioEvents(), DumpFXEvents()); } }
         public string name;
-        private List<AnimEventModel> animEventModels = new List<AnimEventModel>(32);
-        private List<AudioEventModel> audioEventModels = new List<AudioEventModel>(32);
-        private List<FXEventModel> fxEventModels = new List<FXEventModel>(32);
+        public List<AnimEventModel> animEventModels = new List<AnimEventModel>(32);
+        public List<AudioEventModel> audioEventModels = new List<AudioEventModel>(32);
+        public List<FXEventModel> fxEventModels = new List<FXEventModel>(32);
         private XmlDocument doc;
 
         /// <summary>
         /// Creates an empty EventBlockModel.
         /// </summary>
-        public EventBlockModel(EffectPackageModel _parent, string _name)
+        public EventBlockModel(XmlNode _parent, string _name)
         {
-            parentEffectPackageModel = _parent;
             name = _name;
-            XmlNode parentNode = _parent.xmlNode;
-            doc = parentNode.OwnerDocument;
-            xmlNode = parentNode.AppendChild(doc.CreateNode(XmlNodeType.None, name, doc.NamespaceURI));
+            doc = _parent.OwnerDocument;
+            xmlNode = _parent.AppendChild(doc.CreateNode(XmlNodeType.Element, name, doc.NamespaceURI));
         }
 
         /// <summary>

@@ -14,6 +14,7 @@ public class ToolsMenu
     {
         GenerateAnimatorMetadataLookupTable.Refire();
         GenerateDatatableFromBuildSettings.Refire();
+        AssembleDatasets.Refire();
     }
 }
 

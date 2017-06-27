@@ -1,0 +1,31 @@
+<BattleAction info="The simplest possible attack. (This is a comment field. It doesn't get baked into the lookup table. Do as you will with it.)">
+  <baseAOERadius>0</baseAOERadius>
+  <baseDelay>1</baseDelay>
+  <baseFollowthroughStanceChangeDelay>3</baseFollowthroughStanceChangeDelay>
+  <baseMinimumTargetingDistance>0</baseMinimumTargetingDistance>
+  <baseTargetingRange>1</baseTargetingRange>
+  <baseSPCost>15</baseSPCost>
+  <alternateTargetSideFlags>None</alternateTargetSideFlags>
+  <targetSideFlags>Neutral</targetSideFlags>
+  <alternateTargetType>None</alternateTargetType>
+  <targetType>SingleTarget</targetType>
+  <categoryFlags>Heal</categoryFlags>
+  <Subaction info="I'm gonna do a hit!">
+    <subactionName>atk0</subactionName>
+    <baseDamage>30</baseDamage>
+    <baseAccuracy>1</baseAccuracy>
+    <useAlternateTargetSet>False</useAlternateTargetSet>
+    <atkStat>Stat_ATK</atkStat>
+    <defStat>Stat_DEF</defStat>
+    <hitStat>Stat_HIT</hitStat>
+    <evadeStat>Stat_EVA</evadeStat>
+    <damageTypes>Slash</damageTypes>
+    <categoryFlags>Heal</categoryFlags>
+    <damageDeterminantName>
+    </damageDeterminantName>
+    <predicateName>
+    </predicateName>
+    <successDeterminantName>
+    </successDeterminantName>
+  </Subaction>
+</BattleAction>

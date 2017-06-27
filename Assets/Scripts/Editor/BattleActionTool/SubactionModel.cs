@@ -16,8 +16,8 @@ namespace BattleActionTool
                 return new BattleAction.Subaction(eventBlockModel.eventBlock, baseDamage, baseAccuracy, useAlternateTargetSet, atkStat, defStat,
                 hitStat, evadeStat, damageDeterminantName, predicateName, successDeterminantName, categoryFlags, DumpEffectPackages(), damageTypes);
             } }
-        private List<EffectPackageModel> effectPackageModels;
-        private EventBlockModel eventBlockModel;
+        public List<EffectPackageModel> effectPackageModels;
+        public EventBlockModel eventBlockModel;
         public string subactionName;
         public int baseDamage;
         public float baseAccuracy;
@@ -43,7 +43,7 @@ namespace BattleActionTool
         {
             battleActionModel = _battleActionModel;
             doc = battleActionModel.xmlNode.OwnerDocument;
-            xmlNode = battleActionModel.xmlNode.AppendChild(doc.CreateNode(XmlNodeType.None, name, doc.NamespaceURI));
+            xmlNode = battleActionModel.xmlNode.AppendChild(doc.CreateNode(XmlNodeType.Element, name, doc.NamespaceURI));
             effectPackageModels = new List<EffectPackageModel>();
         }
 
@@ -60,6 +60,7 @@ namespace BattleActionTool
             XmlNode eventBlockNode = _node.SelectSingleNode("eventBlock");
             if (eventBlockNode != null) eventBlockModel = new EventBlockModel(eventBlockNode);
             XmlNodeList effectPackageModelNodes = _node.SelectNodes(EffectPackageModel.name);
+            effectPackageModels = new List<EffectPackageModel>();
             for (int i = 0; i < effectPackageModelNodes.Count; i++) effectPackageModels.Add(new EffectPackageModel(this, effectPackageModelNodes[i]));
             BattleActionTool.ActOnNode(_node, "subactionName", (workingNode) => { subactionName = workingNode.InnerText; });
             BattleActionTool.ActOnNode(_node, "baseDamage", (workingNode) => { baseDamage = int.Parse(workingNode.InnerText); });
@@ -94,7 +95,7 @@ namespace BattleActionTool
             CodeFieldReferenceExpression damageTypesDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(DamageTypeFlags)), damageTypes.ToString().Replace(", ", " | "));
             CodeFieldReferenceExpression categoryFlagsDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(BattleActionCategoryFlags)), categoryFlags.ToString().Replace(", ", " | "));
             CodePrimitiveExpression damageDeterminantNameDeclaration = new CodePrimitiveExpression(damageDeterminantName);
-            CodePrimitiveExpression predicateNameExpression = new CodePrimitiveExpression(predicateName);
+            CodePrimitiveExpression predicateNameDeclaration = new CodePrimitiveExpression(predicateName);
             CodePrimitiveExpression successDeterminantNameDeclaration = new CodePrimitiveExpression(successDeterminantName);
             return new CodeObjectCreateExpression(typeof(BattleAction.Subaction), new CodeExpression[] { eventBlockDeclaration, baseDamageDeclaration, baseAccuracyDeclaration, useAlternateTargetSetDeclaration,
                                                   atkStatDeclaration, defStatDeclaration, hitStatDeclaration, evadeStatDeclaration, damageDeterminantNameDeclaration, predicateNameDeclaration,

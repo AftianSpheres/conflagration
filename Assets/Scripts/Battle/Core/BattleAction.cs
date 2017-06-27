@@ -171,7 +171,6 @@ namespace CnfBattleSys
             float _basetargetingRange, byte _baseSPCost, TargetSideFlags _alternateTargetSideFlags, TargetSideFlags _targetingSideFlags, ActionTargetType _alternateTargetType, ActionTargetType _targetingType,
             BattleActionCategoryFlags _categoryFlags, Dictionary<string, Subaction> _subactions)
         {
-            if (_subactions.Count == 0) Util.Crash(new System.Exception("Tried to create a battle Action with no Subactions, which should never happen."));
             animSkip = _animSkip;
             onConclusion = _onConclusion;
             onStart = _onStart;
