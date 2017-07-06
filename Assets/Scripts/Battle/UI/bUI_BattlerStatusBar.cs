@@ -35,7 +35,7 @@ public class bUI_BattlerStatusBar : MonoBehaviour
     /// </summary>
     void OnDestroy()
     {
-        if (puppet != null) puppet.RemoveFromOnStatusPacketsModified(OnStatusPacketsModified);
+        if (puppet != null) puppet.onStatusPacketsChanged -= OnStatusPacketsModified;
     }
 
     /// <summary>
@@ -45,7 +45,7 @@ public class bUI_BattlerStatusBar : MonoBehaviour
     public void PairWithPuppet (BattlerPuppet _puppet)
     {
         puppet = _puppet;
-        puppet.AddToOnStatusPacketsModified(OnStatusPacketsModified);
+        puppet.onStatusPacketsChanged += OnStatusPacketsModified;
     }
 
     /// <summary>

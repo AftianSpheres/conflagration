@@ -1,14 +1,16 @@
-﻿namespace CnfBattleSys
+﻿using System;
+
+namespace CnfBattleSys
 {
     /// <summary>
     /// Data structure representing a single FX event.
     /// </summary>
-    public struct FXEvent
+    public struct FXEvent : IEquatable<FXEvent>
     {
         /// <summary>
         /// Flags applicable to FXEvents.
         /// </summary>
-        [System.Flags]
+        [Flags]
         public enum Flags
         {
             None,
@@ -21,31 +23,20 @@
             /// </summary>
             WaitForMe = 1 << 1,
             /// <summary>
-            /// Apply this FX to the user of an action or w/e.
-            /// </summary>
-            ApplyToUser = 1 << 2,
-            /// <summary>
-            /// Apply this FX to the targets of an action or w/e.
-            /// </summary>
-            ApplyToTargets = 1 << 3,
-            /// <summary>
-            /// This FX can be applied to the BattleStage.
-            /// </summary>
-            ApplyToStage = 1 << 4,
-            /// <summary>
             /// This FX's scale is multiplied by the modifier provided by the
             /// BattlerPuppet or BattleStage it's attached to.
             /// (For a quick example: little things have little explosions.
             /// 50-foot robots or whatever, on the other hand, have very big
             /// explosions.)
             /// </summary>
-            Scalable = 1 << 5
+            Scalable = 1 << 2
         }
 
         /// <summary>
         /// Type of the FX event
         /// </summary>
         public readonly FXEventType fxEventType;
+        public readonly BattleEventTargetType targetType;
         /// <summary>
         /// Flags associated with this FX event.
         /// </summary>
@@ -57,16 +48,30 @@
         /// </summary>
         public readonly int priority;
 
-        public bool onBattlers { get { return (flags & Flags.ApplyToTargets) == Flags.ApplyToTargets || (flags & Flags.ApplyToUser) == Flags.ApplyToUser; } }
-        public bool onStage { get { return (flags & Flags.ApplyToStage) == Flags.ApplyToStage; } }
+        public bool onBattlers { get { return (targetType & BattleEventTargetType.PrimaryTargets) == BattleEventTargetType.PrimaryTargets || 
+                                              (targetType & BattleEventTargetType.SecondaryTargets) == BattleEventTargetType.SecondaryTargets ||
+                                              (targetType & BattleEventTargetType.User) == BattleEventTargetType.User; } }
+        public bool onStage { get { return (targetType & BattleEventTargetType.Stage) == BattleEventTargetType.Stage; } }
         public bool isMandatory { get { return (flags & Flags.IsMandatory) == Flags.IsMandatory; } }
         public bool isScalable { get { return (flags & Flags.Scalable) == Flags.Scalable; } }
+        public SignedFXEventType signedFXEventType { get { return new SignedFXEventType(this); } }
 
-        public FXEvent (FXEventType _fxEventType, Flags _flags, int _priority)
+        public FXEvent (FXEventType _fxEventType, BattleEventTargetType _targetType, Flags _flags, int _priority)
         {
             fxEventType = _fxEventType;
+            targetType = _targetType;
             flags = _flags;
             priority = _priority;
+        }
+
+        /// <summary>
+        /// IEquatable.Equals ()
+        /// Returns true if these events are a) of the same time and b) both have the same scalable flag.
+        /// If those conditions are true, they can use the same prefab. Otherwise, they can't.
+        /// </summary>
+        bool IEquatable<FXEvent>.Equals(FXEvent other)
+        {
+            return (other.fxEventType == fxEventType && (other.flags & Flags.Scalable) == (flags & Flags.Scalable));
         }
     }
 }

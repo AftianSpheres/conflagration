@@ -1,4 +1,6 @@
-﻿namespace CnfBattleSys
+﻿using System;
+
+namespace CnfBattleSys
 {
     /// <summary>
     /// Data structure representing a single animation event
@@ -9,7 +11,7 @@
         /// <summary>
         /// Flags applicable to AnimEvents.
         /// </summary>
-        [System.Flags]
+        [Flags]
         public enum Flags
         {
             None,
@@ -21,14 +23,6 @@
             /// Don't move on to lower-priority events/next subaction/etc. until this finishes.
             /// </summary>
             WaitForMe = 1 << 1,
-            /// <summary>
-            /// Apply this anim event to the user of an action or w/e.
-            /// </summary>
-            ApplyToUser = 1 << 2,
-            /// <summary>
-            /// Apply this anim event to the targets of an action or w/e.
-            /// </summary>
-            ApplyToTargets = 1 << 3,
         }
         /// <summary>
         /// Type of the AnimEvent.
@@ -38,6 +32,10 @@
         /// If this event can't be resolved, try to resolve this instead.
         /// </summary>
         public readonly AnimEventType fallbackType;
+        /// <summary>
+        /// What does the event apply to?
+        /// </summary>
+        public readonly BattleEventTargetType targetType;
         /// <summary>
         /// Flags attached to this event.
         /// </summary>
@@ -49,10 +47,11 @@
         /// </summary>
         public readonly int priority;
 
-        public AnimEvent (AnimEventType _animEventType, AnimEventType _fallbackType, Flags _flags, int _priority)
+        public AnimEvent (AnimEventType _animEventType, AnimEventType _fallbackType, BattleEventTargetType _targetType, Flags _flags, int _priority)
         {
             animEventType = _animEventType;
             fallbackType = _fallbackType;
+            targetType = _targetType;
             flags = _flags;
             priority = _priority;
         }

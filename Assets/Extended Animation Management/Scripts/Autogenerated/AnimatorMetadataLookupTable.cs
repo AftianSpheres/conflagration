@@ -20,7 +20,7 @@ namespace ExtendedAnimationManagement {
                                     new AnimatorMetadata.StateMetadata("Base Layer.DecisionShow", "DecisionShow"),
                                     new AnimatorMetadata.StateMetadata("Base Layer.Idle", "Idle"),
                                     new AnimatorMetadata.StateMetadata("Base Layer.Close", "Close"),
-                                    new AnimatorMetadata.StateMetadata("Base Layer.Done", "Done")}}),
+                                    new AnimatorMetadata.StateMetadata("Base Layer.Done", "Done")}}, new CnfBattleSys.AnimEventType[0], new int[0][]),
                 new AnimatorMetadata(new AnimatorMetadata.StateMetadata[][] {
                             new AnimatorMetadata.StateMetadata[] {
                                     new AnimatorMetadata.StateMetadata("Base Layer.Confirm", "Confirm"),
@@ -29,26 +29,26 @@ namespace ExtendedAnimationManagement {
                                     new AnimatorMetadata.StateMetadata("Base Layer.Selected", "Selected"),
                                     new AnimatorMetadata.StateMetadata("Base Layer.Locked", "Locked"),
                                     new AnimatorMetadata.StateMetadata("Base Layer.Locked+Selected", "Locked+Selected"),
-                                    new AnimatorMetadata.StateMetadata("Base Layer.WheelClose", "WheelClose")}}),
+                                    new AnimatorMetadata.StateMetadata("Base Layer.WheelClose", "WheelClose")}}, new CnfBattleSys.AnimEventType[0], new int[0][]),
                 new AnimatorMetadata(new AnimatorMetadata.StateMetadata[][] {
                             new AnimatorMetadata.StateMetadata[] {
                                     new AnimatorMetadata.StateMetadata("Base Layer.idle", "idle"),
                                     new AnimatorMetadata.StateMetadata("Base Layer.willPass", "willPass"),
-                                    new AnimatorMetadata.StateMetadata("Base Layer.active", "active")}}),
+                                    new AnimatorMetadata.StateMetadata("Base Layer.active", "active")}}, new CnfBattleSys.AnimEventType[0], new int[0][]),
                 new AnimatorMetadata(new AnimatorMetadata.StateMetadata[][] {
                             new AnimatorMetadata.StateMetadata[] {
-                                    new AnimatorMetadata.StateMetadata("Base Layer.spin_forever", "spin_forever")}}),
+                                    new AnimatorMetadata.StateMetadata("Base Layer.spin_forever", "spin_forever")}}, new CnfBattleSys.AnimEventType[0], new int[0][]),
                 new AnimatorMetadata(new AnimatorMetadata.StateMetadata[][] {
                             new AnimatorMetadata.StateMetadata[] {
-                                    new AnimatorMetadata.StateMetadata("Base Layer.loading", "loading")}}),
+                                    new AnimatorMetadata.StateMetadata("Base Layer.loading", "loading")}}, new CnfBattleSys.AnimEventType[0], new int[0][]),
                 new AnimatorMetadata(new AnimatorMetadata.StateMetadata[][] {
-                            new AnimatorMetadata.StateMetadata[0]}),
+                            new AnimatorMetadata.StateMetadata[0]}, new CnfBattleSys.AnimEventType[0], new int[0][]),
                 new AnimatorMetadata(new AnimatorMetadata.StateMetadata[][] {
                             new AnimatorMetadata.StateMetadata[] {
                                     new AnimatorMetadata.StateMetadata("Base Layer.Walk", "Walk"),
                                     new AnimatorMetadata.StateMetadata("Base Layer.Wait", "Wait"),
                                     new AnimatorMetadata.StateMetadata("Base Layer.Dead", "Dead"),
                                     new AnimatorMetadata.StateMetadata("Base Layer.Damage", "Damage"),
-                                    new AnimatorMetadata.StateMetadata("Base Layer.Attack", "Attack")}})};
+                                    new AnimatorMetadata.StateMetadata("Base Layer.Attack", "Attack")}}, new CnfBattleSys.AnimEventType[0], new int[0][])};
     }
 }

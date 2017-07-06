@@ -1,4 +1,5 @@
-﻿using System.CodeDom;
+﻿#if UNITY_EDITOR
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Xml;
 using CnfBattleSys;
@@ -149,3 +150,4 @@ namespace BattleActionTool
         }
     }
 }
+#endif

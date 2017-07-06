@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if UNITY_EDITOR
+using System;
 using System.Collections.Generic;
 using System.Xml;
 using UnityEngine;
@@ -57,3 +58,4 @@ namespace BattleActionTool
         }
     }
 }
+#endif

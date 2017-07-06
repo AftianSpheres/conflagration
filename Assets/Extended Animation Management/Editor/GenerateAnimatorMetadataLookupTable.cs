@@ -1,6 +1,8 @@
 ﻿#if UNITY_EDITOR
+using System;
 using System.CodeDom;
 using System.CodeDom.Compiler;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using UnityEngine;
@@ -8,6 +10,7 @@ using UnityEditor;
 using UnityEditor.Animations;
 using UnityEditor.Build;
 using UnityEditor.Callbacks;
+using CnfBattleSys;
 using ExtendedAnimationManagement;
 
 /// <summary>
@@ -102,6 +105,7 @@ public class GenerateAnimatorMetadataLookupTable : IPreprocessBuild
         {
             AnimatorController animatorController = AssetDatabase.LoadAssetAtPath<AnimatorController>(AssetDatabase.GUIDToAssetPath(guidList[i]));
             RegisterAnimatorController(animatorController, i);
+            
             metadataDeclarations[i] = DeclareMetadataFor(animatorController);
         }
         return new CodeArrayCreateExpression(typeof(AnimatorMetadata), metadataDeclarations);
@@ -126,7 +130,7 @@ public class GenerateAnimatorMetadataLookupTable : IPreprocessBuild
             }
             layerDeclarations[l] = new CodeArrayCreateExpression(typeof(AnimatorMetadata.StateMetadata[]), thisLayerDeclarationsArray);
         }
-        return new CodeObjectCreateExpression(typeof(AnimatorMetadata), new CodeArrayCreateExpression(typeof(AnimatorMetadata.StateMetadata[][]), layerDeclarations));
+        return CreateWithEventMappings(animatorController, new CodeArrayCreateExpression(typeof(AnimatorMetadata.StateMetadata[][]), layerDeclarations));
     }
 
     /// <summary>
@@ -136,18 +140,80 @@ public class GenerateAnimatorMetadataLookupTable : IPreprocessBuild
     private static void RegisterAnimatorController (AnimatorController animatorController, int index)
     {
         StateMachineBehaviour[] layer0Behaviours = animatorController.layers[0].stateMachine.behaviours;
-        StateMachineBehaviour_MetadataPusher metadataPusher = null;
+        StateMachineExtender metadataPusher = null;
         for (int i = 0; i < layer0Behaviours.Length; i++)
         {
-            if (layer0Behaviours[i] is StateMachineBehaviour_MetadataPusher)
+            if (layer0Behaviours[i] is StateMachineExtender)
             {
-                metadataPusher = (StateMachineBehaviour_MetadataPusher)layer0Behaviours[i];
+                metadataPusher = (StateMachineExtender)layer0Behaviours[i];
                 break;
             }
         }
-        if (metadataPusher == null) metadataPusher = animatorController.layers[0].stateMachine.AddStateMachineBehaviour<StateMachineBehaviour_MetadataPusher>();
+        if (metadataPusher == null) metadataPusher = animatorController.layers[0].stateMachine.AddStateMachineBehaviour<StateMachineExtender>();
         metadataPusher.tableIndex_SetAutomatically = index;
         EditorUtility.SetDirty(animatorController);
+    }
+
+    /// <summary>
+    /// Gets all the anim event mappings for the given animator controller.
+    /// </summary>
+    private static CodeObjectCreateExpression CreateWithEventMappings (AnimatorController animatorController, CodeExpression layerDeclarations)
+    {
+        Dictionary<AnimatorState, AnimatorControllerLayer> layerMap = new Dictionary<AnimatorState, AnimatorControllerLayer>();
+        Dictionary<AnimEventType, List<AnimatorState>> bindings = new Dictionary<AnimEventType, List<AnimatorState>>();
+        Func<StateMachineBehaviour[], AnimEventBinder> containsBehaviour = (behaviourSet) => 
+        {
+            for (int i = 0; i < behaviourSet.Length; i++)
+                if (behaviourSet[i].GetType() == typeof(AnimEventBinder)) return (AnimEventBinder)behaviourSet[i];
+            return null;
+        };
+        Func<AnimatorControllerLayer, AnimatorState, int> getFullPathHash = (layer, state) =>
+        {
+            return Animator.StringToHash(layer.name + "." + state.name);
+        };
+        for (int l = 0; l < animatorController.layers.Length; l++)
+        {
+            for (int s = 0; s < animatorController.layers[l].stateMachine.states.Length; s++)
+            {
+                AnimEventBinder binder = containsBehaviour(animatorController.layers[l].stateMachine.states[s].state.behaviours);
+                if (binder != null)
+                {
+                    for (int a = 0; a < binder.animEventTypes.Length; a++)
+                    {
+                        if (!bindings.ContainsKey(binder.animEventTypes[a])) bindings.Add(binder.animEventTypes[a], new List<AnimatorState>());
+                        bindings[binder.animEventTypes[a]].Add(animatorController.layers[l].stateMachine.states[s].state);
+                        layerMap.Add(animatorController.layers[l].stateMachine.states[s].state, animatorController.layers[l]);
+                    }
+                    
+                }
+            }
+        }
+        AnimEventType[] boundAnimEvents = new AnimEventType[bindings.Keys.Count];
+        int[][] hashSets = new int[boundAnimEvents.Length][];
+        CodeFieldReferenceExpression[] eventsRefs = new CodeFieldReferenceExpression[boundAnimEvents.Length];
+        CodePrimitiveExpression[][] hashRefs = new CodePrimitiveExpression[hashSets.Length][];
+        CodeArrayCreateExpression[] subarrays = new CodeArrayCreateExpression[hashRefs.Length];
+        bindings.Keys.CopyTo(boundAnimEvents, 0);
+        for (int i = 0; i < boundAnimEvents.Length; i++)
+        {
+            hashSets[i] = new int[bindings[boundAnimEvents[i]].Count];
+            for (int s = 0; s < hashSets[i].Length; s++)
+            {
+                hashSets[i][s] = getFullPathHash(layerMap[bindings[boundAnimEvents[i]][s]], bindings[boundAnimEvents[i]][s]);
+            }
+            eventsRefs[i] = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(AnimEventType)), boundAnimEvents[i].ToString());
+            hashRefs[i] = new CodePrimitiveExpression[hashSets[i].Length];
+            for (int h = 0; h < hashSets[i].Length; i++) hashRefs[i][h] = new CodePrimitiveExpression(hashSets[i][h]);
+            subarrays[i] = new CodeArrayCreateExpression(typeof(int[]), hashRefs[i]);
+        }
+        CodeExpression hashesMultiArrayDeclaration;
+        // If subarrays.Length == 0, CodeDOM will "optimize" this argument straight into a type mismatch!
+        // This is a hack that works around that by making sure we explicitly declare an empty array-of-arrays,
+        // if need be.
+        if (subarrays.Length > 0) hashesMultiArrayDeclaration = new CodeArrayCreateExpression(typeof(int[][]), subarrays);
+        else hashesMultiArrayDeclaration = new CodeSnippetExpression("new int[0][]");
+        return new CodeObjectCreateExpression(typeof(AnimatorMetadata), new CodeExpression[] { layerDeclarations,
+            new CodeArrayCreateExpression(typeof(AnimEventType), eventsRefs), hashesMultiArrayDeclaration });
     }
 }
 

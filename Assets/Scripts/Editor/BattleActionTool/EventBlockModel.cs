@@ -1,4 +1,5 @@
-﻿using System.CodeDom;
+﻿#if UNITY_EDITOR
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Xml;
 using CnfBattleSys;
@@ -17,9 +18,10 @@ namespace BattleActionTool
         {
             public readonly EventBlockModel eventBlockModel;
             public readonly XmlNode xmlNode;
-            public AnimEvent animEvent { get { return new AnimEvent(animEventType, fallbackType, flags, priority); } }
+            public AnimEvent animEvent { get { return new AnimEvent(animEventType, fallbackType, targetType, flags, priority); } }
             public AnimEventType animEventType;
             public AnimEventType fallbackType;
+            public BattleEventTargetType targetType;
             public AnimEvent.Flags flags;
             public int priority;
             public string info;
@@ -48,6 +50,7 @@ namespace BattleActionTool
                 if (infoNode != null) info = infoNode.Value;
                 BattleActionTool.ActOnNode(_node, "animEventType", (workingNode) => { animEventType = DBTools.ParseAnimEventType(workingNode.InnerText); });
                 BattleActionTool.ActOnNode(_node, "fallbackType", (workingNode) => { fallbackType = DBTools.ParseAnimEventType(workingNode.InnerText); });
+                BattleActionTool.ActOnNode(_node, "targetType", (workingNode) => { targetType = DBTools.ParseBattleEventTargetType(workingNode.InnerText); });
                 BattleActionTool.ActOnNode(_node, "flags", (workingNode) => { flags = DBTools.ParseAnimEventFlags(workingNode.InnerText); });
                 BattleActionTool.ActOnNode(_node, "priority", (workingNode) => { priority = int.Parse(workingNode.InnerText); });
             }
@@ -59,9 +62,10 @@ namespace BattleActionTool
             {
                 CodeFieldReferenceExpression animEventTypeDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(AnimEventType)), animEventType.ToString());
                 CodeFieldReferenceExpression fallbackTypeDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(AnimEventType)), fallbackType.ToString());
+                CodeFieldReferenceExpression targetTypeDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(BattleEventTargetType)), targetType.ToString().Replace(", ", " | "));
                 CodeFieldReferenceExpression flagsDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(AnimEvent.Flags)), flags.ToString().Replace(", ", " | "));
                 CodePrimitiveExpression priorityDeclaration = new CodePrimitiveExpression(priority);
-                return new CodeObjectCreateExpression(typeof(AnimEvent), new CodeExpression[] { animEventTypeDeclaration, fallbackTypeDeclaration, flagsDeclaration, priorityDeclaration });
+                return new CodeObjectCreateExpression(typeof(AnimEvent), new CodeExpression[] { animEventTypeDeclaration, fallbackTypeDeclaration, targetTypeDeclaration, flagsDeclaration, priorityDeclaration });
             }
 
             /// <summary>
@@ -73,6 +77,7 @@ namespace BattleActionTool
                 BattleActionTool.HandleChildNode(xmlNode, "info", (node) => { node.Value = info; }, validChildren, XmlNodeType.Attribute);
                 BattleActionTool.HandleChildNode(xmlNode, "animEventType", (node) => { node.InnerText = animEventType.ToString(); }, validChildren);
                 BattleActionTool.HandleChildNode(xmlNode, "fallbackType", (node) => { node.InnerText = fallbackType.ToString(); }, validChildren);
+                BattleActionTool.HandleChildNode(xmlNode, "targetType", (node) => { node.InnerText = targetType.ToString(); }, validChildren);
                 BattleActionTool.HandleChildNode(xmlNode, "flags", (node) => { node.InnerText = flags.ToString(); }, validChildren);
                 BattleActionTool.HandleChildNode(xmlNode, "priority", (node) => { node.InnerText = priority.ToString(); }, validChildren);
                 BattleActionTool.CleanNode(xmlNode, validChildren);
@@ -87,10 +92,11 @@ namespace BattleActionTool
         {
             public readonly EventBlockModel eventBlockModel;
             public readonly XmlNode xmlNode;
-            public AudioEvent audioEvent { get { return new AudioEvent(audioEventType, fallbackType, clipType, flags, priority); } }
+            public AudioEvent audioEvent { get { return new AudioEvent(audioEventType, fallbackType, clipType, targetType, flags, priority); } }
             public AudioEventType audioEventType;
             public AudioEventType fallbackType;
             public AudioSourceType clipType;
+            public BattleEventTargetType targetType;
             public AudioEvent.Flags flags;
             public int priority;
             public string info;
@@ -121,6 +127,7 @@ namespace BattleActionTool
                 BattleActionTool.ActOnNode(_node, "audioEventType", (workingNode) => { audioEventType = DBTools.ParseAudioEventType(workingNode.InnerText); });
                 BattleActionTool.ActOnNode(_node, "fallbackType", (workingNode) => { fallbackType = DBTools.ParseAudioEventType(workingNode.InnerText); });
                 BattleActionTool.ActOnNode(_node, "clipType", (workingNode) => { clipType = DBTools.ParseAudioSourceType(workingNode.InnerText); });
+                BattleActionTool.ActOnNode(_node, "targetType", (workingNode) => { targetType = DBTools.ParseBattleEventTargetType(workingNode.InnerText); });
                 BattleActionTool.ActOnNode(_node, "flags", (workingNode) => { flags = DBTools.ParseAudioEventFlags(workingNode.InnerText); });
                 BattleActionTool.ActOnNode(_node, "priority", (workingNode) => { priority = int.Parse(workingNode.InnerText); });
             }
@@ -133,9 +140,10 @@ namespace BattleActionTool
                 CodeFieldReferenceExpression audioEventTypeDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(AudioEventType)), audioEventType.ToString());
                 CodeFieldReferenceExpression fallbackTypeDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(AudioEventType)), fallbackType.ToString());
                 CodeFieldReferenceExpression clipTypeDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(AudioSourceType)), clipType.ToString());
+                CodeFieldReferenceExpression targetTypeDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(BattleEventTargetType)), targetType.ToString().Replace(", ", " | "));
                 CodeFieldReferenceExpression flagsDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(AudioEvent.Flags)), flags.ToString().Replace(", ", " | "));
                 CodePrimitiveExpression priorityDeclaration = new CodePrimitiveExpression(priority);
-                return new CodeObjectCreateExpression(typeof(AnimEvent), new CodeExpression[] { audioEventTypeDeclaration, fallbackTypeDeclaration, clipTypeDeclaration, flagsDeclaration, priorityDeclaration });
+                return new CodeObjectCreateExpression(typeof(AnimEvent), new CodeExpression[] { audioEventTypeDeclaration, fallbackTypeDeclaration, clipTypeDeclaration, targetTypeDeclaration, flagsDeclaration, priorityDeclaration });
             }
 
             /// <summary>
@@ -148,6 +156,7 @@ namespace BattleActionTool
                 BattleActionTool.HandleChildNode(xmlNode, "audioEventType", (node) => { node.InnerText = audioEventType.ToString(); }, validChildren);
                 BattleActionTool.HandleChildNode(xmlNode, "fallbackType", (node) => { node.InnerText = fallbackType.ToString(); }, validChildren);
                 BattleActionTool.HandleChildNode(xmlNode, "clipType", (node) => { node.InnerText = clipType.ToString(); }, validChildren);
+                BattleActionTool.HandleChildNode(xmlNode, "targetType", (node) => { node.InnerText = targetType.ToString(); }, validChildren);
                 BattleActionTool.HandleChildNode(xmlNode, "flags", (node) => { node.InnerText = flags.ToString(); }, validChildren);
                 BattleActionTool.HandleChildNode(xmlNode, "priority", (node) => { node.InnerText = priority.ToString(); }, validChildren);
                 BattleActionTool.CleanNode(xmlNode, validChildren);
@@ -162,8 +171,9 @@ namespace BattleActionTool
         {
             public readonly EventBlockModel eventBlockModel;
             public readonly XmlNode xmlNode;
-            public FXEvent fxEvent { get { return new FXEvent(fxEventType, flags, priority); } }
+            public FXEvent fxEvent { get { return new FXEvent(fxEventType, targetType, flags, priority); } }
             public FXEventType fxEventType;
+            public BattleEventTargetType targetType;
             public FXEvent.Flags flags;
             public int priority;
             public string info;
@@ -192,6 +202,7 @@ namespace BattleActionTool
                 XmlNode infoNode = _node.Attributes.GetNamedItem("info");
                 if (infoNode != null) info = infoNode.Value;
                 BattleActionTool.ActOnNode(_node, "fxEventType", (workingNode) => { fxEventType = DBTools.ParseFXEventType(workingNode.InnerText); });
+                BattleActionTool.ActOnNode(_node, "targetType", (workingNode) => { targetType = DBTools.ParseBattleEventTargetType(workingNode.InnerText); });
                 BattleActionTool.ActOnNode(_node, "flags", (workingNode) => { flags = DBTools.ParseFXEventFlags(workingNode.InnerText); });
                 BattleActionTool.ActOnNode(_node, "priority", (workingNode) => { priority = int.Parse(workingNode.InnerText); });
             }
@@ -202,9 +213,10 @@ namespace BattleActionTool
             public CodeObjectCreateExpression DumpToCSDeclaration()
             {
                 CodeFieldReferenceExpression fxEventTypeDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(FXEventType)), fxEventType.ToString());
+                CodeFieldReferenceExpression targetTypeDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(BattleEventTargetType)), targetType.ToString().Replace(", ", " | "));
                 CodeFieldReferenceExpression flagsDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(FXEvent.Flags)), flags.ToString().Replace(", ", " | "));
                 CodePrimitiveExpression priorityDeclaration = new CodePrimitiveExpression(priority);
-                return new CodeObjectCreateExpression(typeof(FXEvent), new CodeExpression[] { fxEventTypeDeclaration, flagsDeclaration, priorityDeclaration });
+                return new CodeObjectCreateExpression(typeof(FXEvent), new CodeExpression[] { fxEventTypeDeclaration, targetTypeDeclaration, flagsDeclaration, priorityDeclaration });
             }
 
             /// <summary>
@@ -215,6 +227,7 @@ namespace BattleActionTool
                 List<XmlNode> validChildren = new List<XmlNode>();
                 BattleActionTool.HandleChildNode(xmlNode, "info", (node) => { node.Value = info; }, validChildren, XmlNodeType.Attribute);
                 BattleActionTool.HandleChildNode(xmlNode, "fxEventType", (node) => { node.InnerText = fxEventType.ToString(); }, validChildren);
+                BattleActionTool.HandleChildNode(xmlNode, "targetType", (node) => { node.InnerText = targetType.ToString(); }, validChildren);
                 BattleActionTool.HandleChildNode(xmlNode, "flags", (node) => { node.InnerText = flags.ToString(); }, validChildren);
                 BattleActionTool.HandleChildNode(xmlNode, "priority", (node) => { node.InnerText = priority.ToString(); }, validChildren);
                 BattleActionTool.CleanNode(xmlNode, validChildren);
@@ -318,3 +331,4 @@ namespace BattleActionTool
         }
     }
 }
+#endif

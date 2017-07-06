@@ -51,13 +51,13 @@ namespace CnfBattleSys
             if (CanResolve(audioEvent.type))
             {
                 AudioEventResolver resolver = audioEventResolvers[audioEvent.type];
-                managedAudioSource.PlayOneShotAs(resolver.clips[Random.Range(0, resolver.clips.Length)], audioEvent.clipType);
+                managedAudioSource.PlayClipAs(resolver.clips[Random.Range(0, resolver.clips.Length)], audioEvent.clipType);
                 return true;
             }
             else if (CanResolve(audioEvent.fallbackType))
             {
                 AudioEventResolver resolver = audioEventResolvers[audioEvent.fallbackType];
-                managedAudioSource.PlayOneShotAs(resolver.clips[Random.Range(0, resolver.clips.Length)], audioEvent.clipType);
+                managedAudioSource.PlayClipAs(resolver.clips[Random.Range(0, resolver.clips.Length)], audioEvent.clipType);
                 return true;
             }
             else if ((audioEvent.flags & AudioEvent.Flags.IsMandatory) == AudioEvent.Flags.IsMandatory) Util.Crash("Table" + audioEventResolverTableType + " can't resolve audio event type of main " + audioEvent.type + " or fallback " + audioEvent.fallbackType);

@@ -285,11 +285,7 @@ namespace CnfBattleSys
         public bool FireSubaction (string subactionName)
         {
             bool r = false;
-            if (!actionInExecution.subactions.ContainsKey(subactionName)) Util.Crash(subactionName, actionInExecution, null);
-            else
-            {
-                r = GetRuntimeDataFor(actionInExecution.subactions[subactionName]).Fire();
-            }
+            if (actionInExecution.subactions.ContainsKey(subactionName)) r = GetRuntimeDataFor(actionInExecution.subactions[subactionName]).Fire();
             return r;
         }
 

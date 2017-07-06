@@ -988,7 +988,7 @@ namespace CnfBattleSys
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, penalty, 1, penalty, 1, penalty, 1, 1, 1);
             }
             if (puppet == null) return;
-            else puppet.DispatchAnimEvent(AnimEventType.StanceBreak);
+            else puppet.DispatchStanceBreakEventBlock();
         }
 
         /// <summary>
@@ -1129,10 +1129,8 @@ namespace CnfBattleSys
                 if (currentHP > stats.maxHP) currentHP = stats.maxHP;
                 if (currentHP <= 0) Die();
                 puppet.DispatchBattlerUIEvent(BattlerUIEventType.HPValueChange);
-                if (dmg > 0) puppet.DispatchAnimEvent(AnimEventType.Hit);
-                else if (dmg < 0) puppet.DispatchAnimEvent(AnimEventType.Heal);
             }
-            else puppet.DispatchAnimEvent(AnimEventType.NoSell);
+            //else puppet.DispatchAnimEvent(AnimEventType.NoSell);
 
         }
 
@@ -1166,7 +1164,7 @@ namespace CnfBattleSys
             ClearStatus();
             isDead = true;
             if (puppet == null) return;
-            else puppet.DispatchAnimEvent(AnimEventType.Die);
+            else puppet.DispatchDeathEventBlock();
             BattleOverseer.BattlerIsDead(this);
         }
 
@@ -1300,7 +1298,7 @@ namespace CnfBattleSys
         /// </summary>
         private void OnStatusPacketsModified()
         {
-            puppet.OnStatusPacketsModified();
+            puppet.FireOnStatusPacketsChanged();
         }
 
         /// <summary>

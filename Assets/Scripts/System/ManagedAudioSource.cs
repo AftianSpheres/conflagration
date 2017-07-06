@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
+using CnfBattleSys;
+using MovementEffects;
 
 /// <summary>
 /// Helper MonoBehaviour that attaches itself to an AudioSource
@@ -8,15 +11,19 @@ using UnityEngine;
 /// </summary>
 public class ManagedAudioSource : MonoBehaviour
 {
+    public event Action onClipFinish;
     public AudioSourceType audioSourceType;
+    public AudioEventResolverTable audioEventResolverTable { get; private set; }
     private AudioSource source;
     private float baseVolume;
+    private string thisTag;
 
     /// <summary>
     /// MonoBehaviour.Awake ()
     /// </summary>
     void Awake ()
     {
+        thisTag = GetInstanceID().ToString();
         source = GetComponent<AudioSource>();
         if (source == null) source = gameObject.AddComponent<AudioSource>();
         baseVolume = source.volume;
@@ -69,10 +76,41 @@ public class ManagedAudioSource : MonoBehaviour
     /// Sets the type of this managedAudioSource to clipType, conform,
     /// and play the given clip.
     /// </summary>
-    public void PlayOneShotAs (AudioClip clip, AudioSourceType clipType)
+    public void PlayClipAs (AudioClip clip, AudioSourceType clipType)
     {
         audioSourceType = clipType;
         ConformToManager();
-        source.PlayOneShot(clip);
+        source.clip = clip;
+        source.Play();
+        Timing.RunCoroutine(_CallOnceClipFinished(onClipFinish), thisTag);
+    }
+
+    /// <summary>
+    /// Acquire a reference to a loaded AudioEventResolverTable.
+    /// If the table isn't loaded Bad Things will happen, so make
+    /// sure you don't call this until it's loaded!
+    /// </summary>
+    public void AcquireAudioEventResolverTable (AudioEventResolverTableType tableType)
+    {
+        audioEventResolverTable = BattleEventResolverTablesLoader.instance.GetTable(tableType);
+    }
+
+    /// <summary>
+    /// Dispatches an AudioEvent to this ManagedAudioSource.
+    /// Returns an AudioEventHandle.
+    /// </summary>
+    public AudioEventHandle DispatchAudioEvent (AudioEvent audioEvent)
+    {
+        audioEventResolverTable.Resolve(audioEvent, this);
+        return new AudioEventHandle(audioEvent, this, source.clip);
+    }
+
+    /// <summary>
+    /// Coroutine: Execute callback once clip has finished playing.
+    /// </summary>
+    private IEnumerator<float> _CallOnceClipFinished (Action callback)
+    {
+        while (source.isPlaying) yield return 0;
+        callback();
     }
 }

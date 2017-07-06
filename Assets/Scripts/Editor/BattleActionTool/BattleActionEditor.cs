@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if UNITY_EDITOR
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
@@ -204,6 +205,7 @@ public class BattleActionEditor : EditorWindow
                     eventBlockModel.animEventModels[i].info = EditorGUILayout.TextArea(eventBlockModel.animEventModels[i].info, new GUILayoutOption[] { GUILayout.MaxHeight(32) });
                     eventBlockModel.animEventModels[i].animEventType = (AnimEventType)EditorGUILayout.EnumPopup("AnimEvent Type", eventBlockModel.animEventModels[i].animEventType);
                     eventBlockModel.animEventModels[i].fallbackType = (AnimEventType)EditorGUILayout.EnumPopup("Fallback Type", eventBlockModel.animEventModels[i].fallbackType);
+                    eventBlockModel.animEventModels[i].targetType = (BattleEventTargetType)EditorGUILayout.EnumMaskPopup("Target Type", eventBlockModel.animEventModels[i].targetType);
                     eventBlockModel.animEventModels[i].flags = (AnimEvent.Flags)EditorGUILayout.EnumMaskPopup("AnimEvent Flags", eventBlockModel.animEventModels[i].flags);
                     Field("Priority", ref eventBlockModel.animEventModels[i].priority);
                     if (GUILayout.Button("Remove")) animEventModelsToRemove.Add(eventBlockModel.animEventModels[i]);
@@ -221,6 +223,7 @@ public class BattleActionEditor : EditorWindow
                     eventBlockModel.audioEventModels[i].audioEventType = (AudioEventType)EditorGUILayout.EnumPopup("AudioEvent Type", eventBlockModel.audioEventModels[i].audioEventType);
                     eventBlockModel.audioEventModels[i].fallbackType = (AudioEventType)EditorGUILayout.EnumPopup("Fallback Type", eventBlockModel.audioEventModels[i].fallbackType);
                     eventBlockModel.audioEventModels[i].clipType = (AudioSourceType)EditorGUILayout.EnumPopup("Clip Type", eventBlockModel.audioEventModels[i].clipType);
+                    eventBlockModel.audioEventModels[i].targetType = (BattleEventTargetType)EditorGUILayout.EnumMaskField("Target Type", eventBlockModel.audioEventModels[i].targetType);
                     eventBlockModel.audioEventModels[i].flags = (AudioEvent.Flags)EditorGUILayout.EnumMaskPopup("AudioEvent Flags", eventBlockModel.audioEventModels[i].flags);
                     Field("Priority", ref eventBlockModel.audioEventModels[i].priority);
                     if (GUILayout.Button("Remove")) audioEventModelsToRemove.Add(eventBlockModel.audioEventModels[i]);
@@ -236,6 +239,7 @@ public class BattleActionEditor : EditorWindow
                     EditorGUILayout.LabelField("<b>FXEvent " + i + "</b>");
                     eventBlockModel.fxEventModels[i].info = EditorGUILayout.TextArea(eventBlockModel.fxEventModels[i].info, new GUILayoutOption[] { GUILayout.MaxHeight(32) });
                     eventBlockModel.fxEventModels[i].fxEventType = (FXEventType)EditorGUILayout.EnumPopup("FXEvent Type", eventBlockModel.fxEventModels[i].fxEventType);
+                    eventBlockModel.fxEventModels[i].targetType = (BattleEventTargetType)EditorGUILayout.EnumMaskField("Target Type", eventBlockModel.fxEventModels[i].targetType);
                     eventBlockModel.fxEventModels[i].flags = (FXEvent.Flags)EditorGUILayout.EnumMaskPopup("FXEvent Flags", eventBlockModel.fxEventModels[i].flags);
                     Field("Priority", ref eventBlockModel.fxEventModels[i].priority);
                     if (GUILayout.Button("Remove")) fxEventModelsToRemove.Add(eventBlockModel.fxEventModels[i]);
@@ -371,5 +375,5 @@ public class BattleActionEditor : EditorWindow
         EditorGUILayout.EndHorizontal();
         EditorGUILayout.Separator();
     }
-
 }
+#endif

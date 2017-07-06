@@ -34,6 +34,14 @@ namespace CnfBattleSys
         }
 
         /// <summary>
+        /// Takes a string, spits out the corresponding BattleEventTargetType.
+        /// </summary>
+        public static BattleEventTargetType ParseBattleEventTargetType(string s)
+        {
+            return (BattleEventTargetType)Enum.Parse(typeof(BattleEventTargetType), s);
+        }
+
+        /// <summary>
         /// Parse comma-separated list of audio event flags.
         /// </summary>
         public static AudioEvent.Flags ParseAudioEventFlags(string s)
@@ -201,84 +209,6 @@ namespace CnfBattleSys
             string[] substrings = s.Split(',');
             if (substrings.Length > 2) Util.Crash(new Exception("Unrecognized vector2-as-string encoding: " + s));
             return new Vector2(float.Parse(substrings[0]), float.Parse(substrings[1]));
-        }
-
-        /// <summary>
-        /// Turns the given blockNode into an EventBlock.
-        /// </summary>
-        public static EventBlock GetEventBlockFromXml (XmlNode blockNode)
-        {
-            XmlNode subNode;
-            Func<XmlNode, AnimEvent> actOnAnimNode = (node) =>
-            {
-                AnimEventType animEventType = AnimEventType.None;
-                subNode = node.SelectSingleNode("eventType");
-                if (subNode == null) Util.Crash(subNode, typeof(DBTools), null);
-                else animEventType = ParseAnimEventType(subNode.InnerText);
-                AnimEventType fallbackType = AnimEventType.None;
-                subNode = node.SelectSingleNode("fallbackType");
-                if (subNode == null) Util.Crash(subNode, typeof(DBTools), null);
-                else fallbackType = ParseAnimEventType(subNode.InnerText);
-                AnimEvent.Flags flags = AnimEvent.Flags.None;
-                subNode = node.SelectSingleNode("flags");
-                if (subNode == null) Util.Crash(subNode, typeof(DBTools), null);
-                else flags = ParseAnimEventFlags(subNode.InnerText);
-                int priority = 0;
-                subNode = node.SelectSingleNode("priority");
-                if (subNode == null) Util.Crash(subNode, typeof(DBTools), null);
-                else priority = int.Parse(subNode.InnerText);
-                return new AnimEvent(animEventType, fallbackType, flags, priority);
-            };
-            Func<XmlNode, AudioEvent> actOnAudioNode = (node) =>
-            {
-                AudioEventType audioEventType = AudioEventType.None;
-                subNode = node.SelectSingleNode("eventType");
-                if (subNode == null) Util.Crash(subNode, typeof(DBTools), null);
-                else audioEventType = ParseAudioEventType(subNode.InnerText);
-                AudioEventType fallbackType = AudioEventType.None;
-                subNode = node.SelectSingleNode("fallbackType");
-                if (subNode == null) Util.Crash(subNode, typeof(DBTools), null);
-                else fallbackType = ParseAudioEventType(subNode.InnerText);
-                AudioSourceType audioSourceType = AudioSourceType.None;
-                subNode = node.SelectSingleNode("audioSourceType");
-                if (subNode == null) Util.Crash(subNode, typeof(DBTools), null);
-                else audioSourceType = ParseAudioSourceType(subNode.InnerText);
-                AudioEvent.Flags flags = AudioEvent.Flags.None;
-                subNode = node.SelectSingleNode("flags");
-                if (subNode == null) Util.Crash(subNode, typeof(DBTools), null);
-                else flags = ParseAudioEventFlags(subNode.InnerText);
-                int priority = 0;
-                subNode = node.SelectSingleNode("priority");
-                if (subNode == null) Util.Crash(subNode, typeof(DBTools), null);
-                else priority = int.Parse(subNode.InnerText);
-                return new AudioEvent(audioEventType, fallbackType, audioSourceType, flags, priority);
-            };
-            Func<XmlNode, FXEvent> actOnFXNode = (node) =>
-            {
-                FXEventType fxEventType = FXEventType.None;
-                subNode = node.SelectSingleNode("eventType");
-                if (subNode == null) Util.Crash(subNode, typeof(DBTools), null);
-                else fxEventType = ParseFXEventType(subNode.InnerText);
-                FXEvent.Flags flags = FXEvent.Flags.None;
-                subNode = node.SelectSingleNode("flags");
-                if (subNode == null) Util.Crash(subNode, typeof(DBTools), null);
-                else flags = ParseFXEventFlags(subNode.InnerText);
-                int priority = 0;
-                subNode = node.SelectSingleNode("priority");
-                if (subNode == null) Util.Crash(subNode, typeof(DBTools), null);
-                else priority = int.Parse(subNode.InnerText);
-                return new FXEvent(fxEventType, flags, priority);
-            };
-            XmlNodeList nodeList = blockNode.SelectNodes("animEvent");
-            AnimEvent[] animEvents = new AnimEvent[nodeList.Count];
-            for (int i = 0; i < animEvents.Length; i++) animEvents[i] = actOnAnimNode(nodeList[i]);
-            nodeList = blockNode.SelectNodes("audioEvent");
-            AudioEvent[] audioEvents = new AudioEvent[nodeList.Count];
-            for (int i = 0; i < audioEvents.Length; i++) audioEvents[i] = actOnAudioNode(nodeList[i]);
-            nodeList = blockNode.SelectNodes("fxEvent");
-            FXEvent[] fxEvents = new FXEvent[nodeList.Count];
-            for (int i = 0; i < fxEvents.Length; i++) fxEvents[i] = actOnFXNode(nodeList[i]);
-            return new EventBlock(animEvents, audioEvents, fxEvents);
         }
 
         /// <summary>

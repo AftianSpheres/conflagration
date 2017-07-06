@@ -18,17 +18,15 @@
             /// </summary>
             WaitForMe = 1 << 1,
             /// <summary>
-            /// Apply this audio event to the user of an action or w/e.
+            /// This event should only be resolved to a single clip.
+            /// If you can resolve it for multiple resolver tables,
+            /// use only the first one you get.
             /// </summary>
-            ApplyToUser = 1 << 2,
+            Exclusive = 1 << 2,
             /// <summary>
-            /// Apply this audio event to the targets of an action or w/e.
+            /// If the audio event is spatially unaware, it'll be played on the camera audiosource instead of on the source attached to the puppet (etc.)
             /// </summary>
-            ApplyToTargets = 1 << 3,
-            /// <summary>
-            /// This audio event can be applied to the BattleStage.
-            /// </summary>
-            ApplyToStage = 1 << 4
+            SpatiallyUnaware = 1 << 3
         }
 
         /// <summary>
@@ -45,6 +43,10 @@
         /// </summary>
         public readonly AudioSourceType clipType;
         /// <summary>
+        /// The targets this event should be applied to.
+        /// </summary>
+        public readonly BattleEventTargetType targetType;
+        /// <summary>
         /// Flags associated with this audio event.
         /// </summary>
         public readonly Flags flags;
@@ -55,12 +57,13 @@
         /// </summary>
         public readonly int priority;
 
-        public AudioEvent (AudioEventType _type, AudioEventType _fallbackType, AudioSourceType _clipType, Flags _flags, int _priority)
+        public AudioEvent (AudioEventType _type, AudioEventType _fallbackType, AudioSourceType _clipType, BattleEventTargetType _targetType, Flags _flags, int _priority)
         {
             if (_type == AudioEventType.None) Util.Crash(_type, typeof(AudioEvent), null);
             type = _type;
             fallbackType = _fallbackType;
             clipType = _clipType;
+            targetType = _targetType;
             flags = _flags;
             priority = _priority;
         }
