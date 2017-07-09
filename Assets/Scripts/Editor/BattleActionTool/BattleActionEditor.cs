@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEditor;
 using CnfBattleSys;
 using BattleActionTool;
+using GeneratedDatasets;
 
 public class BattleActionEditor : EditorWindow
 {
@@ -197,6 +198,7 @@ public class BattleActionEditor : EditorWindow
                     eventBlockModelOpenStatuses.Remove(eventBlockModel);
                     removeCallback();
                 }
+                eventBlockModel.battleCameraScriptType = (BattleCameraScriptType)EditorGUILayout.EnumPopup("Battle camera script", eventBlockModel.battleCameraScriptType);
                 // Anim event models
                 animEventModelsToRemove.Clear();
                 for (int i = 0; i < eventBlockModel.animEventModels.Count; i++)

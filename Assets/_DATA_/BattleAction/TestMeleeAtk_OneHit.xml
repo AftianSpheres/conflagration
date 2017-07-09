@@ -27,5 +27,8 @@
     </predicateName>
     <successDeterminantName>
     </successDeterminantName>
+    <eventBlock>
+      <battleCameraScript>BattleCameraScript_Demo</battleCameraScript>
+    </eventBlock>
   </Subaction>
 </BattleAction>

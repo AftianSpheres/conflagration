@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using CnfBattleSys;
+using GeneratedDatasets;
 
 /// <summary>
 /// Object created when an event block is dispatched.
@@ -164,22 +165,49 @@ public class EventBlockHandle
     public readonly EventBlock eventBlock;
     public int layerIndex { get; private set; }
     public LayerHandle currentLayer { get; private set; }
+    private bool awaitingCameraScript;
 
     public EventBlockHandle (EventBlock _eventBlock)
     {
         eventBlock = _eventBlock;
-        currentLayer = DispatchLayer(eventBlock.layers[0]);
     } 
+
+    /// <summary>
+    /// Starts processing the event block.
+    /// </summary>
+    public void Commence ()
+    {
+        if (eventBlock.battleCameraScript != BattleCameraScriptType.None)
+        {
+            BattleCameraScript battleCameraScript = Factories.BattleCameraScriptFactory(eventBlock.battleCameraScript);
+            if (!battleCameraScript.isIndefiniteDuration) awaitingCameraScript = true;
+            bUI_BattleUIController.instance.cameraHarness.AcceptBattleCameraScript(battleCameraScript, CameraScriptDone);
+        }
+        if (currentLayer != null) Util.Crash("Can't start an event block that's already started!");
+        else currentLayer = DispatchLayer(eventBlock.layers[0]);
+    }
 
     /// <summary>
     /// Move onto the next layer, if one exists.
     /// Otherwise, this event block has finished.
     /// </summary>
-    protected void Advance()
+    protected void Advance ()
     {
         layerIndex++;
         if (layerIndex < eventBlock.layers.Length) currentLayer = DispatchLayer(eventBlock.layers[layerIndex]);
-        else onBlockCompleted();
+        else if (!awaitingCameraScript) onBlockCompleted();
+    }
+
+    /// <summary>
+    /// Given to a battleCameraScript as a callback if we need to wait on one.
+    /// </summary>
+    private void CameraScriptDone ()
+    {
+        if (awaitingCameraScript)
+        {
+            awaitingCameraScript = false;
+            if (!(layerIndex < eventBlock.layers.Length)) onBlockCompleted();
+        }
     }
 
     /// <summary>

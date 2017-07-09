@@ -11,7 +11,7 @@ namespace CnfBattleSys
     public static class ActionDatabase
     {
         public static int count = Enum.GetValues(typeof(ActionType)).Length - SpecialActions.count;
-        private readonly static EventBlock emptyEventBlock = new EventBlock(new AnimEvent[0], new AudioEvent[0], new FXEvent[0]);
+        private readonly static EventBlock emptyEventBlock = new EventBlock(new AnimEvent[0], new AudioEvent[0], new FXEvent[0], BattleCameraScriptType.None);
         private static readonly Dictionary<string, BattleAction.Subaction> defaultSubactionsDict = new Dictionary<string, BattleAction.Subaction>();
         const string actionIconsResourcePath = "Battle/2D/UI/AWIcon/Action/";
 

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using CnfBattleSys;
@@ -35,4 +36,8 @@ public class bUI_CameraHarness : MonoBehaviour
         bUI_BattleUIController.instance.RegisterCameraHarness(this);
     }
 
+    public void AcceptBattleCameraScript (BattleCameraScript _battleCameraScript, Action callback)
+    {
+        Debug.Log("Implement this pls");
+    }
 }

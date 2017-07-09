@@ -20,17 +20,28 @@ public class BattleStage : MonoBehaviour
         ReadyToAdvanceBattle
     }
 
+	/// <summary>
+	/// Called when we finish handling the final
+	/// enqueued event block.
+	/// (This is automatically set to null after it's
+	/// fired.)
+	/// </summary>
+	public event Action onAllEventBlocksFinished;
+	
     private LocalState localState = LocalState.Offline;
     private BattlerPuppet[] puppets;
-    private Dictionary<Battler, BattlerPuppet> puppetsDict;
-   
+    private Dictionary<Battler, BattlerPuppet> puppetsDict = new Dictionary<Battler, BattlerPuppet>();
+    private Queue<EventBlockHandle> eventBlocksToDispatch = new Queue<EventBlockHandle>(8);
+
     /// <summary>
     /// BattleStage isn't actually a singleton, but it interacts with a lot of static classes on a message-passing basis,
     /// so it's useful for those to be able to address the current instance without being given a reference to a specific
     /// BattleStage. There should never be more than one of these in a scene at a time, anyway.
     /// </summary>
+    public bool processingAnyEventBlock { get { return currentEventBlock != null; } }
     public static BattleStage instance { get; private set; }
     public BattleFXContainer battleFXContainer { get; private set; }
+    public EventBlockHandle currentEventBlock { get; private set; }
     public ManagedAudioSource managedAudioSource { get; private set; }
     public Transform battlerPuppetsParent { get; private set; }
     public Transform fxControllersParent { get; private set; }
@@ -91,9 +102,27 @@ public class BattleStage : MonoBehaviour
         }
 	}
 
-    public void Dispatch (EventBlock eventBlock)
+    /// <summary>
+    /// Creates a handle for the given event block, enqueues it if needed, and
+    /// returns it so that the caller can subscribe to events.
+    /// </summary>
+    public EventBlockHandle Dispatch (EventBlock eventBlock)
     {
-
+        Action advance = () =>
+        {
+            if (eventBlocksToDispatch.Count > 0) currentEventBlock = eventBlocksToDispatch.Dequeue();
+            else 
+			{
+			    currentEventBlock = null;
+				onAllEventBlocksFinished();
+				onAllEventBlocksFinished = null; // Wipe this after firing it.
+			}
+        };
+        EventBlockHandle h = new EventBlockHandle(eventBlock);
+        h.onBlockCompleted += advance;
+        if (processingAnyEventBlock) eventBlocksToDispatch.Enqueue(h); // event blocks are always processed one at a time
+        else currentEventBlock = h;
+        return h;
     }
 
     /// <summary>

@@ -3,6 +3,7 @@ using System.CodeDom;
 using System.Collections.Generic;
 using System.Xml;
 using CnfBattleSys;
+using GeneratedDatasets;
 
 namespace BattleActionTool
 {
@@ -237,11 +238,12 @@ namespace BattleActionTool
 
         public readonly EffectPackageModel parentEffectPackageModel;
         public readonly XmlNode xmlNode;
-        public EventBlock eventBlock { get { return new EventBlock(DumpAnimEvents(), DumpAudioEvents(), DumpFXEvents()); } }
+        public EventBlock eventBlock { get { return new EventBlock(DumpAnimEvents(), DumpAudioEvents(), DumpFXEvents(), battleCameraScriptType); } }
         public string name;
         public List<AnimEventModel> animEventModels = new List<AnimEventModel>(32);
         public List<AudioEventModel> audioEventModels = new List<AudioEventModel>(32);
         public List<FXEventModel> fxEventModels = new List<FXEventModel>(32);
+        public BattleCameraScriptType battleCameraScriptType;
         private XmlDocument doc;
 
         /// <summary>
@@ -268,6 +270,7 @@ namespace BattleActionTool
             for (int i = 0; i < nodeList.Count; i++) audioEventModels[i] = new AudioEventModel(this, nodeList[i]);
             nodeList = _node.SelectNodes("fxEvent");
             for (int i = 0; i < nodeList.Count; i++) fxEventModels[i] = new FXEventModel(this, nodeList[i]);
+            BattleActionTool.ActOnNode(_node, "battleCameraScript", (node) => battleCameraScriptType = DBTools.ParseBattleCameraScriptType(node.InnerText));
         }
 
         /// <summary>
@@ -284,7 +287,8 @@ namespace BattleActionTool
             objectCreateExpressions.Clear();
             for (int i = 0; i < fxEventModels.Count; i++) objectCreateExpressions[i] = fxEventModels[i].DumpToCSDeclaration();
             CodeArrayCreateExpression fxEventsArrayDeclaration = new CodeArrayCreateExpression(typeof(FXEvent), objectCreateExpressions.ToArray());
-            return new CodeObjectCreateExpression(typeof(EventBlock), new CodeExpression[] { animEventsArrayDeclaration, audioEventsArrayDeclaration, fxEventsArrayDeclaration });
+            CodeFieldReferenceExpression battleActionScriptTypeDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(BattleCameraScriptType)), battleCameraScriptType.ToString());
+            return new CodeObjectCreateExpression(typeof(EventBlock), new CodeExpression[] { animEventsArrayDeclaration, audioEventsArrayDeclaration, fxEventsArrayDeclaration, battleActionScriptTypeDeclaration });
         }
 
         /// <summary>
@@ -296,6 +300,7 @@ namespace BattleActionTool
             for (int i = 0; i < animEventModels.Count; i++) validChildren.Add(animEventModels[i].DumpToXmlNode());
             for (int i = 0; i < audioEventModels.Count; i++) validChildren.Add(audioEventModels[i].DumpToXmlNode());
             for (int i = 0; i < fxEventModels.Count; i++) validChildren.Add(fxEventModels[i].DumpToXmlNode());
+            BattleActionTool.HandleChildNode(xmlNode, "battleCameraScript", (node) => { node.InnerText = battleCameraScriptType.ToString(); }, validChildren);
             BattleActionTool.CleanNode(xmlNode, validChildren);
             return xmlNode;
         }
