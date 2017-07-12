@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace CnfBattleSys
+﻿namespace CnfBattleSys
 {
     /// <summary>
     /// Defines a single battle action.
@@ -73,7 +71,8 @@ namespace CnfBattleSys
                     baseAIScoreValue = _baseAIScoreValue;
                 }
             }
-
+            private readonly ActionType actionID;
+            public BattleAction parent { get { return ActionDatabase.Get(actionID); } }
             public readonly EventBlock eventBlock;
             /// <summary>
             /// If baseDamage is less than zero, this heals the target.
@@ -95,20 +94,20 @@ namespace CnfBattleSys
             /// If the action doesn't identify itself as a buff, we never bother scoring subactions as buffs!
             /// </summary>
             public readonly BattleActionCategoryFlags categoryFlags;
-
+            public Subaction damageDeterminant { get { if (damageDeterminantIndex > -1) return parent.subactions[damageDeterminantIndex]; else return null; } }
             /// <summary>
             /// Must be lower than the Subaction's index in the BattleAction.Subactions array.
             /// If greater than -1, we skip damage calculation and just use the per-target
             /// final damage figures of the Subaction at the specified index.
             /// </summary>
-            public readonly string damageDeterminantName;
-            public readonly string predicateName;
+            private readonly int damageDeterminantIndex;
+            public Subaction successDeterminant { get { if (successDeterminantIndex > -1) return parent.subactions[successDeterminantIndex]; else return null; } }
             /// <summary>
             /// Must be lower than the Subaction's index in the BattleAction.Subactions array.
             /// If greater than -1, we skip damage calculation and just use the per-target
             /// success values of the Subaction at the specified index.
             /// </summary>
-            public readonly string successDeterminantName;
+            private readonly int successDeterminantIndex;
             public readonly EffectPackage[] effectPackages;
 
             /// <summary>
@@ -117,9 +116,12 @@ namespace CnfBattleSys
             /// </summary>
             public Subaction(EventBlock _eventBlock, int _baseDamage, float _baseAccuracy, bool _useAlternateTargetSet,
                              LogicalStatType _atkStat, LogicalStatType _defStat, LogicalStatType _hitStat, LogicalStatType _evadeStat,
-                             string _damageDeterminantName, string _predicateName, string _successDeterminantName,
+                             ActionType _actionID, int _damageDeterminantIndex, int _successDeterminantIndex,
                              BattleActionCategoryFlags _categoryFlags, EffectPackage[] _fx, DamageTypeFlags _damageTypes)
             {
+                actionID = _actionID;
+                damageDeterminantIndex = _damageDeterminantIndex;
+                successDeterminantIndex = _successDeterminantIndex;
                 eventBlock = _eventBlock;
                 baseDamage = _baseDamage;
                 baseAccuracy = _baseAccuracy;
@@ -128,9 +130,6 @@ namespace CnfBattleSys
                 defStat = _defStat;
                 hitStat = _hitStat;
                 evadeStat = _evadeStat;
-                damageDeterminantName = _damageDeterminantName;
-                predicateName = _predicateName;
-                successDeterminantName = _successDeterminantName;
                 categoryFlags = _categoryFlags;
                 effectPackages = _fx;
                 damageTypes = _damageTypes;
@@ -159,9 +158,9 @@ namespace CnfBattleSys
         public readonly ActionTargetType targetingType;
         public readonly BattleActionCategoryFlags categoryFlags;
         /// <summary>
-        /// Dictionary containing the subactions that compose this BattleAction.
+        /// Array containing the subactions that compose this BattleAction.
         /// </summary>
-        public readonly Dictionary<string, Subaction> subactions;
+        public readonly Subaction[] subactions;
 
         /// <summary>
         /// Constructs a BattleAction struct, given, uh, the entire contents of the BattleAction struct.
@@ -169,7 +168,7 @@ namespace CnfBattleSys
         /// </summary>
         public BattleAction(EventBlock _animSkip, EventBlock _onConclusion, EventBlock _onStart, ActionType _actionID, float _baseAOERadius, float _baseDelay, float _baseFollowthroughStanceChangeDelay, float _baseMinimumTargetingDistance, 
             float _basetargetingRange, byte _baseSPCost, TargetSideFlags _alternateTargetSideFlags, TargetSideFlags _targetingSideFlags, ActionTargetType _alternateTargetType, ActionTargetType _targetingType,
-            BattleActionCategoryFlags _categoryFlags, Dictionary<string, Subaction> _subactions)
+            BattleActionCategoryFlags _categoryFlags, Subaction[] _subactions)
         {
             animSkip = _animSkip;
             onConclusion = _onConclusion;

@@ -1,4 +1,5 @@
-﻿using CnfBattleSys;
+﻿using UnityEngine;
+using CnfBattleSys;
 
 /// <summary>
 /// Object created when an AnimEvent is dispatched.
@@ -26,6 +27,16 @@ public class AnimEventHandle : BattleEventHandle
     /// moving onto the next layer.
     /// </summary>
     public bool waitForMe { get { return (animEvent.flags & AnimEvent.Flags.WaitForMe) == AnimEvent.Flags.WaitForMe; } }
+    private readonly Vector3 puppetOriginalPosition;
+    private readonly Vector3 puppetOriginalScale;
+    private readonly Quaternion puppetOriginalRotation;
+    // actually no
+    // you want to be able to chain these, right?
+    // ...so what you do is:
+    // let attack anims modify transform params
+    // then when an attack finishes executing
+    // re-normalize position/rotation/scale of each battler in the scene
+    // while giving them all their idle events
 
     public AnimEventHandle (AnimEvent _animEvent, BattlerPuppet _battlerPuppet, int _fullPathHash)
     {

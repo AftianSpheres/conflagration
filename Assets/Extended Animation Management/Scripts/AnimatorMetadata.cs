@@ -29,7 +29,7 @@ public class AnimatorMetadata
         /// </summary>
         public AnimEventHandle ResolveOn(AnimEvent animEvent, BattlerPuppet battlerPuppet)
         {
-            int hash = animsHashes[UnityEngine.Random.Range(0, animsHashes.Length)];
+            int hash = animsHashes[Random.Range(0, animsHashes.Length)];
             battlerPuppet.animator.Play(hash);
             return new AnimEventHandle(animEvent, battlerPuppet, hash);
         }

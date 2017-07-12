@@ -65,7 +65,7 @@ namespace CnfBattleSys
         /// huge-ass jump table. (Well it's not huge _yet_ but, architecturally: this
         /// table is fat af.)
         /// </summary>
-        public static void StartThinking (Battler b, bool changeStances)
+        public static void StartThinking (Battler b, bool changeStances, Action callback)
         {
             Battler.TurnActions turnActions = Battler.defaultTurnActions;
             BattlerAIMessageFlags messageFlags = BattlerAIMessageFlags.None;
@@ -73,13 +73,15 @@ namespace CnfBattleSys
             switch (b.aiType)
             {
                 case BattlerAIType.None:
+                    callback();
                     break; // if the battler says it doesn't have any AI, we dutifully decline to provide the battler with AI
                 case BattlerAIType.PlayerSide_ManualControl:
                     outputIsDelayed = true;
-                    AIModule_PlayerSide_ManualControl.GetTurnActionsFromPlayer(b, changeStances);
+                    AIModule_PlayerSide_ManualControl.GetTurnActionsFromPlayer(b, changeStances, callback);
                     break;
                 case BattlerAIType.TestAI:
                     AIModule_TestAI.DecideTurnActions_AndStanceIfApplicable(b, changeStances, out turnActions, out messageFlags);
+                    callback();
                     break;
                 default:
                     Util.Crash(new Exception("No entry in AI function jump table for AI type of: " + b.aiType.ToString()));
@@ -320,19 +322,16 @@ namespace CnfBattleSys
             {
                 float score = 0;
                 int countedSubactions = 0;
-                string[] keys = new string[action.subactions.Keys.Count];
-                action.subactions.Keys.CopyTo(keys, 0);
-                for (int s = 0; s < keys.Length; s++)
+                for (int s = 0; s < action.subactions.Length; s++)
                 {
-                    string key = keys[s];
-                    if ((action.subactions[key].categoryFlags & category) == category)
+                    if ((action.subactions[s].categoryFlags & category) == category)
                     {
                         countedSubactions++;
                         // Float imprecision is fine because scoring doesn't need to have _exact_ integral damage values, it just needs to indicate the general power of attacks relative to each other
-                        float thisSubActionDmg = potentialTargets[i].CalcDamageAgainstMe(user, action.subactions[key], false, (flags & BattlerAIFlags.WeaknessAware) == BattlerAIFlags.WeaknessAware, (flags & BattlerAIFlags.ResistanceAware) == BattlerAIFlags.ResistanceAware);
-                        if ((flags & BattlerAIFlags.EvadeAware) == BattlerAIFlags.EvadeAware && action.subactions[key].evadeStat != LogicalStatType.None)
+                        float thisSubActionDmg = potentialTargets[i].CalcDamageAgainstMe(user, action.subactions[s], false, (flags & BattlerAIFlags.WeaknessAware) == BattlerAIFlags.WeaknessAware, (flags & BattlerAIFlags.ResistanceAware) == BattlerAIFlags.ResistanceAware);
+                        if ((flags & BattlerAIFlags.EvadeAware) == BattlerAIFlags.EvadeAware && action.subactions[s].evadeStat != LogicalStatType.None)
                         {
-                            thisSubActionDmg = Mathf.FloorToInt(BattleUtility.GetModifiedAccuracyFor(action.subactions[key], user, potentialTargets[i]));
+                            thisSubActionDmg = Mathf.FloorToInt(BattleUtility.GetModifiedAccuracyFor(action.subactions[s], user, potentialTargets[i]));
                         }
                         score += thisSubActionDmg;
                     }
@@ -367,23 +366,20 @@ namespace CnfBattleSys
                 float score = 0;
                 float accuracyMod = 0;
                 int countedSubactions = 0;
-                string[] keys = new string[action.subactions.Keys.Count];
-                action.subactions.Keys.CopyTo(keys, 0);
-                for (int s = 0; s < keys.Length; s++)
+                for (int s = 0; s < action.subactions.Length; s++)
                 {
-                    string key = keys[s];
-                    if ((action.subactions[key].categoryFlags & category) == category)
+                    if ((action.subactions[s].categoryFlags & category) == category)
                     {
                         float subactionAccMod = 0;
                         int f;
-                        for (f = 0; f < action.subactions[key].effectPackages.Length; f++)
+                        for (f = 0; f < action.subactions[s].effectPackages.Length; f++)
                         {
                             float fxAccMod = 1;
-                            score += action.subactions[key].effectPackages[f].baseAIScoreValue;
+                            score += action.subactions[s].effectPackages[f].baseAIScoreValue;
                             if ((flags & BattlerAIFlags.EvadeAware) == BattlerAIFlags.EvadeAware)
                             {
-                                if (action.subactions[key].effectPackages[f].evadeStat != LogicalStatType.None) fxAccMod = BattleUtility.GetModifiedAccuracyFor(action.subactions[key].effectPackages[f], user, potentialTargets[i]);
-                                if (!action.subactions[key].effectPackages[f].applyEvenIfSubactionMisses && action.subactions[key].evadeStat != LogicalStatType.None) fxAccMod *= BattleUtility.GetModifiedAccuracyFor(action.subactions[key], user, potentialTargets[i]);
+                                if (action.subactions[s].effectPackages[f].evadeStat != LogicalStatType.None) fxAccMod = BattleUtility.GetModifiedAccuracyFor(action.subactions[s].effectPackages[f], user, potentialTargets[i]);
+                                if (!action.subactions[s].effectPackages[f].applyEvenIfSubactionMisses && action.subactions[s].evadeStat != LogicalStatType.None) fxAccMod *= BattleUtility.GetModifiedAccuracyFor(action.subactions[s], user, potentialTargets[i]);
                             }
                             // Eventually I need to add status resistances, at which point the difficulty or ease of landing that status on that target needs to be factored into the accuracy mod.
                             subactionAccMod += fxAccMod;

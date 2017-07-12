@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -11,302 +12,514 @@ namespace CnfBattleSys
     public class ActionExecutionSubsystem
     {
         /// <summary>
-        /// Stores a subaction reference, plus metadata for tracking if it's been fired off.
+        /// Object created when a BattleAction is processed.
         /// </summary>
-        protected class RuntimeSubaction
+        public class ActionHandle
         {
-            public readonly ActionExecutionSubsystem parent;
-            public readonly BattleAction.Subaction subaction;
-            public bool fired { get; private set; }
-            public int[] finalDamageFigures { get; private set; }
-            public bool[] targetsHit { get; private set; }
-            public bool[] effectPackagesNonFailures { get; private set; }
-            public bool[][] effectPackagesSuccesses { get; private set; }
-            public bool anySucceeded { get; private set; }
-            public int finalAvgDamage { get; private set; }
-            private int fxExecutionIndex;
-            private BattleAction.Subaction damageDeterminant;
-            private BattleAction.Subaction predicate;
-            private BattleAction.Subaction successDeterminant;
+            /// <summary>
+            /// The handle of the subaction that we're currently working on.
+            /// </summary>
+            public SubactionHandle currentSubactionHandle { get { if (currentSubactionIndex < subactionHandles.Length) return subactionHandles[currentSubactionIndex]; else return null; } }
+            /// <summary>
+            /// The BattleAction that this handle belongs to.
+            /// </summary>
+            public readonly BattleAction battleAction;
+            /// <summary>
+            /// The Battler using this action.
+            /// </summary>
+            public readonly Battler user;
+            /// <summary>
+            /// An array containing subaction handles for each of this action's subactions.
+            /// </summary>
+            public readonly SubactionHandle[] subactionHandles;
+            /// <summary>
+            /// The primary targets acquired for this action.
+            /// </summary>
+            public readonly List<Battler> primaryTargetSet;
+            /// <summary>
+            /// The secondary targets acquired for this action.
+            /// </summary>
+            public readonly List<Battler> alternateTargetSet;
+            /// <summary>
+            /// If true, we skip all subaction or effect package
+            /// event blocks. We'll handle only the animSkip block.
+            /// </summary>
+            public bool skipMostEventBlocks { get; private set; }
+            /// <summary>
+            /// The callback that'll run after all of this action's subactions have been executed and its event blocks have finished processing.
+            /// </summary>
+            private readonly Action callback;
+            /// <summary>
+            /// Index that tracks which subaction handle we're currently processing.
+            /// </summary>
+            private int currentSubactionIndex;
 
-            public RuntimeSubaction (ActionExecutionSubsystem _parent, BattleAction.Subaction _subaction)
+            public ActionHandle (BattleAction _battleAction, Battler _user, List<Battler> _primaryTargetSet, List<Battler> _alternateTargetSet, Action _callback)
             {
-                parent = _parent;
-                subaction = _subaction;
-                fired = false;
-                effectPackagesNonFailures = new bool[subaction.effectPackages.Length];
-                effectPackagesSuccesses = new bool[subaction.effectPackages.Length][];
-                if (subaction.useAlternateTargetSet)
+                battleAction = _battleAction;
+                user = _user;
+                primaryTargetSet = _primaryTargetSet;
+                alternateTargetSet = _alternateTargetSet;
+                callback = _callback;
+                subactionHandles = new SubactionHandle[battleAction.subactions.Length];
+                for (int i = 0; i < battleAction.subactions.Length; i++) subactionHandles[i] = new SubactionHandle(this, battleAction.subactions[i], SubactionFinished);
+                if (battleAction.onStart != null && !skipMostEventBlocks)
                 {
-                    finalDamageFigures = new int[parent.alternateTargets.Count];
-                    targetsHit = new bool[parent.alternateTargets.Count];             
-                    for (int i = 0; i < subaction.effectPackages.Length; i++) effectPackagesSuccesses[i] = new bool[parent.alternateTargets.Count];
+                    BattleStage.instance.Dispatch(battleAction.onStart);
+                    BattleStage.instance.onAllEventBlocksFinished += currentSubactionHandle.Process;
+                }
+                else currentSubactionHandle.Process(); // Kickstart action processing
+            }
+
+            /// <summary>
+            /// Called by each of this action's subactions
+            /// as a callback, after they finish processing.
+            /// </summary>
+            private void SubactionFinished ()
+            {
+                currentSubactionIndex++;
+                // There's a much faster way to do dead target pruning but it's really, really ugly and kinda shits all over any pretensions to object-oriented design you have.
+                for (int i = primaryTargetSet.Count; i > -1; i--) if (primaryTargetSet[i].isDead) primaryTargetSet.RemoveAt(i);
+                for (int i = alternateTargetSet.Count; i > -1; i--) if (alternateTargetSet[i].isDead) alternateTargetSet.RemoveAt(i);
+                for (int i = 0; i < subactionHandles.Length; i++) subactionHandles[i].PruneDeadTargets();
+                if (currentSubactionIndex < subactionHandles.Length && !user.isDead) currentSubactionHandle.Process();
+                else OutOfSubactions();
+            }
+
+            /// <summary>
+            /// Skip any remaining event blocks and finish this action immediately.
+            /// </summary>
+            public void EndPrematurely ()
+            {
+                // Each time you EndPrematurely with subactions left to process, you immedaitely get the next handle in line.
+                // So this loop will continue aborting those until you run out of subactions.
+                while (currentSubactionHandle != null) currentSubactionHandle.EndPrematurely();
+            }
+
+            /// <summary>
+            /// Gets the handle corresponding to the given subaction.
+            /// </summary>
+            public SubactionHandle GetHandleFor (BattleAction.Subaction subaction)
+            {
+                for (int i = 0; i < subactionHandles.Length; i++)
+                {
+                    if (subactionHandles[i].subaction == subaction) return subactionHandles[i];
+                }
+                return null;
+            }
+
+            /// <summary>
+            /// Called when we finish our subactions.
+            /// </summary>
+            private void OutOfSubactions ()
+            {
+                if (!user.isDead)
+                {
+                    EventBlockHandle eventBlockHandle;
+                    if (!skipMostEventBlocks) eventBlockHandle = BattleStage.instance.Dispatch(battleAction.onConclusion, callback);
+                    else eventBlockHandle = BattleStage.instance.Dispatch(battleAction.animSkip, callback);
+                    if (eventBlockHandle == null) callback();
+                }
+                else callback();
+            }
+        }
+
+        /// <summary>
+        /// Object created when an effect package is processed.
+        /// Keeps track of the state of any event blocks
+        /// this effect dispatched, and the results of
+        /// processing it.
+        /// </summary>
+        public class EffectPackageHandle
+        {
+            /// <summary>
+            /// The outcome of processing this effect package.
+            /// </summary>
+            public enum Result
+            {
+                /// <summary>
+                /// The effect hasn't actually been processed yet.
+                /// </summary>
+                Undetermined,
+                /// <summary>
+                /// Didn't do shit.
+                /// </summary>
+                Failure,
+                /// <summary>
+                /// The effects this package handles were applied
+                /// to some targets, but not all of them.
+                /// (This should never be used as the result for
+                /// a single target!)
+                /// </summary>
+                PartialSuccess,
+                /// <summary>
+                /// The effect was applied successfully to all targets.
+                /// </summary>
+                Success
+            }
+
+            /// <summary>
+            /// The base handle for tha BattleAction this effect package is attached to.
+            /// </summary>
+            public readonly ActionHandle actionHandle;
+            /// <summary>
+            /// The handle for the subaction this effect package is attached to.
+            /// </summary>
+            public readonly SubactionHandle subactionHandle;
+            /// <summary>
+            /// The effect package that this handle is attached to.
+            /// </summary>
+            public readonly BattleAction.Subaction.EffectPackage effectPackage;
+            /// <summary>
+            /// The overall result of processing the effect package.
+            /// </summary>
+            public readonly Result result;
+            /// <summary>
+            /// The individual results of processing the effect package,
+            /// matched to indices in parent.targets.
+            /// </summary>
+            public readonly Result[] resultsByTarget;
+
+            /// <summary>
+            /// Constructor: Fires off the effect package and sets up the handle's state based on that.
+            /// Fires off callback when the event block tied to this effect package has been handled,
+            /// or immediately if there's no event block.
+            /// </summary>
+            public EffectPackageHandle (SubactionHandle _subactionHandle, BattleAction.Subaction.EffectPackage _effectPackage)
+            {
+                subactionHandle = _subactionHandle;
+                actionHandle = subactionHandle.actionHandle;
+                effectPackage = _effectPackage;
+                resultsByTarget = new Result[subactionHandle.targets.Count];
+                // We don't worry about whether or not to handle event blocks based on anim skipping or anything
+                // until we actually dispatch them to the BattleStage. BattleStage.Dispatch does the lifting there.
+                // This is a minor efficiency loss but keeps this code much simpler.
+                if (effectPackage.eventBlock != null) subactionHandle.eventBlocksQueue.Enqueue(effectPackage.eventBlock);
+                if (effectPackage.tieSuccessToEffectIndex > -1)
+                {
+                    result = subactionHandle.effectPackageHandles[effectPackage.tieSuccessToEffectIndex].result;
+                    resultsByTarget = subactionHandle.effectPackageHandles[effectPackage.tieSuccessToEffectIndex].resultsByTarget;
                 }
                 else
                 {
-                    finalDamageFigures = new int[parent.targets.Count];
-                    targetsHit = new bool[parent.targets.Count];
-                    for (int i = 0; i < subaction.effectPackages.Length; i++) effectPackagesSuccesses[i] = new bool[parent.targets.Count];
-                }
-                if (subaction.damageDeterminantName != string.Empty && parent.actionInExecution.subactions.ContainsKey(subaction.damageDeterminantName))
-                {
-                    damageDeterminant = parent.actionInExecution.subactions[subaction.damageDeterminantName];
-                }
-                if (subaction.predicateName != string.Empty && parent.actionInExecution.subactions.ContainsKey(subaction.predicateName))
-                {
-                    predicate = parent.actionInExecution.subactions[subaction.predicateName];
-                }
-                if (subaction.successDeterminantName != string.Empty && parent.actionInExecution.subactions.ContainsKey(subaction.successDeterminantName))
-                {
-                    successDeterminant = parent.actionInExecution.subactions[subaction.successDeterminantName];
-                } 
+                    bool overallSucceeded = true;
+                    bool overallFailed = true;
+                    for (int i = 0; i < subactionHandle.targets.Count; i++)
+                    {
+                        resultsByTarget[i] = ApplyToTargetIndex(i);
+                        if (resultsByTarget[i] == Result.Success) overallFailed = false;
+                        else if (resultsByTarget[i] == Result.Failure) overallSucceeded = false;
+                    }
+                    // Either these are both false or there are no targets, in which case our result doesn't matter because this is just a battle scripting thing.
+                    if (overallSucceeded == overallFailed) result = Result.PartialSuccess; 
+                    else if (overallSucceeded) result = Result.Success;
+                    else result = Result.Failure;
+                }      
             }
 
             /// <summary>
-            /// Fire off this subaction
+            /// Applies this effect package to target at index.
             /// </summary>
-            public bool Fire ()
+            private Result ApplyToTargetIndex (int targetIndex)
             {
-                if (predicate != null)
+                Func<Result> hitConfirmed = () =>
                 {
-                    RuntimeSubaction predicateRuntime = parent.GetRuntimeDataFor(predicate);
-                    if (!predicateRuntime.fired) predicateRuntime.Fire();
-                }
-                if (fired) Util.Crash("Can't fire a single subaction more than once during action execution");
-                fired = true;
-                List<Battler> t;
-                anySucceeded = false;
-                if (subaction.useAlternateTargetSet) t = parent.alternateTargets;
-                else t = parent.targets;
-                for (int targetIndex = 0; targetIndex < t.Count; targetIndex++)
+                    subactionHandle.targets[targetIndex].ApplyFXPackage(effectPackage);
+                    return Result.Success;
+                };
+                if (!effectPackage.applyEvenIfSubactionMisses && subactionHandle.resultsByTarget[targetIndex] == SubactionHandle.TargetResult.Miss) return Result.Failure;
+                else
                 {
-                    targetsHit[targetIndex] = HandleSubactionForTargetIndex(targetIndex, t);
-                    if (targetsHit[targetIndex] == true) anySucceeded = true;
+                    if (effectPackage.baseSuccessRate < 1.0f)
+                    {
+                        if (subactionHandle.targets[targetIndex].TryToLandFXAgainstMe(actionHandle.user, effectPackage)) return hitConfirmed();
+                        else return Result.Failure;
+                    }
+                    else return hitConfirmed();
                 }
-                for (fxExecutionIndex = 0; fxExecutionIndex < subaction.effectPackages.Length; fxExecutionIndex++)
-                {
-                    effectPackagesNonFailures[fxExecutionIndex] = HandleEffectPackage(subaction.effectPackages[fxExecutionIndex], t);
-                    if (effectPackagesNonFailures[fxExecutionIndex]) anySucceeded = true;
-                }
-                finalAvgDamage = 0;
-                for (int i = 0; i < finalDamageFigures.Length; i++) finalAvgDamage += finalDamageFigures[i];
-                finalAvgDamage = Mathf.RoundToInt((float)finalAvgDamage / finalDamageFigures.Length);
-                return anySucceeded;
+            }
+        }
+
+        /// <summary>
+        /// Object created when a subaction is processed.
+        /// Keeps track of the state of any effect packages
+        /// or event blocks that this subaction dispatched,
+        /// and the results of processing it.
+        public class SubactionHandle
+        {
+            /// <summary>
+            /// The outcome of processing this subaction.
+            /// </summary>
+            public enum Result
+            {
+                /// <summary>
+                /// The subaction hasn't actually been processed yet.
+                /// </summary>
+                Undetermined,
+                /// <summary>
+                /// Didn't do shit.
+                /// </summary>
+                Failure,
+                /// <summary>
+                /// This subaction applied to a subset of its targets.
+                /// </summary>
+                PartialSuccess,
+                /// <summary>
+                /// The subaction was applied successfully to all targets.
+                /// </summary>
+                Success
+            }
+            /// <summary>
+            /// The outcome of processing this subaction
+            /// for a single target.
+            /// </summary>
+            public enum TargetResult
+            {
+                /// <summary>
+                /// The subaction hasn't actually been processed yet.
+                /// </summary>
+                Undetermined,
+                /// <summary>
+                /// This subaction doesn't do damage or perform
+                /// standard accuracy calculations.
+                /// </summary>
+                NotApplicable,
+                /// <summary>
+                /// Failed to hit.
+                /// </summary>
+                Miss,
+                /// <summary>
+                /// Landed a hit, touched target HP.
+                /// (Whether this is considered hit or
+                /// heal is based on whether we did
+                /// positive or negative dmg.)
+                /// </summary>
+                HitOrHealed,
+                /// <summary>
+                /// Landed a hit but dealt no damage.
+                /// </summary>
+                NoSell
             }
 
             /// <summary>
-            /// Handles the specified fx package.
-            /// Since fx packages can apply effects even in the event that the subaction failed to inflict/heal damage,
-            /// we have to iterate over all targets and check them individually, instead of doing that within the subaction success/fail check
-            /// loop.
+            /// The base handle for tha BattleAction this subaction is attached to.
             /// </summary>
-            private bool HandleEffectPackage(BattleAction.Subaction.EffectPackage effectPackage, List<Battler> t)
+            public readonly ActionHandle actionHandle;
+            /// <summary>
+            /// Handles for each of this subaction's effect packages.
+            /// </summary>
+            public readonly EffectPackageHandle[] effectPackageHandles;
+            /// <summary>
+            /// The subaction that this handle is attached to.
+            /// </summary>
+            public readonly BattleAction.Subaction subaction;
+            /// <summary>
+            /// The target list this handle should point to.
+            /// </summary>
+            public readonly List<Battler> targets;
+            /// <summary>
+            /// Queue of event blocks tied to this subaction that it should
+            /// dispatch before firing callback.
+            /// </summary>
+            public readonly Queue<EventBlock> eventBlocksQueue = new Queue<EventBlock>(16);
+            /// <summary>
+            /// The overall result of processing the subaction.
+            /// </summary>
+            public Result result { get; private set; }
+            /// <summary>
+            /// The individual results of processing the subaction,
+            /// matched to indices in the target list.
+            /// </summary>
+            public readonly TargetResult[] resultsByTarget;
+            /// <summary>
+            /// Individual final damage figures, matched
+            /// to indices in the target list.
+            /// </summary>
+            public readonly int[] damageFiguresByTarget;
+            /// <summary>
+            /// Handle for the subaction that determines
+            /// damage figures for this one.
+            /// </summary>
+            private readonly SubactionHandle damageDeterminant;
+            /// <summary>
+            /// Handle for the subaction that determines
+            /// success/failure for this one.
+            /// </summary>
+            private readonly SubactionHandle successDeterminant;
+            /// <summary>
+            /// Callback that will be fired after the subaction has finished and
+            /// all event blocks are done.
+            /// </summary>
+            private Action callback;
+
+            /// <summary>
+            /// Constructor: Prepare a subaction handle. This doesn't execute the subaction until Process() is called.
+            /// </summary>
+            public SubactionHandle (ActionHandle _actionHandle, BattleAction.Subaction _subaction, Action _callback)
             {
-                bool atLeastOneSuccess = false;
-                for (int targetIndex = 0; targetIndex < t.Count; targetIndex++)
+                actionHandle = _actionHandle;
+                subaction = _subaction;
+                if (subaction.useAlternateTargetSet) targets = actionHandle.alternateTargetSet;
+                else targets = actionHandle.primaryTargetSet;
+                damageDeterminant = actionHandle.GetHandleFor(subaction.damageDeterminant);
+                successDeterminant = actionHandle.GetHandleFor(subaction.successDeterminant);
+                callback = _callback;
+                effectPackageHandles = new EffectPackageHandle[subaction.effectPackages.Length];
+                damageFiguresByTarget = new int[targets.Count];
+                resultsByTarget = new TargetResult[targets.Count];
+            }
+
+            /// <summary>
+            /// Process the subaction tied to this handle.
+            /// </summary>
+            public void Process ()
+            {
+                if (subaction.eventBlock != null) eventBlocksQueue.Enqueue(subaction.eventBlock);
+                if (damageDeterminant != null)
                 {
-                    effectPackagesSuccesses[fxExecutionIndex][targetIndex] = HandleEffectPackageForTargetIndex(effectPackage, targetIndex, t);
-                    if (effectPackagesSuccesses[fxExecutionIndex][targetIndex]) atLeastOneSuccess = true;
+                    if (targets == damageDeterminant.targets)
+                    {
+                        for (int i = 0; i < damageFiguresByTarget.Length; i++)
+                        {
+                            damageFiguresByTarget[i] = damageDeterminant.damageFiguresByTarget[i];
+                            if (subaction.baseDamage < 0 && damageDeterminant.subaction.baseDamage > 0 || subaction.baseDamage > 0 && damageDeterminant.subaction.baseDamage < 0) damageFiguresByTarget[i] = -damageFiguresByTarget[i];
+                        }
+                    }
+                    else
+                    {
+                        int d = Util.Mean(damageDeterminant.damageFiguresByTarget);
+                        if (subaction.baseDamage < 0 && damageDeterminant.subaction.baseDamage > 0 || subaction.baseDamage > 0 && damageDeterminant.subaction.baseDamage < 0) d = -d;
+                        for (int i = 0; i < damageFiguresByTarget.Length; i++) damageFiguresByTarget[i] = d;
+                    }
                 }
-                return atLeastOneSuccess;
-            }
-
-            /// <summary>
-            /// Checks to see if the fx package should be applied to target at the given index, and does that if so.
-            /// Returns true if this succeeds, false otherwise.
-            /// </summary>
-            private bool HandleEffectPackageForTargetIndex(BattleAction.Subaction.EffectPackage effectPackage, int targetIndex, List<Battler> t)
-            {
-                bool executionSuccess = true;
-                if (effectPackage.tieSuccessToEffectIndex > -1) executionSuccess = (effectPackagesSuccesses[effectPackage.tieSuccessToEffectIndex][targetIndex] == true);
-                else if (!effectPackage.applyEvenIfSubactionMisses && !targetsHit[targetIndex]) executionSuccess = false;
-                else if (effectPackage.baseSuccessRate < 1.0f) executionSuccess = t[targetIndex].TryToLandFXAgainstMe(parent.currentActingBattler, effectPackage);
-                if (executionSuccess) t[targetIndex].ApplyFXPackage(effectPackage);
-                return executionSuccess;
-            }
-
-            /// <summary>
-            /// Checks to see if the subaction should succeed on specified target, and tells target to apply subaction if true.
-            /// Returns subaction success/fail value.
-            /// </summary>
-            private bool HandleSubactionForTargetIndex(int targetIndex, List<Battler> t)
-            {
-                bool executionSuccess = false;
+                else
+                {
+                    for (int i = 0; i < targets.Count; i++) damageFiguresByTarget[i] = targets[i].CalcDamageAgainstMe(actionHandle.user, subaction, true, true, true);
+                }
                 if (successDeterminant != null)
                 {
-                    RuntimeSubaction runtimeSuccessDeterminant = parent.GetRuntimeDataFor(successDeterminant);
-                    if (subaction.useAlternateTargetSet && parent.actionInExecution.alternateTargetType == ActionTargetType.Self || !subaction.useAlternateTargetSet && parent.actionInExecution.targetingType == ActionTargetType.Self ||
-                        successDeterminant.useAlternateTargetSet && parent.actionInExecution.alternateTargetType == ActionTargetType.Self || !successDeterminant.useAlternateTargetSet && parent.actionInExecution.targetingType == ActionTargetType.Self)
+                    if (targets == successDeterminant.targets)
                     {
-                        executionSuccess = runtimeSuccessDeterminant.anySucceeded;
+                        for (int i = 0; i < resultsByTarget.Length; i++) resultsByTarget[i] = successDeterminant.resultsByTarget[i];
                     }
-                    else executionSuccess = targetsHit[targetIndex];
+                    else
+                    {
+                        TargetResult bestTargetResult = TargetResult.NoSell;
+                        for (int i = 0; i < successDeterminant.resultsByTarget.Length; i++)
+                        {
+                            if (successDeterminant.resultsByTarget[i] == TargetResult.NotApplicable)
+                            {
+                                bestTargetResult = TargetResult.NotApplicable;
+                                break;
+                            }
+                            else if (successDeterminant.resultsByTarget[i] == TargetResult.Miss)
+                            {
+                                if (bestTargetResult != TargetResult.HitOrHealed) bestTargetResult = TargetResult.Miss;
+                            }
+                            else if (successDeterminant.resultsByTarget[i] == TargetResult.HitOrHealed) bestTargetResult = TargetResult.HitOrHealed;
+                        }
+                        for (int i = 0; i < resultsByTarget.Length; i++) resultsByTarget[i] = bestTargetResult;
+                    }
+                    result = successDeterminant.result;
                 }
-                else executionSuccess = t[targetIndex].TryToLandAttackAgainstMe(parent.currentActingBattler, subaction);
-                if (executionSuccess)
+                else
                 {
-                    if (damageDeterminant != null)
+                    bool anySucceeded = false;
+                    bool anyFailed = false;
+                    for (int i = 0; i < resultsByTarget.Length; i++)
                     {
-                        RuntimeSubaction runtimeDamageDeterminant = parent.GetRuntimeDataFor(damageDeterminant);
-                        if (subaction.useAlternateTargetSet != damageDeterminant.useAlternateTargetSet) finalDamageFigures[targetIndex] = runtimeDamageDeterminant.finalAvgDamage; // can't map exactly if the two subactions don't use the same target set, so average it
-                        else finalDamageFigures[targetIndex] = runtimeDamageDeterminant.finalDamageFigures[targetIndex];
+                        if (subaction.baseDamage == 0 && subaction.baseAccuracy == 0)
+                        {
+                            resultsByTarget[i] = TargetResult.NotApplicable;
+                            result = Result.Success;
+                        }
+                        else if (targets[i].TryToLandAttackAgainstMe(actionHandle.user, subaction))
+                        {
+                            if (damageFiguresByTarget[i] != 0)
+                            {
+                                resultsByTarget[i] = TargetResult.HitOrHealed;
+                                anySucceeded = true;
+                            }
+                            else
+                            {
+                                resultsByTarget[i] = TargetResult.NoSell;
+                                anyFailed = true;
+                            }
+                        }
+                        else
+                        {
+                            resultsByTarget[i] = TargetResult.Miss;
+                            anyFailed = true;
+                            damageFiguresByTarget[i] = 0; // Lose whatever figure you had determined if you miss.
+                        }
                     }
-                    else finalDamageFigures[targetIndex] = t[targetIndex].CalcDamageAgainstMe(parent.currentActingBattler, subaction, true, true, true);
-                    t[targetIndex].DealOrHealDamage(finalDamageFigures[targetIndex]);
+                    if (result != Result.Success)
+                    {
+                        if (anySucceeded && !anyFailed) result = Result.Success;
+                        else if (anySucceeded && anyFailed) result = Result.PartialSuccess;
+                        else result = Result.Failure;
+                    }
                 }
-                return executionSuccess;
+                for (int i = 0; i < targets.Count; i++) targets[i].DealOrHealDamage(damageFiguresByTarget[i]);
+                for (int i = 0; i < effectPackageHandles.Length; i++) effectPackageHandles[i] = new EffectPackageHandle(this, subaction.effectPackages[i]);
+                if (eventBlocksQueue.Count > 0)
+                {
+                    while (eventBlocksQueue.Count > 0) BattleStage.instance.Dispatch(eventBlocksQueue.Dequeue());
+                    BattleStage.instance.onAllEventBlocksFinished += callback;
+                }
+                else callback();
             }
-        }
-        private BattleData battle;
-        public bool isRunning { get { return currentActingBattler != null; } }
-        /// <summary>
-        /// The Battler that's using the action we're executing.
-        /// </summary>
-        public Battler currentActingBattler { get; private set; }
-        /// <summary>
-        /// The action that we're executing.
-        /// </summary>
-        public BattleAction actionInExecution { get; private set; }
-        private int currentSubactionIndex;
-        /// <summary>
-        /// Array of subaction references+metadata
-        /// </summary>
-        private RuntimeSubaction[] runtimeSubactions;
-        /// <summary>
-        /// Where are we in the current subaction's FX packages?
-        /// </summary>
-        private int subactionFXExecutionIndex;
-        /// <summary>
-        /// List of primary-type targets.
-        /// Subactions will apply to these Battlers if they aren't using alternate targets.
-        /// </summary>
-        public List<Battler> targets { get; private set; }
-        /// <summary>
-        /// List of alternate-type targets.
-        /// If subactions apply to alternate targets, these are those.
-        /// </summary>
-        public List<Battler> alternateTargets { get; private set; }
 
-        /// <summary>
-        /// Constructor for CurrentActionExecutionSubsystem.
-        /// </summary>
-        public ActionExecutionSubsystem(BattleData _battle)
-        {
-            battle = _battle;
-            targets = new List<Battler>();
-            alternateTargets = new List<Battler>();
+            /// <summary>
+            /// Remove dead targets from target list.
+            /// </summary>
+            public void PruneDeadTargets ()
+            {
+                for (int i = targets.Count; i > -1; i--) if (targets[i].isDead) targets.RemoveAt(i);
+            }
+
+            /// <summary>
+            /// End processing of this subaction early.
+            /// </summary>
+            public void EndPrematurely ()
+            {
+                BattleStage.instance.CancelEventBlocks();
+            }
         }
 
         /// <summary>
-        /// Sets the action execution subsystem up to execute the given action.
+        /// The BattleData object to which this action execution subsystem belongs.
         /// </summary>
-        public void BeginProcessingAction(BattleAction action, Battler user, Battler[] _targets, Battler[] _alternateTargets)
+        private readonly BattleData battleData;
+        /// <summary>
+        /// The action that we're working on right now.
+        /// </summary>
+        public ActionHandle currentAction { get; private set; }
+
+        /// <summary>
+        /// Constructor: This ActionExecutionSystem belongs to the BattleData object given.
+        /// </summary>
+        public ActionExecutionSubsystem (BattleData _battleData)
         {
-            string targetStr = string.Empty;
-            for (int i = 0; i < _targets.Length; i++)
-            {
-                targetStr += _targets[i].puppet.gameObject.name;
-                if (i + 1 < _targets.Length) targetStr += ", ";
-            }
-            Debug.Log(user.puppet.gameObject.name + " is executing action " + action.actionID + " against " + targetStr);
-            battle.ChangeState(BattleData.State.ExecutingAction);
-            user.CommitCurrentChosenActions();
-            if (action == ActionDatabase.SpecialActions.selfStanceBreakAction)
-            {
-                user.BreakStance(); // we never bother setting up the action execution subsystem in this event
-            }
+            battleData = _battleData;
+        }
+
+        /// <summary>
+        /// Start handling the given BattleActiom, given the selected user and target sets.
+        /// Callback will be executed upon completion of the action.
+        /// </summary>
+        public void BeginAction (BattleAction _battleAction, Battler _user, Battler[] _primaryTargetSet, Battler[] _alternateTargetSet, Action _callback)
+        {
+            if (currentAction != null) Util.Crash("Attempted to start executing " + _battleAction.actionID + " while holding a live handle for " + currentAction.battleAction.actionID);
             else
             {
-                actionInExecution = action;
-                currentActingBattler = user;
-                targets.Clear();
-                alternateTargets.Clear();
-                subactionFXExecutionIndex = 0;
-                currentSubactionIndex = 0;
-                runtimeSubactions = new RuntimeSubaction[action.subactions.Count];
-                string[] keys = new string[action.subactions.Keys.Count];
-                action.subactions.Keys.CopyTo(keys, 0);
-                for (int i = 0; i < runtimeSubactions.Length; i++)
+                Action callback = () =>
                 {
-                    runtimeSubactions[i] = new RuntimeSubaction(this, action.subactions[keys[i]]);
-                }
-                for (int i = 0; i < _targets.Length || i < _alternateTargets.Length; i++)
-                {
-                    if (i < _targets.Length) targets.Add(_targets[i]);
-                    if (i < _alternateTargets.Length) alternateTargets.Add(_targets[i]);
-                }
+                    currentAction = null;
+                    _callback();
+                };
+                currentAction = new ActionHandle(_battleAction, _user, new List<Battler>(_primaryTargetSet), new List<Battler>(_alternateTargetSet), callback);
             }
-        }
-
-        /// <summary>
-        /// Handles cleanup for CurrentActionExecutionSubsystem.
-        /// </summary>
-        public void Cleanup()
-        {
-            currentActingBattler = null;
-            actionInExecution = ActionDatabase.SpecialActions.noneBattleAction;
-            runtimeSubactions = null;
-            targets.Clear();
-            alternateTargets.Clear();
-            currentSubactionIndex = 0;
-        }
-
-        /// <summary>
-        /// Get runtime info for subaction.
-        /// </summary>
-        protected RuntimeSubaction GetRuntimeDataFor (BattleAction.Subaction subaction)
-        {
-            for (int i = 0; i < runtimeSubactions.Length; i++)
-            {
-                if (runtimeSubactions[i].subaction == subaction) return runtimeSubactions[i];
-            }
-            return null;
-        }
-
-        /// <summary>
-        /// Fire all unfired subactions.
-        /// </summary>
-        public bool FireRemainingSubactions ()
-        {
-            bool r = false;
-            for (int i = 0; i < runtimeSubactions.Length; i++)
-            {
-                if (!runtimeSubactions[i].fired)
-                {
-                    if (runtimeSubactions[i].Fire()) r = true;
-                }
-            }
-            return r;
-        }
-
-        /// <summary>
-        /// Fire off this subaction by name.
-        /// </summary>
-        public bool FireSubaction (string subactionName)
-        {
-            bool r = false;
-            if (actionInExecution.subactions.ContainsKey(subactionName)) r = GetRuntimeDataFor(actionInExecution.subactions[subactionName]).Fire();
-            return r;
-        }
-
-        /// <summary>
-        /// Does exactly what it says on the tin.
-        /// </summary>
-        public void StopExecutingAction()
-        {
-            Cleanup();
-        }
-
-        /// <summary>
-        /// The specified battler is dead, so if we're running an action, we
-        /// need to remove it from any target lists it might be on.
-        /// If it's _using_ an action, we need to stop that entirely.
-        /// </summary>
-        public void BattlerIsDead(Battler b)
-        {
-            targets.Remove(b);
-            alternateTargets.Remove(b);
-            if (currentActingBattler == b) StopExecutingAction();
         }
     }
 }

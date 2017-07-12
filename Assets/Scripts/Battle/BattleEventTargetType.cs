@@ -4,9 +4,13 @@
 [System.Flags]
 public enum BattleEventTargetType
 {
+    /// <summary>
+    /// If you're dispatching an event _directly_ instead of as part of an event block,
+    /// set targetType to None. It doesn't really matter but it's a helpful convention.
+    /// </summary>
     None = 0,
     User = 1,
     PrimaryTargets = 1 << 1,
     SecondaryTargets = 1 << 2,
-    Stage = 1 << 3
+    Stage = 1 << 3,
 }

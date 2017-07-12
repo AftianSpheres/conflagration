@@ -21,7 +21,9 @@ public class BattleActionEditor : EditorWindow
     List<EventBlockModel.AudioEventModel> audioEventModelsToRemove;
     List<EventBlockModel.FXEventModel> fxEventModelsToRemove;
     List<SubactionModel> subactionModelsToRemove;
+    List<string> subactionNamesToRemove = new List<string>();
     Vector2 scrollPos = Vector2.zero;
+    bool displaySubactionOrder = true;
 
     /// <summary>
     /// EditorWindow.Init ()
@@ -64,6 +66,7 @@ public class BattleActionEditor : EditorWindow
             EventBlockPanel("AnimSkip", battleActionModel.animSkipModel, () => { battleActionModel.animSkipModel = new EventBlockModel(battleActionModel.xmlNode, "animSkip"); }, () => { battleActionModel.animSkipModel = null; });
             EventBlockPanel("OnStart", battleActionModel.onStartModel, () => { battleActionModel.onStartModel = new EventBlockModel(battleActionModel.xmlNode, "onStart"); }, () => { battleActionModel.onStartModel = null; });
             EventBlockPanel("OnConclusion", battleActionModel.onConclusionModel, () => { battleActionModel.onConclusionModel = new EventBlockModel(battleActionModel.xmlNode, "onConclusion"); }, () => { battleActionModel.onConclusionModel = null; });
+            SubactionOrderArea();
             subactionModelsToRemove.Clear();
             for (int i = 0; i < battleActionModel.subactionModels.Count; i++) SubactionPanel("Subaction " + i, battleActionModel.subactionModels[i], () => { subactionModelsToRemove.Add(battleActionModel.subactionModels[i]); });
             for (int i = 0; i < subactionModelsToRemove.Count; i++) battleActionModel.subactionModels.Remove(subactionModelsToRemove[i]);
@@ -338,7 +341,7 @@ public class BattleActionEditor : EditorWindow
     /// <summary>
     /// Adds a set of widgets for the given subaction model.
     /// </summary>
-    void SubactionPanel(string label, SubactionModel subactionModel, Action removeCallback)
+    void SubactionPanel (string label, SubactionModel subactionModel, Action removeCallback)
     {
         EditorGUILayout.BeginHorizontal();
         GUILayout.Space(16);
@@ -349,7 +352,6 @@ public class BattleActionEditor : EditorWindow
         {
             subactionModel.info = EditorGUILayout.TextArea(subactionModel.info, new GUILayoutOption[] { GUILayout.MaxHeight(32) });
             Field("Subaction Name", ref subactionModel.subactionName);
-            Field("Predicate Name", ref subactionModel.predicateName);
             Field("Success Determinant Name", ref subactionModel.successDeterminantName);
             Field("Damage Determinant Name", ref subactionModel.damageDeterminantName);
             Field("Base Damage", ref subactionModel.baseDamage);
@@ -376,6 +378,28 @@ public class BattleActionEditor : EditorWindow
         EditorGUILayout.EndVertical();
         EditorGUILayout.EndHorizontal();
         EditorGUILayout.Separator();
+    }
+
+    /// <summary>
+    /// Display the subaction ordering controls.
+    /// </summary>
+    void SubactionOrderArea ()
+    {
+        subactionNamesToRemove.Clear();
+        displaySubactionOrder = EditorGUILayout.BeginToggleGroup("Subaction order", displaySubactionOrder);
+        if (displaySubactionOrder)
+        {       
+            for (int i = 0; i < battleActionModel.subactionOrder.Count; i++)
+            {
+                EditorGUILayout.BeginHorizontal();
+                battleActionModel.subactionOrder[i] = EditorGUILayout.TextField("Subaction " + i + ": ", battleActionModel.subactionOrder[i]);
+                if (GUILayout.Button("-")) subactionNamesToRemove.Add(battleActionModel.subactionOrder[i]);
+                EditorGUILayout.EndHorizontal();
+            }
+            for (int i = 0; i < subactionNamesToRemove.Count; i++) battleActionModel.subactionOrder.Remove(subactionNamesToRemove[i]);
+            if (GUILayout.Button("Add entry")) battleActionModel.subactionOrder.Add(string.Empty);
+        }
+        EditorGUILayout.EndToggleGroup();
     }
 }
 #endif

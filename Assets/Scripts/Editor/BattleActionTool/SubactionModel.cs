@@ -15,7 +15,7 @@ namespace BattleActionTool
         public readonly XmlNode xmlNode;
         public BattleAction.Subaction subaction { get {
                 return new BattleAction.Subaction(eventBlockModel.eventBlock, baseDamage, baseAccuracy, useAlternateTargetSet, atkStat, defStat,
-                hitStat, evadeStat, damageDeterminantName, predicateName, successDeterminantName, categoryFlags, DumpEffectPackages(), damageTypes);
+                hitStat, evadeStat, battleActionModel.actionID, battleActionModel.GetIndexForSubactionOfName(damageDeterminantName), battleActionModel.GetIndexForSubactionOfName(successDeterminantName), categoryFlags, DumpEffectPackages(), damageTypes);
             } }
         public List<EffectPackageModel> effectPackageModels;
         public EventBlockModel eventBlockModel;
@@ -30,7 +30,6 @@ namespace BattleActionTool
         public DamageTypeFlags damageTypes;
         public BattleActionCategoryFlags categoryFlags;
         public string damageDeterminantName;
-        public string predicateName;
         public string successDeterminantName;
         public string info;
         public const string name = "Subaction";
@@ -74,7 +73,6 @@ namespace BattleActionTool
             BattleActionTool.ActOnNode(_node, "damageTypes", (workingNode) => { damageTypes = DBTools.ParseDamageTypeFlags(workingNode.InnerText); });
             BattleActionTool.ActOnNode(_node, "categoryFlags", (workingNode) => { categoryFlags = DBTools.ParseBattleActionCategoryFlags(workingNode.InnerText); });
             BattleActionTool.ActOnNode(_node, "damageDeterminantName", (workingNode) => { damageDeterminantName = workingNode.InnerText; });
-            BattleActionTool.ActOnNode(_node, "predicateName", (workingNode) => { predicateName = workingNode.InnerText; });
             BattleActionTool.ActOnNode(_node, "successDeterminantName", (workingNode) => { successDeterminantName = workingNode.InnerText; });
         }
 
@@ -95,12 +93,12 @@ namespace BattleActionTool
             CodeFieldReferenceExpression evadeStatDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(LogicalStatType)), evadeStat.ToString());
             CodeFieldReferenceExpression damageTypesDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(DamageTypeFlags)), damageTypes.ToString().Replace(", ", " | "));
             CodeFieldReferenceExpression categoryFlagsDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(BattleActionCategoryFlags)), categoryFlags.ToString().Replace(", ", " | "));
-            CodePrimitiveExpression damageDeterminantNameDeclaration = new CodePrimitiveExpression(damageDeterminantName);
-            CodePrimitiveExpression predicateNameDeclaration = new CodePrimitiveExpression(predicateName);
-            CodePrimitiveExpression successDeterminantNameDeclaration = new CodePrimitiveExpression(successDeterminantName);
+            CodeFieldReferenceExpression actionIDDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(ActionType)), battleActionModel.actionID.ToString());
+            CodePrimitiveExpression damageDeterminantIndexDeclaration = new CodePrimitiveExpression(battleActionModel.GetIndexForSubactionOfName(damageDeterminantName));
+            CodePrimitiveExpression successDeterminantIndexDeclaration = new CodePrimitiveExpression(battleActionModel.GetIndexForSubactionOfName(successDeterminantName));
             return new CodeObjectCreateExpression(typeof(BattleAction.Subaction), new CodeExpression[] { eventBlockDeclaration, baseDamageDeclaration, baseAccuracyDeclaration, useAlternateTargetSetDeclaration,
-                                                  atkStatDeclaration, defStatDeclaration, hitStatDeclaration, evadeStatDeclaration, damageDeterminantNameDeclaration, predicateNameDeclaration,
-                                                  successDeterminantNameDeclaration, categoryFlagsDeclaration, DumpEffectPackageArrayCreateExpression(), damageTypesDeclaration });
+                                                  atkStatDeclaration, defStatDeclaration, hitStatDeclaration, evadeStatDeclaration, actionIDDeclaration, damageDeterminantIndexDeclaration,
+                                                  successDeterminantIndexDeclaration, categoryFlagsDeclaration, DumpEffectPackageArrayCreateExpression(), damageTypesDeclaration });
         }
 
         /// <summary>
@@ -123,7 +121,6 @@ namespace BattleActionTool
             BattleActionTool.HandleChildNode(xmlNode, "damageTypes", (node) => { node.InnerText = damageTypes.ToString(); }, validChildren);
             BattleActionTool.HandleChildNode(xmlNode, "categoryFlags", (node) => { node.InnerText = categoryFlags.ToString(); }, validChildren);
             BattleActionTool.HandleChildNode(xmlNode, "damageDeterminantName", (node) => { node.InnerText = damageDeterminantName; }, validChildren);
-            BattleActionTool.HandleChildNode(xmlNode, "predicateName", (node) => { node.InnerText = predicateName; }, validChildren);
             BattleActionTool.HandleChildNode(xmlNode, "successDeterminantName", (node) => { node.InnerText = successDeterminantName; }, validChildren);
             BattleActionTool.CleanNode(xmlNode, validChildren);
             return xmlNode;

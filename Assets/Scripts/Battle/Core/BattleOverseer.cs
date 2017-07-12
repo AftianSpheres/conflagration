@@ -55,17 +55,6 @@ namespace CnfBattleSys
         // Bits and pieces for use within the battle loop
 
         /// <summary>
-        /// Passthrough to CurrentActionExecutionSubsystem.BattlerIsDead; keeps from exposing BattleOverseer internal structure.
-        /// The specified battler is dead, so if we're running an action, we
-        /// need to remove it from any target lists it might be on.
-        /// If it's _using_ an action, we need to stop that entirely.
-        /// </summary>
-        public static void BattlerIsDead(Battler b)
-        {
-            currentBattle.actionExecutionSubsystem.BattlerIsDead(b);
-        }
-
-        /// <summary>
         /// Passthrough to TurnManagementSubsystem.ExtendCurrentTurn.
         /// So long as something's taking a turn right now, gives that battler a second turn immediately after this one.
         /// </summary>

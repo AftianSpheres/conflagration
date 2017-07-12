@@ -54,15 +54,15 @@ public class EventBlockHandle
             };
             if ((animEvent.targetType & BattleEventTargetType.User) == BattleEventTargetType.User)
             {
-                forThis(BattleOverseer.currentBattle.actionExecutionSubsystem.currentActingBattler.puppet);
+                forThis(BattleOverseer.currentBattle.actionExecutionSubsystem.currentAction.user.puppet);
             }
             if ((animEvent.targetType & BattleEventTargetType.PrimaryTargets) == BattleEventTargetType.PrimaryTargets)
             {
-                for (int i = 0; i < BattleOverseer.currentBattle.actionExecutionSubsystem.targets.Count; i++) forThis(BattleOverseer.currentBattle.actionExecutionSubsystem.targets[i].puppet);
+                for (int i = 0; i < BattleOverseer.currentBattle.actionExecutionSubsystem.currentAction.primaryTargetSet.Count; i++) forThis(BattleOverseer.currentBattle.actionExecutionSubsystem.currentAction.primaryTargetSet[i].puppet);
             }
             if ((animEvent.targetType & BattleEventTargetType.SecondaryTargets) == BattleEventTargetType.SecondaryTargets)
             {
-                for (int i = 0; i < BattleOverseer.currentBattle.actionExecutionSubsystem.alternateTargets.Count; i++) forThis(BattleOverseer.currentBattle.actionExecutionSubsystem.alternateTargets[i].puppet);
+                for (int i = 0; i < BattleOverseer.currentBattle.actionExecutionSubsystem.currentAction.alternateTargetSet.Count; i++) forThis(BattleOverseer.currentBattle.actionExecutionSubsystem.currentAction.alternateTargetSet[i].puppet);
             }
         }
 
@@ -85,18 +85,18 @@ public class EventBlockHandle
             }
             if ((audioEvent.targetType & BattleEventTargetType.User) == BattleEventTargetType.User)
             {
-                if (forThis(BattleOverseer.currentBattle.actionExecutionSubsystem.currentActingBattler.puppet.managedAudioSource)) return;
+                if (forThis(BattleOverseer.currentBattle.actionExecutionSubsystem.currentAction.user.puppet.managedAudioSource)) return;
             }
             if ((audioEvent.targetType & BattleEventTargetType.PrimaryTargets) == BattleEventTargetType.PrimaryTargets)
             {
-                for (int i = 0; i < BattleOverseer.currentBattle.actionExecutionSubsystem.targets.Count; i++)
-                    if (forThis(BattleOverseer.currentBattle.actionExecutionSubsystem.targets[i].puppet.managedAudioSource)) return;
+                for (int i = 0; i < BattleOverseer.currentBattle.actionExecutionSubsystem.currentAction.primaryTargetSet.Count; i++)
+                    if (forThis(BattleOverseer.currentBattle.actionExecutionSubsystem.currentAction.primaryTargetSet[i].puppet.managedAudioSource)) return;
             }
             if ((audioEvent.targetType & BattleEventTargetType.SecondaryTargets) == BattleEventTargetType.SecondaryTargets)
             {
-                for (int i = 0; i < BattleOverseer.currentBattle.actionExecutionSubsystem.alternateTargets.Count; i++)
+                for (int i = 0; i < BattleOverseer.currentBattle.actionExecutionSubsystem.currentAction.alternateTargetSet.Count; i++)
                 {
-                    if (forThis(BattleOverseer.currentBattle.actionExecutionSubsystem.alternateTargets[i].puppet.managedAudioSource)) return;
+                    if (forThis(BattleOverseer.currentBattle.actionExecutionSubsystem.currentAction.alternateTargetSet[i].puppet.managedAudioSource)) return;
                 }
             }
         }
@@ -119,15 +119,15 @@ public class EventBlockHandle
             }
             if ((fxEvent.targetType & BattleEventTargetType.User) == BattleEventTargetType.User)
             {
-                forThis(BattleOverseer.currentBattle.actionExecutionSubsystem.currentActingBattler.puppet.battleFXContainer);
+                forThis(BattleOverseer.currentBattle.actionExecutionSubsystem.currentAction.user.puppet.battleFXContainer);
             }
             if ((fxEvent.targetType & BattleEventTargetType.PrimaryTargets) == BattleEventTargetType.PrimaryTargets)
             {
-                for (int i = 0; i < BattleOverseer.currentBattle.actionExecutionSubsystem.targets.Count; i++) forThis(BattleOverseer.currentBattle.actionExecutionSubsystem.targets[i].puppet.battleFXContainer);
+                for (int i = 0; i < BattleOverseer.currentBattle.actionExecutionSubsystem.currentAction.primaryTargetSet.Count; i++) forThis(BattleOverseer.currentBattle.actionExecutionSubsystem.currentAction.primaryTargetSet[i].puppet.battleFXContainer);
             }
             if ((fxEvent.targetType & BattleEventTargetType.SecondaryTargets) == BattleEventTargetType.SecondaryTargets)
             {
-                for (int i = 0; i < BattleOverseer.currentBattle.actionExecutionSubsystem.alternateTargets.Count; i++) forThis(BattleOverseer.currentBattle.actionExecutionSubsystem.alternateTargets[i].puppet.battleFXContainer);
+                for (int i = 0; i < BattleOverseer.currentBattle.actionExecutionSubsystem.currentAction.alternateTargetSet.Count; i++) forThis(BattleOverseer.currentBattle.actionExecutionSubsystem.currentAction.alternateTargetSet[i].puppet.battleFXContainer);
             }
         }
 
@@ -154,10 +154,24 @@ public class EventBlockHandle
         /// Adds this event to the list of event handles we're waiting on,
         /// and passes it a callback that lets it remove itself from that list when it's done.
         /// </summary>
-        private void WaitOn(BattleEventHandle evtHandle)
+        private void WaitOn (BattleEventHandle evtHandle)
         {
             LinkedListNode<BattleEventHandle> node = eventHandlesAwaited.AddLast(evtHandle);
             evtHandle.onEventCompleted += () => { EventHandleFinished(node); };
+        }
+
+        /// <summary>
+        /// Immediately mark this layer done and continue onward even though it's not actually done yet.
+        /// </summary>
+        public void Abort ()
+        {
+            while (eventHandlesAwaited.Count > 0)
+            {
+                BattleEventHandle handle = eventHandlesAwaited.First.Value;
+                eventHandlesAwaited.RemoveFirst();
+                handle.Abort();
+            }
+            LayerFinished();
         }
     }
 
@@ -166,11 +180,26 @@ public class EventBlockHandle
     public int layerIndex { get; private set; }
     public LayerHandle currentLayer { get; private set; }
     private bool awaitingCameraScript;
+    private bool skipFurtherEvents;
 
-    public EventBlockHandle (EventBlock _eventBlock)
+    public EventBlockHandle (EventBlock _eventBlock, Action _callback = null)
     {
         eventBlock = _eventBlock;
+        if (_callback != null) onBlockCompleted += _callback;
     } 
+
+    /// <summary>
+    /// Stops the event block.
+    /// This doesn't normalize positions or anything - so if
+    /// you abort an event block and you want to dispatch other
+    /// event blocks affecting its targets, you need to do
+    /// that first.
+    /// </summary>
+    public void Abort ()
+    {
+        skipFurtherEvents = true;
+        currentLayer.Abort();
+    }
 
     /// <summary>
     /// Starts processing the event block.
@@ -193,9 +222,18 @@ public class EventBlockHandle
     /// </summary>
     protected void Advance ()
     {
-        layerIndex++;
-        if (layerIndex < eventBlock.layers.Length) currentLayer = DispatchLayer(eventBlock.layers[layerIndex]);
-        else if (!awaitingCameraScript) onBlockCompleted();
+        if (skipFurtherEvents)
+        {
+            // need to normalize camera
+            // if awaitingcamerascript battlecameraharness cancel
+            onBlockCompleted();
+        }
+        else
+        {
+            layerIndex++;
+            if (layerIndex < eventBlock.layers.Length) currentLayer = DispatchLayer(eventBlock.layers[layerIndex]);
+            else if (!awaitingCameraScript) onBlockCompleted();
+        }
     }
 
     /// <summary>

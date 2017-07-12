@@ -44,8 +44,15 @@ public class BattlerPuppet : MonoBehaviour
     public LoadingState loadingState { get; private set; }
     private AnimatorMetadataContainer animatorMetadataContainer;
     private Vector3 logicalPositionOffset;
+    private Vector3 originalScale;
     private float stepTime;
     private string thisTag;
+    /// <summary>
+    /// This is the last rotation that we determined for this puppet.
+    /// currentRotation is recalculated each time we move or select a target,
+    /// and ensures the puppet "looks" at what it needs to look at.
+    /// </summary>
+    private Quaternion currentRotation;
 
     /// <summary>
     /// MonoBehaviour.Awake ()
@@ -56,6 +63,7 @@ public class BattlerPuppet : MonoBehaviour
         managedAudioSource = GetComponent<ManagedAudioSource>();
         fxControllersParent = Util.CreateEmptyChild(transform).transform;
         fxControllersParent.gameObject.name = "FX Controllers";
+        originalScale = transform.localScale;
     }
 
     /// <summary>
@@ -113,7 +121,7 @@ public class BattlerPuppet : MonoBehaviour
     /// Normally speed = stepTime, but we might wanna eg. throw units around at speeds independent of their
     /// stepTime values.
     /// </summary>
-    private IEnumerator<float> _Move(Vector3 moveVector, float speed, AnimEventType exitEvent)
+    private IEnumerator<float> _Move(Vector3 moveVector, float speed)
     {
         float vd = 0;
         float distance = moveVector.magnitude;
@@ -125,8 +133,7 @@ public class BattlerPuppet : MonoBehaviour
             vd += (1 / speed) * Timing.DeltaTime * distance;
             yield return 0;
         }
-        SyncPosition();
-        //DispatchAnimEvent(exitEvent);
+        Idle();
     }
 
     /// <summary>
@@ -137,6 +144,15 @@ public class BattlerPuppet : MonoBehaviour
         return animatorMetadataContainer.contents.AnimEventIsResolveable(animEvent);
     }
 
+    /// <summary>
+    /// Re-conforms position, scale, and rotation to BattlerData and
+    /// field position, then dispatches idle AnimEvent.
+    /// </summary>
+    public void Idle ()
+    {
+        SyncPosition();
+        if (!battler.isDead) DispatchAnimEvent(new AnimEvent(AnimEventType.Idle, AnimEventType.None, BattleEventTargetType.None, AnimEvent.Flags.IsMandatory, 0));
+    }
 
     /// <summary>
     /// Generates and dispatches an event block for death.
@@ -206,12 +222,12 @@ public class BattlerPuppet : MonoBehaviour
     /// Plays exitEvent after the move event ends. Normally this is AnimEventType.Idle.
     /// Returns true if we were able to process the moveEvent.
     /// </summary>
-    public bool ProcessMove(Vector3 moveVector, float speed, AnimEventType moveEvent, AnimEventType exitEvent)
+    public bool ProcessMove(Vector3 moveVector, float speed, AnimEventType moveEvent)
     {
         bool r = true; // HasAnimFor(moveEvent);
         if (r == true)
         {
-            Timing.RunCoroutine(_Move(moveVector, speed, exitEvent));
+            Timing.RunCoroutine(_Move(moveVector, speed));
         }
         else
         {
@@ -226,6 +242,8 @@ public class BattlerPuppet : MonoBehaviour
     private void SyncPosition()
     {
         transform.position = battler.logicalPosition + logicalPositionOffset;
+        transform.localRotation = currentRotation;
+        transform.localScale = originalScale;
     }
 
     /// <summary>
@@ -258,13 +276,10 @@ public class BattlerPuppet : MonoBehaviour
             loadForEventBlock(action.animSkip);
             loadForEventBlock(action.onStart);
             loadForEventBlock(action.onConclusion);
-            string[] keys = new string[action.subactions.Keys.Count];
-            action.subactions.Keys.CopyTo(keys, 0);
-            for (int sa = 0; sa < keys.Length; sa++)
+            for (int s = 0; s < action.subactions.Length; s++)
             {
-                string key = keys[sa];
-                for (int f = 0; f < action.subactions[key].effectPackages.Length; f++) loadForEventBlock(action.subactions[key].effectPackages[f].eventBlock);
-                loadForEventBlock(action.subactions[key].eventBlock);
+                for (int f = 0; f < action.subactions[s].effectPackages.Length; f++) loadForEventBlock(action.subactions[s].effectPackages[f].eventBlock);
+                loadForEventBlock(action.subactions[s].eventBlock);
             }
         };
         Timing.RunCoroutine(BattleEventResolverTablesLoader._OnceAvailable(whenLoaderAvailable));

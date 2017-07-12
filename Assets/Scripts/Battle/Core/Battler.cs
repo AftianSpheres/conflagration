@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -1002,19 +1003,22 @@ namespace CnfBattleSys
             if (withDeviation) deviation = normalDeviation;
             else deviation = 0;
             int dmg = 0;
-            if (subaction.baseDamage != 0)
+            if (!isDead)
             {
-                int atkStat = -1;
-                int defStat = -1;
-                if (subaction.atkStat != LogicalStatType.None) atkStat = attacker.GetLogicalStatValue(subaction.atkStat);
-                if (subaction.defStat != LogicalStatType.None) defStat = GetLogicalStatValue(subaction.defStat);
-                int modifiedBaseDamage = subaction.baseDamage;
-                if (subaction.baseDamage < 0) modifiedBaseDamage *= -1; // this should be positive for damage calculations as a rule; we re-flip the damage figure later if we're healing, but this gives more flexibility if I wanna change the damage formula down the line
-                if (atkStat != -1 && defStat != -1) dmg = Util.DamageCalc(attacker.level, atkStat, defStat, subaction.baseDamage, deviation);
-                else dmg = modifiedBaseDamage; // like with hit/misses: it should be possible for atk/def to do something unopposed but I dunno what that looks like.
-                if (subaction.baseDamage < 0) dmg *= -1; // re-flip
-                float resMod = GetResistance(subaction.damageTypes, resistanceAware, weaknessAware);
-                dmg = Mathf.FloorToInt(dmg * resMod);
+                if (subaction.baseDamage != 0)
+                {
+                    int atkStat = -1;
+                    int defStat = -1;
+                    if (subaction.atkStat != LogicalStatType.None) atkStat = attacker.GetLogicalStatValue(subaction.atkStat);
+                    if (subaction.defStat != LogicalStatType.None) defStat = GetLogicalStatValue(subaction.defStat);
+                    int modifiedBaseDamage = subaction.baseDamage;
+                    if (subaction.baseDamage < 0) modifiedBaseDamage *= -1; // this should be positive for damage calculations as a rule; we re-flip the damage figure later if we're healing, but this gives more flexibility if I wanna change the damage formula down the line
+                    if (atkStat != -1 && defStat != -1) dmg = Util.DamageCalc(attacker.level, atkStat, defStat, subaction.baseDamage, deviation);
+                    else dmg = modifiedBaseDamage; // like with hit/misses: it should be possible for atk/def to do something unopposed but I dunno what that looks like.
+                    if (subaction.baseDamage < 0) dmg *= -1; // re-flip
+                    float resMod = GetResistance(subaction.damageTypes, resistanceAware, weaknessAware);
+                    dmg = Mathf.FloorToInt(dmg * resMod);
+                }
             }
             return dmg;
         }
@@ -1165,7 +1169,6 @@ namespace CnfBattleSys
             isDead = true;
             if (puppet == null) return;
             else puppet.DispatchDeathEventBlock();
-            BattleOverseer.BattlerIsDead(this);
         }
 
         /// <summary>
@@ -1200,11 +1203,11 @@ namespace CnfBattleSys
         /// to put its order in that box, and it needs to _watch_ that box
         /// once it puts in the request.
         /// </summary>
-        public void GetAction ()
+        public void GetAction (Action callback)
         {
             bool changeStances = false;
             if (StanceBroken()) changeStances = true;
-            BattlerAISystem.StartThinking(this, changeStances);
+            BattlerAISystem.StartThinking(this, changeStances, callback);
         }
 
         /// <summary>
@@ -1354,7 +1357,7 @@ namespace CnfBattleSys
         {
             float modifiedAccuracy = BattleUtility.GetModifiedAccuracyFor(subaction, attacker, this);
             // like with fx packages: there should also be non-contested hit/evade bonuses if the subaction says "yo I got a hit stat but no evade stat" or vice versa, but I don't know what the math looks like yet
-            return (modifiedAccuracy > Random.Range(0f, 1f));
+            return (modifiedAccuracy > UnityEngine.Random.Range(0f, 1f));
         }
 
         /// <summary>
@@ -1364,7 +1367,7 @@ namespace CnfBattleSys
         {
             float adjustedSuccessRate = BattleUtility.GetModifiedAccuracyFor(fxPackage, attacker, this);
             // It should also be possible for uncontested hit/evade stats to provide hit/evade bonuses on FX packages, but that requires me to have some idea of what the numbers look like
-            return (adjustedSuccessRate > Random.Range(0f, 1f));
+            return (adjustedSuccessRate > UnityEngine.Random.Range(0f, 1f));
         }
 
     }

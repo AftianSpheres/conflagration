@@ -144,8 +144,9 @@ namespace CnfBattleSys.AI
         /// Starts the psuedo-AI module for the specified battler, and waits until we have 
         /// all the info needed to build the TurnActions struct that we finally give
         /// to it via ReceiveAThought.
+        /// callback will fire once we get a TurnActions struct.
         /// </summary>
-        public static void GetTurnActionsFromPlayer (Battler b, bool changeStances)
+        public static void GetTurnActionsFromPlayer (Battler b, bool changeStances, Action callback)
         {
             if ((stateFlags & StateFlags.Online) == StateFlags.Online) Util.Crash(new Exception("Tried to get input for a second player-controlled unit while still waiting on the first!"));
             Cleanup();
@@ -156,13 +157,13 @@ namespace CnfBattleSys.AI
             {
                 PlayerSelectsActionFor(b);
             }
-            Timing.RunCoroutine(_GenerateTurnActionsAsSoonAsPosible(b));
+            Timing.RunCoroutine(_GenerateTurnActionsAsSoonAsPosible(b, callback));
         }
 
         /// <summary>
         /// Coroutine: waits until we've gotten everything we need to build the TurnActions struct, then does that.
         /// </summary>
-        private static IEnumerator<float> _GenerateTurnActionsAsSoonAsPosible(Battler b)
+        private static IEnumerator<float> _GenerateTurnActionsAsSoonAsPosible(Battler b, Action callback)
         {
             while (stillWaiting)
             {
@@ -185,6 +186,7 @@ namespace CnfBattleSys.AI
             Battler.TurnActions turnActions = new Battler.TurnActions(stanceChanged, 0.0f, selectedPrimaryTargets, selectedSecondaryTargets, selectedAction, selectedStance);
             b.ReceiveAThought(turnActions, messageFlags);
             stateFlags ^= StateFlags.Online;
+            callback();
         }
 
         /// <summary>

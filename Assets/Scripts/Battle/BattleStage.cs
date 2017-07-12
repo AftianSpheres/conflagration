@@ -48,6 +48,14 @@ public class BattleStage : MonoBehaviour
     public float fxScale = 30;
     private string thisTag;
 
+    /// <summary>
+    /// Ensures that onAllEventBlocksFinished is cleared after running
+    /// </summary>
+    void onAllEventBlocksFinishedAutoclear ()
+    {
+        onAllEventBlocksFinished = onAllEventBlocksFinishedAutoclear;
+    }
+
 	/// <summary>
     /// MonoBehaviour.Awake ()
     /// </summary>
@@ -59,6 +67,7 @@ public class BattleStage : MonoBehaviour
         fxControllersParent = Util.CreateEmptyChild(transform).transform;
         battlerPuppetsParent.gameObject.name = "Battlers";
         fxControllersParent.gameObject.name = "FX Controllers";
+        onAllEventBlocksFinished = onAllEventBlocksFinishedAutoclear;
 	}
 
     /// <summary>
@@ -106,7 +115,7 @@ public class BattleStage : MonoBehaviour
     /// Creates a handle for the given event block, enqueues it if needed, and
     /// returns it so that the caller can subscribe to events.
     /// </summary>
-    public EventBlockHandle Dispatch (EventBlock eventBlock)
+    public EventBlockHandle Dispatch (EventBlock eventBlock, Action callback = null)
     {
         Action advance = () =>
         {
@@ -115,10 +124,9 @@ public class BattleStage : MonoBehaviour
 			{
 			    currentEventBlock = null;
 				onAllEventBlocksFinished();
-				onAllEventBlocksFinished = null; // Wipe this after firing it.
 			}
         };
-        EventBlockHandle h = new EventBlockHandle(eventBlock);
+        EventBlockHandle h = new EventBlockHandle(eventBlock, callback);
         h.onBlockCompleted += advance;
         if (processingAnyEventBlock) eventBlocksToDispatch.Enqueue(h); // event blocks are always processed one at a time
         else currentEventBlock = h;
@@ -213,5 +221,24 @@ public class BattleStage : MonoBehaviour
             yield return Timing.WaitUntilDone(Timing.RunCoroutine(puppets[b]._Load(), thisTag));
             while (puppets[b].loadingState == BattlerPuppet.LoadingState.Loading) yield return 0;
         }
+    }
+
+    /// <summary>
+    /// Aborts the current event block and
+    /// cancels all remaining ones.
+    /// </summary>
+    public void CancelEventBlocks ()
+    {
+        eventBlocksToDispatch.Clear();
+        currentEventBlock.Abort();
+        onAllEventBlocksFinished();
+    }
+
+    /// <summary>
+    /// Calls Idle() on all BattlerPuppets.
+    /// </summary>
+    public void SetBattlersIdle ()
+    {
+        for (int i = 0; i < puppets.Length; i++) puppets[i].Idle();
     }
 }

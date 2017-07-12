@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using MovementEffects;
+﻿using System;
+using System.Collections.Generic;
 
 namespace CnfBattleSys
 {
@@ -70,48 +70,30 @@ namespace CnfBattleSys
         }
 
         /// <summary>
-        /// Coroutine: calls b.GetAction, then sit on our ass until b gives us the action we want.
-        /// (This lets us pause the battle simulation indefinitely for eg. player input. Or _really_
-        /// messy AI, hypothetically, I guess.)
-        /// </summary>
-        private IEnumerator<float> _WaitUntilBattlerReadyToAct(Battler b)
-        {
-            BattleOverseer.currentBattle.ChangeState(BattleData.State.WaitingForInput);
-            b.GetAction();
-            while (b.turnActions.action == ActionDatabase.SpecialActions.defaultBattleAction) yield return 0; // wait until b decides what to do
-            battle.actionExecutionSubsystem.BeginProcessingAction(b.turnActions.action, b, b.turnActions.targets, b.turnActions.alternateTargets);
-            Timing.RunCoroutine(_EndTurnOnceActionExecutionCompleted());
-        }
-
-        /// <summary>
-        /// Coroutine: waits until action execution completes, then ends turn.
-        /// </summary>
-        private IEnumerator<float> _EndTurnOnceActionExecutionCompleted()
-        {
-            while (battle.actionExecutionSubsystem.isRunning) yield return 0;
-            EndTurn();
-        }
-
-        /// <summary>
         /// Starts taking a turn.
         /// </summary>
-        public void StartTurn()
+        public void StartTurn ()
         {
             BattleStage.instance.StartOfTurn();
             currentTurnBattler = battlersReadyToTakeTurns[0];
             battlersReadyToTakeTurns.Remove(currentTurnBattler);
-            Timing.RunCoroutine(_WaitUntilBattlerReadyToAct(currentTurnBattler));
+            BattleOverseer.currentBattle.ChangeState(BattleData.State.WaitingForInput);
+            Action callback = () =>
+            {
+                battle.actionExecutionSubsystem.BeginAction(currentTurnBattler.turnActions.action, currentTurnBattler, currentTurnBattler.turnActions.targets, currentTurnBattler.turnActions.alternateTargets, EndTurn);
+            };
+            currentTurnBattler.GetAction(callback);
         }
 
         /// <summary>
         /// Finishes taking a turn.
         /// </summary>
-        public void EndTurn()
+        public void EndTurn ()
         {
-            battle.actionExecutionSubsystem.FireRemainingSubactions();
             currentTurnBattler = null;
             battle.ChangeState(BattleData.State.BetweenTurns);
             battle.DeriveNormalizedSpeed();
+            BattleStage.instance.SetBattlersIdle();
             elapsedTurns++;
         }
     }

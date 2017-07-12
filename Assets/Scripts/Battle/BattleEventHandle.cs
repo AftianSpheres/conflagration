@@ -23,4 +23,12 @@ public abstract class BattleEventHandle
         onEventCompleted();
     }
 
+    /// <summary>
+    /// Mark this handle done before the event finishes.
+    /// </summary>
+    public void Abort ()
+    {
+        FireOnEventCompleted();
+    }
+
 }

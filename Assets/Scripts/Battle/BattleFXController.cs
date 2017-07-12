@@ -26,6 +26,7 @@ namespace CnfBattleSys
         /// </summary>
         public virtual FXEventHandle Commence(FXEvent fxEvent)
         {
+            onCompletion = null; // The way we use BattleFXController makes it difficult to keep this tidy, so let's assume it's gross and crusty when commencing.
             onStart();
             isRunning = true;
             return new FXEventHandle(fxEvent, this);

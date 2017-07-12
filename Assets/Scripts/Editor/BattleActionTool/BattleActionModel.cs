@@ -1,10 +1,10 @@
 ﻿#if UNITY_EDITOR
+using System;
 using System.CodeDom;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml;
 using CnfBattleSys;
-using UnityEngine;
 using UnityEditor;
 
 namespace BattleActionTool
@@ -15,10 +15,10 @@ namespace BattleActionTool
     public class BattleActionModel
     {
         const string PATH = "Assets/_DATA_/BattleAction/";
-        const string xmlHeader = "<?xml version=\"1.0\"?>";
         public readonly string filePath;
         public readonly XmlNode xmlNode;
-        public List<SubactionModel> subactionModels;
+        public List<string> subactionOrder = new List<string>();
+        public List<SubactionModel> subactionModels = new List<SubactionModel>();
         public EventBlockModel animSkipModel;
         public EventBlockModel onConclusionModel;
         public EventBlockModel onStartModel;
@@ -67,7 +67,6 @@ namespace BattleActionTool
                     loaded = false; // this is redundant, just for clarity - if you can't load the xml, you don't set loaded, and you don't try to set anything from the xml you didn't load
                 }
             }
-            subactionModels = new List<SubactionModel>();
             if (loaded)
             {
                 XmlNodeList subactionModelNodes = xmlNode.SelectNodes(SubactionModel.name);
@@ -88,6 +87,7 @@ namespace BattleActionTool
                 BattleActionTool.ActOnNode(xmlNode, "alternateTargetType", (node) => { alternateTargetType = DBTools.ParseActionTargetType(node.InnerText); });
                 BattleActionTool.ActOnNode(xmlNode, "targetType", (node) => { targetType = DBTools.ParseActionTargetType(node.InnerText); });
                 BattleActionTool.ActOnNode(xmlNode, "categoryFlags", (node) => { categoryFlags = DBTools.ParseBattleActionCategoryFlags(node.InnerText); });
+                BattleActionTool.ActOnNode(xmlNode, "subactionOrder", (node) => { subactionOrder.AddRange(node.InnerText.Replace(" ", string.Empty).Split(',')); });
             }
             else
             {
@@ -125,7 +125,7 @@ namespace BattleActionTool
             return new CodeObjectCreateExpression(typeof(BattleAction), new CodeExpression[] { animSkipDeclaration, onConclusionDeclaration, onStartDeclaration, actionIDDeclaration, baseAOERadiusDeclaration,
                                                   baseDelayDeclaration, baseFollowthroughStanceChangeDelayDeclaration, baseMinimumTargetingDistanceDeclaration, baseTargetingRangeDeclaration, baseSPCostDeclaration,
                                                   alternateTargetSideFlagsDeclaration, targetSideFlagsDeclaration, alternateTargetTypeDeclaration, targetTypeDeclaration, categoryFlagsDeclaration,
-                                                  GetDictDeclaration() });
+                                                  GetSubactionsArray() });
         }
 
         /// <summary>
@@ -136,6 +136,7 @@ namespace BattleActionTool
         /// </summary>
         public XmlNode DumpToXmlNode ()
         {
+            if (subactionModels.Count != subactionOrder.Count) throw new Exception(actionID + " has mismatch between subaction order count and no. of subactions. Can't compile or export to XML until corrected.");
             List<XmlNode> validChildren = new List<XmlNode>();
             if (animSkipModel != null) validChildren.Add(animSkipModel.DumpToXmlNode());
             if (onConclusionModel != null) validChildren.Add(onConclusionModel.DumpToXmlNode());
@@ -153,6 +154,7 @@ namespace BattleActionTool
             BattleActionTool.HandleChildNode(xmlNode, "alternateTargetType", (node) => { node.InnerText = alternateTargetType.ToString(); }, validChildren);
             BattleActionTool.HandleChildNode(xmlNode, "targetType", (node) => { node.InnerText = targetType.ToString(); }, validChildren);
             BattleActionTool.HandleChildNode(xmlNode, "categoryFlags", (node) => { node.InnerText = categoryFlags.ToString(); }, validChildren);
+            BattleActionTool.HandleChildNode(xmlNode, "subactionOrder", (node) => { node.InnerText = GetSubactionOrderString(); }, validChildren);
             BattleActionTool.CleanNode(xmlNode, validChildren);
             return xmlNode;
         }
@@ -173,19 +175,55 @@ namespace BattleActionTool
         }
 
         /// <summary>
+        /// Turns subaction order list into a single CSV string.
+        /// </summary>
+        private string GetSubactionOrderString ()
+        {
+            string r = string.Empty;
+            for (int i = 0; i < subactionOrder.Count; i++)
+            {
+                r += subactionOrder[i];
+                if (i + 1 < subactionOrder.Count) r += ",";
+            }
+            return r;
+        }
+
+        /// <summary>
         /// Invoke Util.PopulateDictWith to generate a Dictionary containing the required key:subaction mappings.
         /// </summary>
-        private CodeMethodInvokeExpression GetDictDeclaration ()
+        private CodeArrayCreateExpression GetSubactionsArray ()
         {
-            CodePrimitiveExpression[] keysDeclarations = new CodePrimitiveExpression[subactionModels.Count];
+            if (subactionModels.Count != subactionOrder.Count) throw new Exception(actionID + " has mismatch between subaction order count and no. of subactions. Can't compile or export to XML until corrected.");
             CodeObjectCreateExpression[] subactionDeclarations = new CodeObjectCreateExpression[subactionModels.Count];
-            for (int i = 0; i < keysDeclarations.Length; i++)
+            for (int i = 0; i < subactionOrder.Count; i++)
             {
-                keysDeclarations[i] = new CodePrimitiveExpression(subactionModels[i].subactionName);
-                subactionDeclarations[i] = subactionModels[i].DumpToCSDeclaration();
+                subactionDeclarations[i] = FindSubaction(subactionOrder[i]).DumpToCSDeclaration();
             }
-            return new CodeMethodInvokeExpression(new CodeMethodReferenceExpression(new CodeTypeReferenceExpression(typeof(Util)), "PopulateDictWith"), new CodeExpression[] { new CodeArrayCreateExpression(typeof(string), keysDeclarations),
-                                                                                    new CodeArrayCreateExpression(typeof(BattleAction.Subaction), subactionDeclarations) });
+            return new CodeArrayCreateExpression(typeof(BattleAction.Subaction), subactionDeclarations);
+        }
+
+        /// <summary>
+        /// Get the subaction model of the given name.
+        /// </summary>
+        public SubactionModel FindSubaction(string subactionName)
+        {
+            for (int s = 0; s < subactionModels.Count; s++)
+            {
+                if (subactionModels[s].subactionName == subactionName) return subactionModels[s];
+            }
+            throw new Exception("Couldn't find subaction by name of " + subactionName);
+        }
+
+        /// <summary>
+        /// Get the index of the subaction by the given name.
+        /// </summary>
+        public int GetIndexForSubactionOfName (string subactionName)
+        {
+            for (int s = 0; s < subactionModels.Count; s++)
+            {
+                if (subactionModels[s].subactionName == subactionName) return s;
+            }
+            throw new Exception("Couldn't find subaction by name of " + subactionName);
         }
     }
 }
