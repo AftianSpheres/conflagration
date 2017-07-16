@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using ExtendedAnimationManagement;
 
 /// <summary>
@@ -10,6 +11,7 @@ using ExtendedAnimationManagement;
 /// </summary>
 public class AnimatorMetadataContainer : MonoBehaviour
 {
+    public event Action onceFilled;
     public AnimatorMetadata contents { get; private set; }
     public StateMachineExtender stateMachineExtender { get; private set; }
 
@@ -20,5 +22,7 @@ public class AnimatorMetadataContainer : MonoBehaviour
     {
         contents = _contents;
         stateMachineExtender = _stateMachineExtender;
+        onceFilled?.Invoke();
+        onceFilled = null;
     }
 }

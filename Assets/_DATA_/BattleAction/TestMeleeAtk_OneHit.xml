@@ -23,12 +23,11 @@
     <categoryFlags>Heal</categoryFlags>
     <damageDeterminantName>
     </damageDeterminantName>
-    <predicateName>
-    </predicateName>
     <successDeterminantName>
     </successDeterminantName>
     <eventBlock>
       <battleCameraScript>BattleCameraScript_Demo</battleCameraScript>
     </eventBlock>
   </Subaction>
+  <subactionOrder>atk0</subactionOrder>
 </BattleAction>

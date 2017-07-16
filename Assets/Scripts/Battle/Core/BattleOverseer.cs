@@ -22,7 +22,9 @@ namespace CnfBattleSys
         /// </summary>
         public static void StartBattle (BattleFormation formation)
         {
-            currentBattle = new BattleData(formation);
+            Action callbackFromConstructors;
+            currentBattle = new BattleData(formation, out callbackFromConstructors);
+            callbackFromConstructors();
             Timing.RunCoroutine(_WaitForPuppets());
         }
 
@@ -50,26 +52,6 @@ namespace CnfBattleSys
                 yield return 0;
             }
             BattleStage.instance.StartOfBattle();
-        }
-
-        // Bits and pieces for use within the battle loop
-
-        /// <summary>
-        /// Passthrough to TurnManagementSubsystem.ExtendCurrentTurn.
-        /// So long as something's taking a turn right now, gives that battler a second turn immediately after this one.
-        /// </summary>
-        internal static void ExtendCurrentTurn()
-        {
-            currentBattle.turnManagementSubsystem.ExtendCurrentTurn();
-        }
-
-        /// <summary>
-        /// Passthrough to TurnManagementSubsystem.RequestTurn.
-        /// Battler b needs to take a turn as soon as it can be allowed to do so.
-        /// </summary>
-        public static void RequestTurn(Battler b)
-        {
-            currentBattle.turnManagementSubsystem.RequestTurn(b);
         }
     }
 }

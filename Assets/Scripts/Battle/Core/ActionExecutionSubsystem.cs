@@ -94,6 +94,7 @@ namespace CnfBattleSys
                 // Each time you EndPrematurely with subactions left to process, you immedaitely get the next handle in line.
                 // So this loop will continue aborting those until you run out of subactions.
                 while (currentSubactionHandle != null) currentSubactionHandle.EndPrematurely();
+                skipMostEventBlocks = true;
             }
 
             /// <summary>
@@ -115,9 +116,12 @@ namespace CnfBattleSys
             {
                 if (!user.isDead)
                 {
-                    EventBlockHandle eventBlockHandle;
-                    if (!skipMostEventBlocks) eventBlockHandle = BattleStage.instance.Dispatch(battleAction.onConclusion, callback);
-                    else eventBlockHandle = BattleStage.instance.Dispatch(battleAction.animSkip, callback);
+                    EventBlockHandle eventBlockHandle = null;
+                    if (!skipMostEventBlocks)
+                    {
+                        if (battleAction.onConclusion != null) eventBlockHandle = BattleStage.instance.Dispatch(battleAction.onConclusion, callback);
+                    }
+                    else if (battleAction.animSkip != null) eventBlockHandle = BattleStage.instance.Dispatch(battleAction.animSkip, callback);
                     if (eventBlockHandle == null) callback();
                 }
                 else callback();
@@ -382,7 +386,8 @@ namespace CnfBattleSys
                         for (int i = 0; i < damageFiguresByTarget.Length; i++)
                         {
                             damageFiguresByTarget[i] = damageDeterminant.damageFiguresByTarget[i];
-                            if (subaction.baseDamage < 0 && damageDeterminant.subaction.baseDamage > 0 || subaction.baseDamage > 0 && damageDeterminant.subaction.baseDamage < 0) damageFiguresByTarget[i] = -damageFiguresByTarget[i];
+                            if (subaction.baseDamage < 0 && damageDeterminant.subaction.baseDamage > 0 || subaction.baseDamage > 0 && damageDeterminant.subaction.baseDamage < 0)
+                                damageFiguresByTarget[i] = -damageFiguresByTarget[i];
                         }
                     }
                     else
@@ -461,7 +466,11 @@ namespace CnfBattleSys
                     }
                 }
                 for (int i = 0; i < targets.Count; i++) targets[i].DealOrHealDamage(damageFiguresByTarget[i]);
-                for (int i = 0; i < effectPackageHandles.Length; i++) effectPackageHandles[i] = new EffectPackageHandle(this, subaction.effectPackages[i]);
+                for (int i = 0; i < effectPackageHandles.Length; i++)
+                {
+                    effectPackageHandles[i] = new EffectPackageHandle(this, subaction.effectPackages[i]);
+                    if (subaction.effectPackages[i].eventBlock != null) eventBlocksQueue.Enqueue(subaction.effectPackages[i].eventBlock);
+                }
                 if (eventBlocksQueue.Count > 0)
                 {
                     while (eventBlocksQueue.Count > 0) BattleStage.instance.Dispatch(eventBlocksQueue.Dequeue());

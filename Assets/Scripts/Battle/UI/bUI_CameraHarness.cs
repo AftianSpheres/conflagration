@@ -12,32 +12,46 @@ using CnfBattleSys;
 public class bUI_CameraHarness : MonoBehaviour
 {
     /// <summary>
-    /// Valid modes the camera harness can be in.
-    /// The specific mode the camera harness is in will determine
-    /// the precise logic it applies to find its position
-    /// in relation to its focus.
+    /// The BattleCameraScript instance that's currently driving the CameraHarness.
     /// </summary>
-    public enum ViewpointMode
-    {
-        None,
-        OverheadView,
-        BehindBack,
-        Dynamic
-    }
-    public Camera viewportCam;
-    private Transform focusTransform;
-    private ViewpointMode viewpointMode;
+    public BattleCameraScript battleCameraScript { get; private set; }
+    /// <summary>
+    /// The Camera attached to this CameraHarness.
+    /// </summary>
+    public Camera viewportCam { get; private set; }
 	
+    void Awake ()
+    {
+        viewportCam = GetComponent<Camera>();
+    }
+
     /// <summary>
     /// MonoBehaviour.Start ()
     /// </summary>
-    void Start()
+    void Start ()
     {
         bUI_BattleUIController.instance.RegisterCameraHarness(this);
     }
 
-    public void AcceptBattleCameraScript (BattleCameraScript _battleCameraScript, Action callback)
+    /// <summary>
+    /// Forces the current battleCameraScript to end
+    /// and normalizes the state of the cameraHarness.
+    /// </summary>
+    public void AbortCurrentBattleCameraScript ()
     {
-        Debug.Log("Implement this pls");
+        battleCameraScript.End();
     }
+
+    /// <summary>
+    /// Take the BattleCameraScript given and start handling it.
+    /// The callback given will be called when this battleCameraScript finishes
+    /// and End() is called on it.
+    /// </summary>
+    public void AcceptBattleCameraScript (BattleCameraScript _battleCameraScript, Action callback = null)
+    {
+        battleCameraScript = _battleCameraScript;
+        battleCameraScript.Start(callback);
+    }
+
+
 }

@@ -1,7 +1,6 @@
 <BattleAction info="Test attack - 3x combo">
   <Subaction info="">
-    <subactionName>
-    </subactionName>
+    <subactionName>atk0</subactionName>
     <baseDamage>0</baseDamage>
     <baseAccuracy>0</baseAccuracy>
     <useAlternateTargetSet>False</useAlternateTargetSet>
@@ -13,27 +12,6 @@
     <categoryFlags>None</categoryFlags>
     <damageDeterminantName>
     </damageDeterminantName>
-    <predicateName>
-    </predicateName>
-    <successDeterminantName>
-    </successDeterminantName>
-  </Subaction>
-  <Subaction info="">
-    <subactionName>
-    </subactionName>
-    <baseDamage>0</baseDamage>
-    <baseAccuracy>0</baseAccuracy>
-    <useAlternateTargetSet>False</useAlternateTargetSet>
-    <atkStat>None</atkStat>
-    <defStat>None</defStat>
-    <hitStat>None</hitStat>
-    <evadeStat>None</evadeStat>
-    <damageTypes>None</damageTypes>
-    <categoryFlags>None</categoryFlags>
-    <damageDeterminantName>
-    </damageDeterminantName>
-    <predicateName>
-    </predicateName>
     <successDeterminantName>
     </successDeterminantName>
   </Subaction>
@@ -48,23 +26,5 @@
   <alternateTargetType>None</alternateTargetType>
   <targetType>None</targetType>
   <categoryFlags>None</categoryFlags>
-  <Subaction info="">
-    <subactionName>
-    </subactionName>
-    <baseDamage>0</baseDamage>
-    <baseAccuracy>0</baseAccuracy>
-    <useAlternateTargetSet>False</useAlternateTargetSet>
-    <atkStat>None</atkStat>
-    <defStat>None</defStat>
-    <hitStat>None</hitStat>
-    <evadeStat>None</evadeStat>
-    <damageTypes>None</damageTypes>
-    <categoryFlags>None</categoryFlags>
-    <damageDeterminantName>
-    </damageDeterminantName>
-    <predicateName>
-    </predicateName>
-    <successDeterminantName>
-    </successDeterminantName>
-  </Subaction>
+  <subactionOrder>atk0</subactionOrder>
 </BattleAction>

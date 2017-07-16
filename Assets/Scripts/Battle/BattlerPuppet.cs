@@ -72,8 +72,14 @@ public class BattlerPuppet : MonoBehaviour
     void Start ()
     {
         animatorMetadataContainer = GetComponent<AnimatorMetadataContainer>();
-        animatorMetadataContainer.stateMachineExtender.onStateChanged += onAnimatorStateChanged;
-        Timing.RunCoroutine(_Load(), thisTag);       
+        if (animatorMetadataContainer == null) animatorMetadataContainer = gameObject.AddComponent<AnimatorMetadataContainer>();
+        Action whenSMEAvailable = () =>
+        {
+            animatorMetadataContainer.stateMachineExtender.onStateChanged += onAnimatorStateChanged;
+            Timing.RunCoroutine(_Load(), thisTag);
+        };
+        if (animatorMetadataContainer.stateMachineExtender != null) whenSMEAvailable();
+        else animatorMetadataContainer.onceFilled += whenSMEAvailable;        
     }
 
     /// <summary>
@@ -81,7 +87,7 @@ public class BattlerPuppet : MonoBehaviour
     /// </summary>
     void OnDestroy ()
     {
-        if (animatorMetadataContainer != null) animatorMetadataContainer.stateMachineExtender.onStateChanged -= onAnimatorStateChanged; // don't try to do this if we never started the puppet
+        if (animatorMetadataContainer != null && animatorMetadataContainer.stateMachineExtender != null) animatorMetadataContainer.stateMachineExtender.onStateChanged -= onAnimatorStateChanged; // don't try to do this if we never started the puppet
         Timing.KillCoroutines(thisTag);
     }
 
@@ -159,7 +165,7 @@ public class BattlerPuppet : MonoBehaviour
     /// </summary>
     public void DispatchDeathEventBlock ()
     {
-
+        DispatchAnimEvent(new AnimEvent(AnimEventType.Die, AnimEventType.None, BattleEventTargetType.None, AnimEvent.Flags.IsMandatory, 0));
     }
 
     /// <summary>

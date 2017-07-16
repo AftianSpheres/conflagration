@@ -1,4 +1,5 @@
-﻿using System;
+﻿using UnityEngine;
+using System;
 using System.Collections.Generic;
 
 namespace CnfBattleSys
@@ -13,6 +14,10 @@ namespace CnfBattleSys
     /// </summary>
     public class TurnManagementSubsystem
     {
+        /// <summary>
+        /// The TurnManagementSubsystem attached to the battle currently being handled by the BattleOverseer.
+        /// </summary>
+        public static TurnManagementSubsystem current { get { return BattleOverseer.currentBattle.turnManagementSubsystem; } }
         private BattleData battle;
         /// <summary>
         /// Battler that's currently taking a turn.
@@ -22,17 +27,18 @@ namespace CnfBattleSys
         /// Battlers to give turns when that next becomes possible. Normally there should only actually be one Battler here at a time... but ties are a thing,
         /// and having multiple members in this list gives us an easy way to say "these guys need a tiebreaker."
         /// </summary>
-        public List<Battler> battlersReadyToTakeTurns { get; private set; }
+        public LinkedList<Battler> battlersReadyToTakeTurns { get; private set; }
         public int elapsedTurns { get; private set; }
 
         /// <summary>
         /// First-run setup for turn management subsystem.
         /// </summary>
-        public TurnManagementSubsystem (BattleData _battle)
+        public TurnManagementSubsystem (BattleData _battle, out Action callback)
         {
             battle = _battle;
-            battlersReadyToTakeTurns = new List<Battler>();
+            battlersReadyToTakeTurns = new LinkedList<Battler>();
             elapsedTurns = 0;
+            callback = battle.BetweenTurns;
         }
 
         /// <summary>
@@ -48,8 +54,8 @@ namespace CnfBattleSys
         /// </summary>
         public void ExtendCurrentTurn()
         {
-            if (currentTurnBattler == null) Util.Crash(new System.Exception("Can't extend current turn because there _isn't_ a current turn."));
-            battlersReadyToTakeTurns.Insert(0, currentTurnBattler);
+            if (currentTurnBattler == null) Util.Crash(new Exception("Can't extend current turn because there _isn't_ a current turn."));
+            battlersReadyToTakeTurns.AddFirst(currentTurnBattler);
         }
 
         /// <summary>
@@ -66,7 +72,8 @@ namespace CnfBattleSys
         /// </summary>
         public void RequestTurn(Battler b)
         {
-            battlersReadyToTakeTurns.Add(b);
+            Debug.Log(b.battlerType);
+            battlersReadyToTakeTurns.AddLast(b);
         }
 
         /// <summary>
@@ -74,9 +81,10 @@ namespace CnfBattleSys
         /// </summary>
         public void StartTurn ()
         {
+            Debug.Log("Start of turn " + elapsedTurns);
+            
             BattleStage.instance.StartOfTurn();
-            currentTurnBattler = battlersReadyToTakeTurns[0];
-            battlersReadyToTakeTurns.Remove(currentTurnBattler);
+            currentTurnBattler = GetTakerOfNextTurn();
             BattleOverseer.currentBattle.ChangeState(BattleData.State.WaitingForInput);
             Action callback = () =>
             {
@@ -88,13 +96,31 @@ namespace CnfBattleSys
         /// <summary>
         /// Finishes taking a turn.
         /// </summary>
-        public void EndTurn ()
+        private void EndTurn ()
         {
             currentTurnBattler = null;
             battle.ChangeState(BattleData.State.BetweenTurns);
             battle.DeriveNormalizedSpeed();
             BattleStage.instance.SetBattlersIdle();
             elapsedTurns++;
+            BattleOverseer.currentBattle.BetweenTurns();
+        }
+
+        /// <summary>
+        /// Get the Battler that'll take the next turn.
+        /// </summary>
+        private Battler GetTakerOfNextTurn ()
+        {
+            Battler taker;
+            if (battlersReadyToTakeTurns.Count > 1)
+            {
+                Battler[] tiedBattlers = new Battler[battlersReadyToTakeTurns.Count];
+                battlersReadyToTakeTurns.CopyTo(tiedBattlers, 0);
+                taker = battle.BreakTie(tiedBattlers);
+            }
+            else taker = battlersReadyToTakeTurns.First.Value;
+            battlersReadyToTakeTurns.Remove(taker);
+            return taker;
         }
     }
 }

@@ -1182,7 +1182,7 @@ namespace CnfBattleSys
             {
                 currentDelay -= turnDelayReduction;
                 if (currentDelay < 0) currentDelay = 0;
-                if (currentDelay == 0) BattleOverseer.RequestTurn(this);
+                if (currentDelay == 0) TurnManagementSubsystem.current.RequestTurn(this);
             }
         }
 
@@ -1318,7 +1318,7 @@ namespace CnfBattleSys
             if (_turnActions.action.actionID == ActionType.INTERNAL_BreakOwnStance && StanceBroken()) Util.Crash(new System.Exception("u wot m8"));
             turnActions = _turnActions;
             if ((messageFlags & BattlerAIMessageFlags.ExtendTurn) == BattlerAIMessageFlags.ExtendTurn)
-                BattleOverseer.ExtendCurrentTurn();
+                TurnManagementSubsystem.current.ExtendCurrentTurn();
             if ((messageFlags & BattlerAIMessageFlags.ForbidMovementOnNextTurn) == BattlerAIMessageFlags.ForbidMovementOnNextTurn)
                 Debug.Log("What even is movement, mannnn");
         }

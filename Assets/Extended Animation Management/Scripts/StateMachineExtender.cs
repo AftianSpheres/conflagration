@@ -27,7 +27,7 @@ namespace ExtendedAnimationManagement
             AnimatorMetadataContainer animatorMetadataContainer = animator.gameObject.GetComponent<AnimatorMetadataContainer>();
             if (animatorMetadataContainer == null) animatorMetadataContainer = animator.gameObject.AddComponent<AnimatorMetadataContainer>();
             if (animatorMetadataContainer.contents == null) animatorMetadataContainer.FillWith(AnimatorMetadataLookupTable.lookupTable[tableIndex_SetAutomatically], this);
-            onStateChanged();
+            onStateChanged?.Invoke();
         }
     }
 

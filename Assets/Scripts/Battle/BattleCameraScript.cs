@@ -76,6 +76,10 @@ public abstract class BattleCameraScript
     /// to finish what it's doing. Always call this
     /// before throwing a BattleCameraScript child
     /// instance away - even if it's "over."
+    /// This also normalizes the state of the
+    /// BattleCameraScript if it's currently mid-operation,
+    /// so you can use it to abort a camera movement
+    /// midway or whatever.
     /// </summary>
     public void End ()
     {

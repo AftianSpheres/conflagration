@@ -187,6 +187,7 @@ namespace CnfBattleSys
         /// </summary>
         private IEnumerator<float> _LoadFXEvent(FXEvent fxEvent, Action callback = null)
         {
+            Debug.Log("OH NO");
             const string prefabsPath = "Battle/Prefabs/FX/";
             fxEventsInLoading.AddLast(fxEvent.signedFXEventType);
             ResourceRequest request = Resources.LoadAsync<BattleFXController>(prefabsPath + fxEvent.fxEventType);
@@ -216,8 +217,9 @@ namespace CnfBattleSys
             // And we're done
             fxEventResolverTable.Add(fxEvent.signedFXEventType, controllers);
             fxEventsInLoading.Remove(fxEvent.signedFXEventType);
-            if (callback != null) callback();
+            callback?.Invoke();
             onAnyLoadFinished();
+            Debug.Log("OH YEAH");
         }
     }
 }

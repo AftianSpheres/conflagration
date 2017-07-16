@@ -189,7 +189,7 @@ namespace BattleActionTool
         }
 
         /// <summary>
-        /// Invoke Util.PopulateDictWith to generate a Dictionary containing the required key:subaction mappings.
+        /// Build the subaction array.
         /// </summary>
         private CodeArrayCreateExpression GetSubactionsArray ()
         {
@@ -219,6 +219,7 @@ namespace BattleActionTool
         /// </summary>
         public int GetIndexForSubactionOfName (string subactionName)
         {
+            if (subactionName == string.Empty) return -1; 
             for (int s = 0; s < subactionModels.Count; s++)
             {
                 if (subactionModels[s].subactionName == subactionName) return s;

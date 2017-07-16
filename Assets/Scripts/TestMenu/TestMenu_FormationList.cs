@@ -59,8 +59,7 @@ public class TestMenu_FormationList : MonoBehaviour
                            localBank.GetPage("venueLabel").text.Replace(venuePlaceholder, formation.venue.ToString()) + ", " +
                            localBank.GetPage("flagsLabel").text.Replace(flagsPlaceholder, flagsList);
             string line2 = GetBattlersListStringFor(formation);
-            label.text = line0 + Environment.NewLine + line1 + Environment.NewLine + line2;
-            
+            label.text = line0 + Environment.NewLine + line1 + Environment.NewLine + line2;   
             newButton.onClick.AddListener(new UnityAction(() => { BattleTransitionManager.Instance.EnterBattleScene(formation); }));
             newButton.gameObject.name = "Button: " + formation.formationID.ToString();
         }

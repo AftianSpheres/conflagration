@@ -224,8 +224,7 @@ public class EventBlockHandle
     {
         if (skipFurtherEvents)
         {
-            // need to normalize camera
-            // if awaitingcamerascript battlecameraharness cancel
+            if (awaitingCameraScript) bUI_BattleUIController.instance.cameraHarness.AbortCurrentBattleCameraScript();
             onBlockCompleted();
         }
         else

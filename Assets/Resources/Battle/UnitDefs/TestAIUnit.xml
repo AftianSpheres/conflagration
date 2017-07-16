@@ -9,6 +9,7 @@
   <baseMoveDelay>1.0</baseMoveDelay>
   <stepTime>0.25</stepTime>
   <yOffset>2.4</yOffset>
+  <fxScale>1.0</fxScale>
   <model>TestModelSimple</model>
   <audioEventResolverTable>TestTable</audioEventResolverTable>
   <stances>

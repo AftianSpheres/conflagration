@@ -82,7 +82,7 @@ namespace CnfBattleSys
         /// <summary>
         /// Initializes the BattleOverseer and loads in the various datasets the battle system uses.
         /// </summary>
-        public BattleData(BattleFormation formation)
+        public BattleData(BattleFormation formation, out Action callback)
         {
             activeFormation = formation;
             state = State.Offline;
@@ -109,48 +109,10 @@ namespace CnfBattleSys
                 }
             }
             DeriveNormalizedSpeed();
+            RandomizeBattlerTiebreakerStack();
             for (int b = 0; b < allBattlers.Length; b++) allBattlers[b].ApplyDelay(1.0f); // Applying the starting delay of 1.0 gives each battler something to apply its speed factor to, and lets us build starting turn order
             actionExecutionSubsystem = new ActionExecutionSubsystem(this);
-            turnManagementSubsystem = new TurnManagementSubsystem(this);
-        }
-
-        /// <summary>
-        /// Advances the battle simulation by one "step."
-        /// The way this is intended to be used, basically, is that BattleStage calls BattleStep() whenever it doesn't have any animation events
-        /// to process, goes through all of those, and then calls BattleStep() again.
-        /// </summary>
-        public void BattleStep()
-        {
-            if (!CheckIfBattleAlreadyOver()) switch (state)
-                {
-                    case State.Paused:
-                        Util.Crash(new Exception("Can't advance battle state: battle is paused."));
-                        break;
-                    case State.Offline:
-                        Util.Crash(new Exception("Can't advance battle state: battle system is offline."));
-                        break;
-                    case State.BetweenTurns:
-                        BetweenTurns();
-                        if (turnManagementSubsystem.ReadyToTakeATurn()) turnManagementSubsystem.StartTurn();
-                        break;
-                    case State.WaitingForInput:
-                        Util.Crash(new Exception("Can't advance battle state: waiting for player input."));
-                        break;
-                    case State.ExecutingAction:
-                        // Subactions are called by name now!
-                        // We need to have BattleAnimControllers...
-                        //actionExecutionSubsystem.StepSubactions(1);
-                        break;
-                    case State.BattleWon:
-                        Util.Crash(new Exception("Can't advance battle state: battle is already won."));
-                        break;
-                    case State.BattleLost:
-                        Util.Crash(new Exception("Can't advance battle state: battle is already lost."));
-                        break;
-                    default:
-                        Util.Crash(new Exception("Can't advance battle state: invalid overseer state " + state.ToString()));
-                        break;
-                }
+            turnManagementSubsystem = new TurnManagementSubsystem(this, out callback);
         }
 
         /// <summary>
@@ -209,7 +171,7 @@ namespace CnfBattleSys
         /// <summary>
         /// Called between turns - handles delay logic and updates battlers so that they can request turns.
         /// </summary>
-        private void BetweenTurns()
+        public void BetweenTurns()
         {
             if (!CheckIfBattleAlreadyOver())
             {
@@ -219,26 +181,8 @@ namespace CnfBattleSys
                     if (allBattlers[i].currentDelay < lowestDelay) lowestDelay = allBattlers[i].currentDelay;
                 }
                 for (int i = 0; i < allBattlers.Length; i++) allBattlers[i].BetweenTurns(lowestDelay);
+                turnManagementSubsystem.StartTurn();
             }
-        }
-
-        /// <summary>
-        /// Uses BattlerTiebreakerStack to break a tie.
-        /// Returns the Battler that won.
-        /// </summary>
-        private Battler BreakTie(Battler[] tiedBattlers)
-        {
-            if (tiedBattlers.Length == 0) Util.Crash(new Exception("You're trying to break a tie between no battlers. Protip: ain't nobody gonna win that one."));
-            while (battlerTiebreakerStack.Count > 0)
-            {
-                Battler b = battlerTiebreakerStack.Pop();
-                for (int i = 0; i < tiedBattlers.Length; i++)
-                {
-                    if (tiedBattlers[i] == b) return b;
-                }
-            }
-            Util.Crash(new Exception("Tried to break a tie, but none of the tiedBattlers were in the battlerTiebreakerStack. That... shouldn't happen."));
-            return default(Battler);
         }
 
         /// <summary>
@@ -273,6 +217,31 @@ namespace CnfBattleSys
                 int randomIndex = UnityEngine.Random.Range(0, allBattlers.Length);
                 if (!battlerTiebreakerStack.Contains(allBattlers[randomIndex])) battlerTiebreakerStack.Push(allBattlers[randomIndex]);
             }
+        }
+
+        /// <summary>
+        /// Uses BattlerTiebreakerStack to break a tie.
+        /// Returns the Battler that won.
+        /// </summary>
+        public Battler BreakTie(Battler[] tiedBattlers)
+        {
+            Battler r = null;
+            if (tiedBattlers.Length == 0) Util.Crash(new Exception("You're trying to break a tie between no battlers. Protip: ain't nobody gonna win that one."));
+            while (battlerTiebreakerStack.Count > 0)
+            {
+                Battler b = battlerTiebreakerStack.Pop();
+                for (int i = 0; i < tiedBattlers.Length; i++)
+                {
+                    if (tiedBattlers[i] == b)
+                    {
+                        r = b;
+                        break;
+                    }
+                }
+            }
+            if (r == null) Util.Crash(new Exception("Tried to break a tie, but none of the tiedBattlers were in the battlerTiebreakerStack. That... shouldn't happen."));
+            RandomizeBattlerTiebreakerStack();
+            return r;
         }
 
         /// <summary>
@@ -350,9 +319,11 @@ namespace CnfBattleSys
             }
             output[0] = turnManagementSubsystem.currentTurnBattler;
             int lastFilledIndex = 0;
+            LinkedListNode<Battler> node = turnManagementSubsystem.battlersReadyToTakeTurns.First;
             for (int i = 0; i < turnManagementSubsystem.battlersReadyToTakeTurns.Count; i++)
             {
-                output[i + 1] = turnManagementSubsystem.battlersReadyToTakeTurns[i];
+                output[i + 1] = node.Value;
+                node = node.Next;
                 skips[output[i + 1].index] = true;
                 lastFilledIndex++;
             }

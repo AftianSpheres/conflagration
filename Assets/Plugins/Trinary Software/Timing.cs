@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using System.Collections.Generic;
 #if UNITY_5_5_OR_NEWER
 using UnityEngine.Profiling;
@@ -310,11 +311,8 @@ namespace MovementEffects
                         }
                         catch (System.Exception ex)
                         {
-                            if (OnError == null)
-                                _exceptions.Enqueue(ex);
-                            else
-                                OnError(ex);
-
+                            if (OnError == null) _exceptions.Enqueue(ex);
+                            else OnError(ex);
                             UpdateProcesses[coindex.i] = null;
                         }
 
@@ -340,7 +338,11 @@ namespace MovementEffects
             }
 
             if (_exceptions.Count > 0)
-                 throw _exceptions.Dequeue();
+            {
+                Exception ex = _exceptions.Dequeue();
+                Debug.Log(ex.StackTrace);
+                throw ex;
+            }
         }
 
         void FixedUpdate()
@@ -406,7 +408,11 @@ namespace MovementEffects
             }
 
             if (_exceptions.Count > 0)
-                throw _exceptions.Dequeue();
+            {
+                Exception ex = _exceptions.Dequeue();
+                Debug.Log(ex.StackTrace);
+                throw ex;
+            }
         }
 
         void LateUpdate()
@@ -472,7 +478,11 @@ namespace MovementEffects
             }
 
             if (_exceptions.Count > 0)
-                throw _exceptions.Dequeue();
+            {
+                Exception ex = _exceptions.Dequeue();
+                Debug.Log(ex.StackTrace);
+                throw ex;
+            }
         }
 
         private void RemoveUnused()
@@ -2211,34 +2221,34 @@ namespace MovementEffects
         public new void StopAllCoroutines() { }
 
         [System.Obsolete("Use your own GameObject for this.", true)]
-        public new static void Destroy(Object obj) { }
+        public new static void Destroy(UnityEngine.Object obj) { }
 
         [System.Obsolete("Use your own GameObject for this.", true)]
-        public new static void Destroy(Object obj, float f) { }
+        public new static void Destroy(UnityEngine.Object obj, float f) { }
 
         [System.Obsolete("Use your own GameObject for this.", true)]
-        public new static void DestroyObject(Object obj) { }
+        public new static void DestroyObject(UnityEngine.Object obj) { }
 
         [System.Obsolete("Use your own GameObject for this.", true)]
-        public new static void DestroyObject(Object obj, float f) { }
+        public new static void DestroyObject(UnityEngine.Object obj, float f) { }
 
         [System.Obsolete("Use your own GameObject for this.", true)]
-        public new static void DestroyImmediate(Object obj) { }
+        public new static void DestroyImmediate(UnityEngine.Object obj) { }
 
         [System.Obsolete("Use your own GameObject for this.", true)]
-        public new static void DestroyImmediate(Object obj, bool b) { }
+        public new static void DestroyImmediate(UnityEngine.Object obj, bool b) { }
 
         [System.Obsolete("Just.. no.", true)]
-        public new static T FindObjectOfType<T>() where T : Object { return null; }
+        public new static T FindObjectOfType<T>() where T : UnityEngine.Object { return null; }
 
         [System.Obsolete("Just.. no.", true)]
-        public new static Object FindObjectOfType(System.Type t) { return null; }
+        public new static UnityEngine.Object FindObjectOfType(System.Type t) { return null; }
 
         [System.Obsolete("Just.. no.", true)]
-        public new static T[] FindObjectsOfType<T>() where T : Object { return null; }
+        public new static T[] FindObjectsOfType<T>() where T : UnityEngine.Object { return null; }
 
         [System.Obsolete("Just.. no.", true)]
-        public new static Object[] FindObjectsOfType(System.Type t) { return null; }
+        public new static UnityEngine.Object[] FindObjectsOfType(System.Type t) { return null; }
 
         [System.Obsolete("Just.. no.", true)]
         public new static void print(object message) { }

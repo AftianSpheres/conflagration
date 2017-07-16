@@ -10,16 +10,6 @@ using MovementEffects;
 /// </summary>
 public class BattleStage : MonoBehaviour
 {
-    /// <summary>
-    /// Battle stage states.
-    /// </summary>
-    private enum LocalState
-    {
-        Offline,
-        HandlingAnimEvent,
-        ReadyToAdvanceBattle
-    }
-
 	/// <summary>
 	/// Called when we finish handling the final
 	/// enqueued event block.
@@ -27,8 +17,6 @@ public class BattleStage : MonoBehaviour
 	/// fired.)
 	/// </summary>
 	public event Action onAllEventBlocksFinished;
-	
-    private LocalState localState = LocalState.Offline;
     private BattlerPuppet[] puppets;
     private Dictionary<Battler, BattlerPuppet> puppetsDict = new Dictionary<Battler, BattlerPuppet>();
     private Queue<EventBlockHandle> eventBlocksToDispatch = new Queue<EventBlockHandle>(8);
@@ -80,38 +68,6 @@ public class BattleStage : MonoBehaviour
     }
 
     /// <summary>
-    /// MonoBehaviour.Update
-    /// </summary>
-    void Update ()
-    {
-        if (bUI_BattleUIController.instance.actionWheel.isOpen)
-        {
-            Debug.Log("Action wheel test!!!!");
-            return;
-        }
-        switch (localState)
-        {
-            case LocalState.ReadyToAdvanceBattle:
-                switch (BattleOverseer.currentBattle.state)
-                {
-                    case BattleData.State.BattleWon:
-                    case BattleData.State.BattleLost:
-                        gameObject.SetActive(false);
-                        break;
-                    case BattleData.State.WaitingForInput:
-                    case BattleData.State.Paused:
-                        break;
-                    default:
-                        BattleOverseer.currentBattle.BattleStep();
-                        break;
-                }
-                break;
-            case LocalState.HandlingAnimEvent:
-                break;
-        }
-	}
-
-    /// <summary>
     /// Creates a handle for the given event block, enqueues it if needed, and
     /// returns it so that the caller can subscribe to events.
     /// </summary>
@@ -146,7 +102,7 @@ public class BattleStage : MonoBehaviour
     /// </summary>
     public void StartOfBattle ()
     {
-        if (localState == LocalState.Offline) Initialize();
+        Initialize();
     }
 
     /// <summary>
@@ -155,7 +111,6 @@ public class BattleStage : MonoBehaviour
     private void Initialize()
     {
         bUI_BattleUIController.instance.elementsGen.AssignInfoboxesToBattlers();
-        localState = LocalState.ReadyToAdvanceBattle;
     }
 
     /// <summary>
@@ -188,8 +143,8 @@ public class BattleStage : MonoBehaviour
     /// </summary>
     public BattlerPuppet GetPuppetAssociatedWithBattler(Battler battler)
     {
-        if (!puppetsDict.ContainsKey(battler)) Util.Crash("No puppet in current battle scene tied to battler " + battler.battlerType + " " + battler.side + " " + battler.index);
-        return puppetsDict[battler];
+        if (!puppetsDict.ContainsKey(battler)) return null;
+        else return puppetsDict[battler];
     }
 
     /// <summary>
