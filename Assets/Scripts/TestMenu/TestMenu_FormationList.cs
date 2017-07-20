@@ -36,7 +36,7 @@ public class TestMenu_FormationList : MonoBehaviour
     {
         if (localBank == null) localBank = TextBankManager.Instance.GetTextBank("TestMenu/battle");
         float baseSize = buttonsPrefab.GetComponent<RectTransform>().sizeDelta.y;
-        BattleFormation[] formations = FormationDatabase.GetAll();
+        BattleFormation[] formations = FormationDatabase.GetAll();   
         buttonsParent.sizeDelta = new Vector2(buttonsParent.sizeDelta.x, baseSize * (formations.Length + 1));
         for (int i = 0; i < formations.Length; i++)
         {

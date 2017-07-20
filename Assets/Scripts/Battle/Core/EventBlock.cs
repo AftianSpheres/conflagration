@@ -63,20 +63,23 @@ namespace CnfBattleSys
                 }
                 return new Layer(animEventsList.ToArray(), audioEventsList.ToArray(), fxEventsList.ToArray());
             };
-            int pLimit = int.MinValue;
+            int priorityCeiling = int.MaxValue;
             while (true)
             {
                 int highestPriority = int.MinValue;
                 for (int i = 0; i < longestLength; i++)
                 {
-                    if (i < animEvents.Length && animEvents[i].priority > pLimit && animEvents[i].priority > highestPriority) highestPriority = animEvents[i].priority;
-                    if (i < audioEvents.Length && audioEvents[i].priority > pLimit && audioEvents[i].priority > highestPriority) highestPriority = audioEvents[i].priority;
-                    if (i < fxEvents.Length && fxEvents[i].priority > pLimit && fxEvents[i].priority > highestPriority) highestPriority = fxEvents[i].priority;
+                    if (i < animEvents.Length && animEvents[i].priority < priorityCeiling && animEvents[i].priority > highestPriority)
+                        highestPriority = animEvents[i].priority;
+                    if (i < audioEvents.Length && audioEvents[i].priority < priorityCeiling && audioEvents[i].priority > highestPriority)
+                        highestPriority = audioEvents[i].priority;
+                    if (i < fxEvents.Length && fxEvents[i].priority < priorityCeiling && fxEvents[i].priority > highestPriority)
+                        highestPriority = fxEvents[i].priority;
                 }
-                if (pLimit != highestPriority)
+                if (priorityCeiling != highestPriority)
                 {
                     layersList.Add(GetLayerAtPriority(highestPriority));
-                    pLimit = highestPriority;
+                    priorityCeiling = highestPriority;
                 }
                 else break;
             }

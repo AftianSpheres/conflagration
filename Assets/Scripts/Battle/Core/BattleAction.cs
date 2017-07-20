@@ -170,7 +170,7 @@
             float _basetargetingRange, byte _baseSPCost, TargetSideFlags _alternateTargetSideFlags, TargetSideFlags _targetingSideFlags, ActionTargetType _alternateTargetType, ActionTargetType _targetingType,
             BattleActionCategoryFlags _categoryFlags, Subaction[] _subactions)
         {
-            animSkip = _animSkip;
+            animSkip = _animSkip;        
             onConclusion = _onConclusion;
             onStart = _onStart;
             actionID = _actionID;
@@ -182,7 +182,7 @@
             baseSPCost = _baseSPCost;
             targetingSideFlags = _targetingSideFlags;
             targetingType = _targetingType;
-            categoryFlags = _categoryFlags;
+            categoryFlags = _categoryFlags;     
             subactions = _subactions;
         }
     }

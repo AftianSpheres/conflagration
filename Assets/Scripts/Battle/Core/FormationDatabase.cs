@@ -52,11 +52,16 @@ namespace CnfBattleSys
             XmlNode workingNode = doc.DocumentElement;
             int c = Enum.GetValues(typeof(FormationType)).Length - SpecialFormations.count;
             _formations = new BattleFormation[c];
-            for (int f = 1; f < c; f++) _formations[f] = ImportFormationWithID((FormationType)f, doc, workingNode);
+            _formations[0] = SpecialFormations.noneFormation;
+            for (int f = 1; f < c; f++)
+            {
+                _formations[f] = ImportFormationWithID((FormationType)f, doc, workingNode);
+            }
         }
 
         /// <summary>
         /// Imports a formation from the xml file.
+        /// This is hanging and using a lotta lotta memory... somewhere.
         /// </summary>
         private static BattleFormation ImportFormationWithID (FormationType formationType, XmlDocument doc, XmlNode workingNode)
         {
