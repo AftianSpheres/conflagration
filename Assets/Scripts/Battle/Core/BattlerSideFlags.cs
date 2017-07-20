@@ -8,7 +8,6 @@
     [System.Flags]
     public enum BattlerSideFlags
     {
-        None = 0,
         PlayerSide = 1,
         GenericEnemySide = 1 << 1,
         GenericAlliedSide = 1 << 2,

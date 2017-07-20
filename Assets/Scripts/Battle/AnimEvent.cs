@@ -14,7 +14,7 @@ namespace CnfBattleSys
         [Flags]
         public enum Flags
         {
-            None,
+            //None,
             /// <summary>
             /// Crash if we can't resolve this. If it's not mandatory, we just throw away an event we can't resolve.
             /// </summary>
@@ -23,6 +23,11 @@ namespace CnfBattleSys
             /// Don't move on to lower-priority events/next subaction/etc. until this finishes.
             /// </summary>
             WaitForMe = 1 << 1,
+            /// <summary>
+            /// Dispatch this event to all relevant puppets -
+            /// even if the associated subaction or w/e didn't apply to them.
+            /// </summary>
+            HandleEvenIfFailed = 1 << 2
         }
         /// <summary>
         /// Type of the AnimEvent.

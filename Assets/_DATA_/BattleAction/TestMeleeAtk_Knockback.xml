@@ -1,0 +1,86 @@
+<BattleAction info="A melee attack with an effect attached to it.">
+  <baseAOERadius>0</baseAOERadius>
+  <baseDelay>4</baseDelay>
+  <baseFollowthroughStanceChangeDelay>4</baseFollowthroughStanceChangeDelay>
+  <baseMinimumTargetingDistance>0</baseMinimumTargetingDistance>
+  <baseTargetingRange>1</baseTargetingRange>
+  <baseSPCost>25</baseSPCost>
+  <alternateTargetSideFlags>0</alternateTargetSideFlags>
+  <targetSideFlags>MyEnemies</targetSideFlags>
+  <alternateTargetType>None</alternateTargetType>
+  <targetType>SingleTarget</targetType>
+  <categoryFlags>Attack</categoryFlags>
+  <subactionOrder>atk0</subactionOrder>
+  <animSkip>
+    <battleCameraScript>None</battleCameraScript>
+    <animEvent info="hit">
+      <animEventType>Hit</animEventType>
+      <fallbackType>None</fallbackType>
+      <targetType>SecondaryTargets</targetType>
+      <flags>WaitForMe</flags>
+      <priority>0</priority>
+    </animEvent>
+    <animEvent info="use">
+      <animEventType>TestAnim_OnUse</animEventType>
+      <fallbackType>None</fallbackType>
+      <targetType>PrimaryTargets</targetType>
+      <flags>WaitForMe</flags>
+      <priority>0</priority>
+    </animEvent>
+  </animSkip>
+  <Subaction info="">
+    <eventBlock>
+      <battleCameraScript>None</battleCameraScript>
+      <animEvent info="hit">
+        <animEventType>Hit</animEventType>
+        <fallbackType>None</fallbackType>
+        <targetType>SecondaryTargets</targetType>
+        <flags>WaitForMe</flags>
+        <priority>0</priority>
+      </animEvent>
+      <animEvent info="use">
+        <animEventType>TestAnim_OnUse</animEventType>
+        <fallbackType>None</fallbackType>
+        <targetType>PrimaryTargets</targetType>
+        <flags>WaitForMe</flags>
+        <priority>0</priority>
+      </animEvent>
+    </eventBlock>
+    <EffectPackage info="Knockback effect">
+      <eventBlock>
+        <fxEvent info="">
+          <fxEventType>TestHitFX</fxEventType>
+          <targetType>SecondaryTargets</targetType>
+          <flags>WaitForMe, Scalable</flags>
+          <priority>0</priority>
+        </fxEvent>
+        <battleCameraScript>None</battleCameraScript>
+      </eventBlock>
+      <subactionEffectType>KnockTargetBackward</subactionEffectType>
+      <hitStat>None</hitStat>
+      <evadeStat>None</evadeStat>
+      <applyEvenIfSubactionMisses>False</applyEvenIfSubactionMisses>
+      <baseAIScoreValue>25</baseAIScoreValue>
+      <baseSuccessRate>1</baseSuccessRate>
+      <length_Float>0</length_Float>
+      <strength_Float>5</strength_Float>
+      <length_Byte>0</length_Byte>
+      <strength_Int>0</strength_Int>
+      <tieSuccessToEffectIndex>0</tieSuccessToEffectIndex>
+    </EffectPackage>
+    <subactionName>atk0</subactionName>
+    <baseDamage>30</baseDamage>
+    <baseAccuracy>0.9</baseAccuracy>
+    <useAlternateTargetSet>False</useAlternateTargetSet>
+    <atkStat>Stat_ATK</atkStat>
+    <defStat>Stat_DEF</defStat>
+    <hitStat>Stat_HIT</hitStat>
+    <evadeStat>Stat_EVA</evadeStat>
+    <damageTypes>Thrust</damageTypes>
+    <categoryFlags>Attack</categoryFlags>
+    <damageDeterminantName>
+    </damageDeterminantName>
+    <successDeterminantName>
+    </successDeterminantName>
+  </Subaction>
+</BattleAction>

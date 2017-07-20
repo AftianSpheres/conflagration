@@ -111,9 +111,9 @@ namespace CnfBattleSys
         /// <summary>
         /// Takes a string, spits out the corresponding SubactionFXType.
         /// </summary>
-        public static SubactionEffectType ParseSubactionFXType (string s)
+        public static EffectPackageType ParseSubactionFXType (string s)
         {
-            return (SubactionEffectType)Enum.Parse(typeof(SubactionEffectType), s);
+            return (EffectPackageType)Enum.Parse(typeof(EffectPackageType), s);
         }
 
         /// <summary>

@@ -7,7 +7,6 @@
     [System.Flags]
     public enum BattleFormationFlags
     {
-        None = 0,
         ForbidPlayerFromRunning = 1
     }
 }

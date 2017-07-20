@@ -1,0 +1,77 @@
+<BattleAction info="">
+  <baseAOERadius>0</baseAOERadius>
+  <baseDelay>3</baseDelay>
+  <baseFollowthroughStanceChangeDelay>3</baseFollowthroughStanceChangeDelay>
+  <baseMinimumTargetingDistance>0</baseMinimumTargetingDistance>
+  <baseTargetingRange>1</baseTargetingRange>
+  <baseSPCost>31</baseSPCost>
+  <alternateTargetSideFlags>0</alternateTargetSideFlags>
+  <targetSideFlags>MyEnemies</targetSideFlags>
+  <alternateTargetType>None</alternateTargetType>
+  <targetType>SingleTarget</targetType>
+  <categoryFlags>Attack, Debuff</categoryFlags>
+  <subactionOrder>atk0</subactionOrder>
+  <animSkip>
+    <battleCameraScript>None</battleCameraScript>
+    <animEvent info="hit">
+      <animEventType>Hit</animEventType>
+      <fallbackType>None</fallbackType>
+      <targetType>SecondaryTargets</targetType>
+      <flags>WaitForMe</flags>
+      <priority>0</priority>
+    </animEvent>
+    <animEvent info="use">
+      <animEventType>TestAnim_OnUse</animEventType>
+      <fallbackType>None</fallbackType>
+      <targetType>PrimaryTargets</targetType>
+      <flags>WaitForMe</flags>
+      <priority>0</priority>
+    </animEvent>
+  </animSkip>
+  <Subaction info="">
+    <EffectPackage info="">
+      <subactionEffectType>DealStaminaDamage</subactionEffectType>
+      <hitStat>None</hitStat>
+      <evadeStat>None</evadeStat>
+      <applyEvenIfSubactionMisses>False</applyEvenIfSubactionMisses>
+      <baseAIScoreValue>25</baseAIScoreValue>
+      <baseSuccessRate>1</baseSuccessRate>
+      <length_Float>0</length_Float>
+      <strength_Float>0</strength_Float>
+      <length_Byte>0</length_Byte>
+      <strength_Int>25</strength_Int>
+      <tieSuccessToEffectIndex>0</tieSuccessToEffectIndex>
+    </EffectPackage>
+    <eventBlock>
+      <battleCameraScript>None</battleCameraScript>
+      <animEvent info="hit">
+        <animEventType>Hit</animEventType>
+        <fallbackType>None</fallbackType>
+        <targetType>SecondaryTargets</targetType>
+        <flags>WaitForMe</flags>
+        <priority>0</priority>
+      </animEvent>
+      <animEvent info="use">
+        <animEventType>TestAnim_OnUse</animEventType>
+        <fallbackType>None</fallbackType>
+        <targetType>PrimaryTargets</targetType>
+        <flags>WaitForMe</flags>
+        <priority>0</priority>
+      </animEvent>
+    </eventBlock>
+    <subactionName>atk0</subactionName>
+    <baseDamage>19</baseDamage>
+    <baseAccuracy>1</baseAccuracy>
+    <useAlternateTargetSet>False</useAlternateTargetSet>
+    <atkStat>Stats_MATKMDEF</atkStat>
+    <defStat>Stats_MATKMDEF</defStat>
+    <hitStat>None</hitStat>
+    <evadeStat>None</evadeStat>
+    <damageTypes>Psyche</damageTypes>
+    <categoryFlags>Attack, Debuff</categoryFlags>
+    <damageDeterminantName>
+    </damageDeterminantName>
+    <successDeterminantName>
+    </successDeterminantName>
+  </Subaction>
+</BattleAction>

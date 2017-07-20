@@ -157,7 +157,7 @@ public class BattlerPuppet : MonoBehaviour
     public void Idle ()
     {
         SyncPosition();
-        if (!battler.isDead) DispatchAnimEvent(new AnimEvent(AnimEventType.Idle, AnimEventType.None, BattleEventTargetType.None, AnimEvent.Flags.IsMandatory, 0));
+        if (!battler.isDead) DispatchAnimEvent(new AnimEvent(AnimEventType.Idle, AnimEventType.None, 0, AnimEvent.Flags.IsMandatory, 0));
     }
 
     /// <summary>
@@ -165,7 +165,7 @@ public class BattlerPuppet : MonoBehaviour
     /// </summary>
     public void DispatchDeathEventBlock ()
     {
-        DispatchAnimEvent(new AnimEvent(AnimEventType.Die, AnimEventType.None, BattleEventTargetType.None, AnimEvent.Flags.IsMandatory, 0));
+        DispatchAnimEvent(new AnimEvent(AnimEventType.Die, AnimEventType.None, 0, AnimEvent.Flags.IsMandatory, 0));
     }
 
     /// <summary>

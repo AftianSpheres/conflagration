@@ -1,18 +1,18 @@
 <BattleAction info="The simplest possible attack. (This is a comment field. It doesn't get baked into the lookup table. Do as you will with it.)">
   <baseAOERadius>0</baseAOERadius>
-  <baseDelay>1</baseDelay>
-  <baseFollowthroughStanceChangeDelay>3</baseFollowthroughStanceChangeDelay>
+  <baseDelay>1.5</baseDelay>
+  <baseFollowthroughStanceChangeDelay>1.5</baseFollowthroughStanceChangeDelay>
   <baseMinimumTargetingDistance>0</baseMinimumTargetingDistance>
   <baseTargetingRange>1</baseTargetingRange>
   <baseSPCost>15</baseSPCost>
-  <alternateTargetSideFlags>None</alternateTargetSideFlags>
-  <targetSideFlags>Neutral</targetSideFlags>
+  <alternateTargetSideFlags>0</alternateTargetSideFlags>
+  <targetSideFlags>MyEnemies</targetSideFlags>
   <alternateTargetType>None</alternateTargetType>
   <targetType>SingleTarget</targetType>
-  <categoryFlags>Heal</categoryFlags>
+  <categoryFlags>Attack</categoryFlags>
   <Subaction info="I'm gonna do a hit!">
     <subactionName>atk0</subactionName>
-    <baseDamage>30</baseDamage>
+    <baseDamage>45</baseDamage>
     <baseAccuracy>1</baseAccuracy>
     <useAlternateTargetSet>False</useAlternateTargetSet>
     <atkStat>Stat_ATK</atkStat>
@@ -20,14 +20,45 @@
     <hitStat>Stat_HIT</hitStat>
     <evadeStat>Stat_EVA</evadeStat>
     <damageTypes>Slash</damageTypes>
-    <categoryFlags>Heal</categoryFlags>
+    <categoryFlags>Attack</categoryFlags>
     <damageDeterminantName>
     </damageDeterminantName>
     <successDeterminantName>
     </successDeterminantName>
     <eventBlock>
-      <battleCameraScript>BattleCameraScript_Demo</battleCameraScript>
+      <battleCameraScript>None</battleCameraScript>
+      <animEvent info="hit">
+        <animEventType>Hit</animEventType>
+        <fallbackType>None</fallbackType>
+        <targetType>SecondaryTargets</targetType>
+        <flags>WaitForMe</flags>
+        <priority>0</priority>
+      </animEvent>
+      <animEvent info="use">
+        <animEventType>TestAnim_OnUse</animEventType>
+        <fallbackType>None</fallbackType>
+        <targetType>PrimaryTargets</targetType>
+        <flags>WaitForMe</flags>
+        <priority>0</priority>
+      </animEvent>
     </eventBlock>
   </Subaction>
   <subactionOrder>atk0</subactionOrder>
+  <animSkip>
+    <battleCameraScript>None</battleCameraScript>
+    <animEvent info="hit">
+      <animEventType>Hit</animEventType>
+      <fallbackType>None</fallbackType>
+      <targetType>SecondaryTargets</targetType>
+      <flags>WaitForMe</flags>
+      <priority>0</priority>
+    </animEvent>
+    <animEvent info="use">
+      <animEventType>TestAnim_OnUse</animEventType>
+      <fallbackType>None</fallbackType>
+      <targetType>PrimaryTargets</targetType>
+      <flags>WaitForMe</flags>
+      <priority>0</priority>
+    </animEvent>
+  </animSkip>
 </BattleAction>

@@ -13,7 +13,7 @@ namespace CnfBattleSys
         [Flags]
         public enum Flags
         {
-            None,
+            //None,
             /// <summary>
             /// Crash if we can't resolve this. If it's not mandatory, we just throw away an event we can't resolve.
             /// </summary>
@@ -29,7 +29,12 @@ namespace CnfBattleSys
             /// 50-foot robots or whatever, on the other hand, have very big
             /// explosions.)
             /// </summary>
-            Scalable = 1 << 2
+            Scalable = 1 << 2,
+            /// <summary>
+            /// Dispatch this event to all relevant puppets -
+            /// even if the associated subaction or w/e didn't apply to them.
+            /// </summary>
+            HandleEvenIfFailed = 1 << 3
         }
 
         /// <summary>

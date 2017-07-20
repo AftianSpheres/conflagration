@@ -418,7 +418,7 @@ namespace CnfBattleSys
                 Battler[] t1 = new Battler[0];
                 Battler[] t2 = new Battler[0];
                 Battler[] t3 = new Battler[0];
-                if (targetSideFlags == TargetSideFlags.None) Util.Crash(new Exception("Can't find legal targets for action " + battleAction.actionID.ToString() + " because it doesn't _have_ legal targets. This is either a special case that shouldn't go through normal target acquisition, something that just shouldn't _be_ executed, or completely broken."));
+                if (targetSideFlags == 0) return new Battler[0];
                 if ((targetSideFlags & TargetSideFlags.MySide) == TargetSideFlags.MySide)
                 {
                     t0 = BattleOverseer.currentBattle.GetBattlersSameSideAs(b.side);
@@ -460,7 +460,7 @@ namespace CnfBattleSys
                 return validTargets;
             };      
             output[0] = populateList(battleAction.targetingSideFlags);
-            if (battleAction.alternateTargetSideFlags != TargetSideFlags.None) output[1] = populateList(battleAction.alternateTargetSideFlags);
+            if (battleAction.alternateTargetSideFlags != 0) output[1] = populateList(battleAction.alternateTargetSideFlags);
             else output[1] = new Battler[0];
             return output;
         }    

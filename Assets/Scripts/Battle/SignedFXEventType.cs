@@ -20,7 +20,7 @@ public struct SignedFXEventType : IEquatable<FXEvent>, IEquatable<FXEventType>
     bool IEquatable<FXEvent>.Equals(FXEvent other)
     {
         int v = value;
-        FXEvent.Flags comparison = FXEvent.Flags.None; // if not positive (ie sign bit unset) we want scalable flag unset
+        FXEvent.Flags comparison = 0; // if not positive (ie sign bit unset) we want scalable flag unset
         if (value < 0) // factor out bit 31 + we do want the scalable flag set
         {
             v *= -1;

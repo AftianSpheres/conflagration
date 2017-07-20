@@ -8,7 +8,7 @@
         [System.Flags]
         public enum Flags
         {
-            None,
+            //None,
             /// <summary>
             /// Crash if we can't resolve this. If it's not mandatory, we just throw away an event we can't resolve.
             /// </summary>
@@ -26,7 +26,12 @@
             /// <summary>
             /// If the audio event is spatially unaware, it'll be played on the camera audiosource instead of on the source attached to the puppet (etc.)
             /// </summary>
-            SpatiallyUnaware = 1 << 3
+            SpatiallyUnaware = 1 << 3,
+            /// <summary>
+            /// Dispatch this event to all relevant puppets -
+            /// even if the associated subaction or w/e didn't apply to them.
+            /// </summary>
+            HandleEvenIfFailed = 1 << 4
         }
 
         /// <summary>

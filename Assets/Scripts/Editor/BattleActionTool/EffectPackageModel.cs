@@ -22,7 +22,7 @@ namespace BattleActionTool
             }
         }
         public EventBlockModel eventBlockModel;
-        public SubactionEffectType subactionEffectType;
+        public EffectPackageType subactionEffectType;
         public LogicalStatType hitStat;
         public LogicalStatType evadeStat;
         public bool applyEvenIfSubactionMisses;
@@ -80,7 +80,7 @@ namespace BattleActionTool
             CodeExpression eventBlockDeclaration;
             if (eventBlockModel != null) eventBlockDeclaration = eventBlockModel.DumpToCSDeclaration();
             else eventBlockDeclaration = new CodePrimitiveExpression(null);
-            CodeFieldReferenceExpression subactionEffectTypeDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(SubactionEffectType)), subactionEffectType.ToString());
+            CodeFieldReferenceExpression subactionEffectTypeDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(EffectPackageType)), subactionEffectType.ToString());
             CodeFieldReferenceExpression hitStatDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(LogicalStatType)), hitStat.ToString());
             CodeFieldReferenceExpression evadeStatDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(LogicalStatType)), evadeStat.ToString());
             CodePrimitiveExpression applyEvenIfSubactionMissesDeclaration = new CodePrimitiveExpression(applyEvenIfSubactionMisses);
@@ -102,7 +102,10 @@ namespace BattleActionTool
         public XmlNode DumpToXmlNode()
         {    
             List<XmlNode> validChildren = new List<XmlNode>();
-            if (eventBlockModel != null) validChildren.Add(eventBlockModel.DumpToXmlNode());
+            if (eventBlockModel != null)
+            {
+                validChildren.Add(eventBlockModel.DumpToXmlNode());
+            }
             BattleActionTool.HandleChildNode(xmlNode, "info", (node) => { node.Value = info; }, validChildren, XmlNodeType.Attribute);
             BattleActionTool.HandleChildNode(xmlNode, "subactionEffectType", (node) => { node.InnerText = subactionEffectType.ToString(); }, validChildren);
             BattleActionTool.HandleChildNode(xmlNode, "hitStat", (node) => { node.InnerText = hitStat.ToString(); }, validChildren);

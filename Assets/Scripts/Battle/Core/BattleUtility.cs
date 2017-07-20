@@ -21,7 +21,7 @@
                         case BattlerSideFlags.GenericNeutralSide:
                             return TargetSideFlags.Neutral;
                         default:
-                            return TargetSideFlags.None;
+                            return 0;
                     }
                 case BattlerSideFlags.GenericEnemySide:
                     switch (target)
@@ -34,12 +34,12 @@
                         case BattlerSideFlags.GenericNeutralSide:
                             return TargetSideFlags.Neutral;
                         default:
-                            return TargetSideFlags.None;
+                            return 0;
                     }
                 case BattlerSideFlags.GenericNeutralSide:
                     return TargetSideFlags.Neutral;
                 default:
-                    return TargetSideFlags.None;
+                    return 0;
             }
         }
 
@@ -89,7 +89,7 @@
         {
             switch (side)
             {
-                case BattlerSideFlags.None:
+                case 0:
                 case BattlerSideFlags.PlayerSide:
                 case BattlerSideFlags.GenericNeutralSide:
                 case BattlerSideFlags.GenericEnemySide:

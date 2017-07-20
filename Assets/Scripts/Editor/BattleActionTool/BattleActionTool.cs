@@ -35,7 +35,6 @@ namespace BattleActionTool
                 XmlNode node = parent.ChildNodes[i];
                 if (!validChildren.Contains(node))
                 {
-                    //Debug.Log("Invalid child " + node.Name + " in " + parent.Name);
                     parent.RemoveChild(node);
                 }
             }

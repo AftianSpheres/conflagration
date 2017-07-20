@@ -117,11 +117,11 @@ namespace BattleActionTool
             CodePrimitiveExpression baseMinimumTargetingDistanceDeclaration = new CodePrimitiveExpression(baseMinimumTargetingDistance);
             CodePrimitiveExpression baseTargetingRangeDeclaration = new CodePrimitiveExpression(baseTargetingRange);
             CodePrimitiveExpression baseSPCostDeclaration = new CodePrimitiveExpression(baseSPCost);
-            CodeFieldReferenceExpression alternateTargetSideFlagsDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(TargetSideFlags)), alternateTargetSideFlags.ToString().Replace(", ", " | "));
-            CodeFieldReferenceExpression targetSideFlagsDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(TargetSideFlags)), targetSideFlags.ToString().Replace(", ", " | "));
-            CodeFieldReferenceExpression alternateTargetTypeDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(ActionTargetType)), alternateTargetType.ToString());
-            CodeFieldReferenceExpression targetTypeDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(ActionTargetType)), targetType.ToString());
-            CodeFieldReferenceExpression categoryFlagsDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(BattleActionCategoryFlags)), categoryFlags.ToString().Replace(", ", " | "));
+            CodeExpression alternateTargetSideFlagsDeclaration = new CodeCastExpression(typeof(TargetSideFlags), new CodePrimitiveExpression((int)alternateTargetSideFlags));
+            CodeExpression targetSideFlagsDeclaration = new CodeCastExpression(typeof(TargetSideFlags), new CodePrimitiveExpression((int)targetSideFlags));
+            CodeExpression alternateTargetTypeDeclaration = new CodeCastExpression(typeof(ActionTargetType), new CodePrimitiveExpression((byte)alternateTargetType));
+            CodeExpression targetTypeDeclaration = new CodeCastExpression(typeof(ActionTargetType), new CodePrimitiveExpression((byte)targetType));
+            CodeExpression categoryFlagsDeclaration = new CodeCastExpression(typeof(BattleActionCategoryFlags), new CodePrimitiveExpression((int)categoryFlags));
             return new CodeObjectCreateExpression(typeof(BattleAction), new CodeExpression[] { animSkipDeclaration, onConclusionDeclaration, onStartDeclaration, actionIDDeclaration, baseAOERadiusDeclaration,
                                                   baseDelayDeclaration, baseFollowthroughStanceChangeDelayDeclaration, baseMinimumTargetingDistanceDeclaration, baseTargetingRangeDeclaration, baseSPCostDeclaration,
                                                   alternateTargetSideFlagsDeclaration, targetSideFlagsDeclaration, alternateTargetTypeDeclaration, targetTypeDeclaration, categoryFlagsDeclaration,
@@ -136,11 +136,20 @@ namespace BattleActionTool
         /// </summary>
         public XmlNode DumpToXmlNode ()
         {
-            if (subactionModels.Count != subactionOrder.Count) throw new Exception(actionID + " has mismatch between subaction order count and no. of subactions. Can't compile or export to XML until corrected.");
+            if (subactionModels.Count > subactionOrder.Count) throw new Exception(actionID + " has mismatch between subaction order count and no. of subactions. Can't compile or export to XML until corrected.");
             List<XmlNode> validChildren = new List<XmlNode>();
-            if (animSkipModel != null) validChildren.Add(animSkipModel.DumpToXmlNode());
-            if (onConclusionModel != null) validChildren.Add(onConclusionModel.DumpToXmlNode());
-            if (onStartModel != null) validChildren.Add(onStartModel.DumpToXmlNode());
+            if (animSkipModel != null)
+            {
+                validChildren.Add(animSkipModel.DumpToXmlNode());
+            }
+            if (onConclusionModel != null)
+            {
+                validChildren.Add(onConclusionModel.DumpToXmlNode());
+            }
+            if (onStartModel != null)
+            {
+                validChildren.Add(onStartModel.DumpToXmlNode());
+            }
             for (int i = 0; i < subactionModels.Count; i++) validChildren.Add(subactionModels[i].DumpToXmlNode());
             BattleActionTool.HandleChildNode(xmlNode, "info", (node) => { node.Value = info; }, validChildren, XmlNodeType.Attribute);
             BattleActionTool.HandleChildNode(xmlNode, "baseAOERadius", (node) => { node.InnerText = baseAOERadius.ToString(); }, validChildren);
@@ -193,12 +202,9 @@ namespace BattleActionTool
         /// </summary>
         private CodeArrayCreateExpression GetSubactionsArray ()
         {
-            if (subactionModels.Count != subactionOrder.Count) throw new Exception(actionID + " has mismatch between subaction order count and no. of subactions. Can't compile or export to XML until corrected.");
-            CodeObjectCreateExpression[] subactionDeclarations = new CodeObjectCreateExpression[subactionModels.Count];
-            for (int i = 0; i < subactionOrder.Count; i++)
-            {
-                subactionDeclarations[i] = FindSubaction(subactionOrder[i]).DumpToCSDeclaration();
-            }
+            if (subactionModels.Count > subactionOrder.Count) throw new Exception(actionID + " has mismatch between subaction order count and no. of subactions. Can't compile or export to XML until corrected.");
+            CodeObjectCreateExpression[] subactionDeclarations = new CodeObjectCreateExpression[subactionOrder.Count];
+            for (int i = 0; i < subactionOrder.Count; i++) subactionDeclarations[i] = FindSubaction(subactionOrder[i]).DumpToCSDeclaration();
             return new CodeArrayCreateExpression(typeof(BattleAction.Subaction), subactionDeclarations);
         }
 

@@ -22,7 +22,7 @@
     [System.Flags]
     public enum BattleActionCategoryFlags
     {
-        None = 0,
+        //None = 0,
         Attack = 1,
         Heal = 1 << 1,
         Buff = 1 << 2,

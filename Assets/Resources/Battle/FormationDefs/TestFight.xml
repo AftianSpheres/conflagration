@@ -2,7 +2,7 @@
 <formation>
   <venue>TestVenue</venue>
   <bgm>TestBGM</bgm>
-  <flags>None</flags>
+  <flags>0</flags>
   <fieldSize>20, 20</fieldSize>
   <battlers>
     <GenericEnemySide>

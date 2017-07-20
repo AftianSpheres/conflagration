@@ -6,7 +6,7 @@
     [System.Flags]
     public enum TargetSideFlags
     {
-        None = 0,
+        //None = 0,
         MySide = 1,
         MyFriends = 1 << 1,
         MyEnemies = 1 << 2,

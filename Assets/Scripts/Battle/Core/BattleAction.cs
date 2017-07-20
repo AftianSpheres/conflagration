@@ -21,7 +21,7 @@
             public class EffectPackage
             {
                 public readonly EventBlock eventBlock;
-                public readonly SubactionEffectType effectType;
+                public readonly EffectPackageType effectType;
                 public readonly LogicalStatType hitStat;
                 public readonly LogicalStatType evadeStat;
                 public readonly bool applyEvenIfSubactionMisses;
@@ -53,7 +53,7 @@
                 /// FXPackage constructor.
                 /// This should never be called outside of ActionDataset.LoadData()!
                 /// </summary>
-                public EffectPackage(EventBlock _eventBlock, SubactionEffectType _fxType, LogicalStatType _fxHitStat, LogicalStatType _fxEvadeStat,
+                public EffectPackage(EventBlock _eventBlock, EffectPackageType _fxType, LogicalStatType _fxHitStat, LogicalStatType _fxEvadeStat,
                                  bool _applyEvenIfSubactionMisses, float _baseSuccessRate, float _fxLength_Float, float _fxStrength_Float,
                                  byte _fxLength_Byte, int _fxStrength_Int, sbyte _thisFXSuccessTiedToFXAtIndex, float _baseAIScoreValue)
                 {

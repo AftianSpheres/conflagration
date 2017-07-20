@@ -1,0 +1,50 @@
+<BattleAction info="">
+  <animSkip>
+    <animEvent info="">
+      <animEventType>Hit</animEventType>
+      <fallbackType>None</fallbackType>
+      <targetType>SecondaryTargets</targetType>
+      <flags>WaitForMe</flags>
+      <priority>0</priority>
+    </animEvent>
+    <battleCameraScript>None</battleCameraScript>
+  </animSkip>
+  <Subaction info="">
+    <eventBlock>
+      <animEvent info="">
+        <animEventType>Hit</animEventType>
+        <fallbackType>None</fallbackType>
+        <targetType>SecondaryTargets</targetType>
+        <flags>WaitForMe</flags>
+        <priority>0</priority>
+      </animEvent>
+      <battleCameraScript>None</battleCameraScript>
+    </eventBlock>
+    <subactionName>atk0</subactionName>
+    <baseDamage>15</baseDamage>
+    <baseAccuracy>1</baseAccuracy>
+    <useAlternateTargetSet>False</useAlternateTargetSet>
+    <atkStat>Stat_ATK</atkStat>
+    <defStat>Stat_DEF</defStat>
+    <hitStat>None</hitStat>
+    <evadeStat>None</evadeStat>
+    <damageTypes>Strike</damageTypes>
+    <categoryFlags>0</categoryFlags>
+    <damageDeterminantName>
+    </damageDeterminantName>
+    <successDeterminantName>
+    </successDeterminantName>
+  </Subaction>
+  <baseAOERadius>0</baseAOERadius>
+  <baseDelay>0</baseDelay>
+  <baseFollowthroughStanceChangeDelay>0</baseFollowthroughStanceChangeDelay>
+  <baseMinimumTargetingDistance>0</baseMinimumTargetingDistance>
+  <baseTargetingRange>1</baseTargetingRange>
+  <baseSPCost>0</baseSPCost>
+  <alternateTargetSideFlags>0</alternateTargetSideFlags>
+  <targetSideFlags>MyEnemies</targetSideFlags>
+  <alternateTargetType>None</alternateTargetType>
+  <targetType>SingleTarget</targetType>
+  <categoryFlags>Attack</categoryFlags>
+  <subactionOrder>atk0</subactionOrder>
+</BattleAction>

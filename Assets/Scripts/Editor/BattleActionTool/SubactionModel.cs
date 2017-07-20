@@ -91,8 +91,8 @@ namespace BattleActionTool
             CodeFieldReferenceExpression defStatDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(LogicalStatType)), defStat.ToString());
             CodeFieldReferenceExpression hitStatDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(LogicalStatType)), hitStat.ToString());
             CodeFieldReferenceExpression evadeStatDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(LogicalStatType)), evadeStat.ToString());
-            CodeFieldReferenceExpression damageTypesDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(DamageTypeFlags)), damageTypes.ToString().Replace(", ", " | "));
-            CodeFieldReferenceExpression categoryFlagsDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(BattleActionCategoryFlags)), categoryFlags.ToString().Replace(", ", " | "));
+            CodeExpression damageTypesDeclaration = new CodeCastExpression(typeof(DamageTypeFlags), new CodePrimitiveExpression((int)damageTypes));
+            CodeExpression categoryFlagsDeclaration = new CodeCastExpression(typeof(BattleActionCategoryFlags), new CodePrimitiveExpression((int)categoryFlags));
             CodeFieldReferenceExpression actionIDDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(ActionType)), battleActionModel.actionID.ToString());
             CodePrimitiveExpression damageDeterminantIndexDeclaration = new CodePrimitiveExpression(battleActionModel.GetIndexForSubactionOfName(damageDeterminantName));
             CodePrimitiveExpression successDeterminantIndexDeclaration = new CodePrimitiveExpression(battleActionModel.GetIndexForSubactionOfName(successDeterminantName));
@@ -107,7 +107,10 @@ namespace BattleActionTool
         public XmlNode DumpToXmlNode()
         {
             List<XmlNode> validChildren = new List<XmlNode>();
-            if (eventBlockModel != null) validChildren.Add(eventBlockModel.DumpToXmlNode());
+            if (eventBlockModel != null)
+            {
+                validChildren.Add(eventBlockModel.DumpToXmlNode());
+            }
             for (int i = 0; i < effectPackageModels.Count; i++) validChildren.Add(effectPackageModels[i].DumpToXmlNode());
             BattleActionTool.HandleChildNode(xmlNode, "info", (node) => { node.Value = info; }, validChildren, XmlNodeType.Attribute);
             BattleActionTool.HandleChildNode(xmlNode, "subactionName", (node) => { node.InnerText = subactionName; }, validChildren);

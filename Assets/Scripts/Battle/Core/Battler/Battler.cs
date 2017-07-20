@@ -10,8 +10,11 @@ namespace CnfBattleSys
     /// Battle logic is totally decoupled from presentation - 
     /// the MonoBehaviours create and manipulate Battler objects, which do
     /// all the crunchy stuff.
+    /// This is implemented as a partial class in order to provide modularity
+    /// for EffectPackage implementations. Each EffectPackage is stored in its
+    /// own source file and provides a method that Battler can call on itself.
     /// </summary>
-    public class Battler
+    public partial class Battler
     {
         public const int maxLevel = 120; // you could actually have things over maxLevel but we use this for scaling stats w/ level...
         public static TurnActions defaultTurnActions = new TurnActions(false, -1, new Battler[0], new Battler[0], ActionDatabase.SpecialActions.defaultBattleAction, StanceDatabase.SpecialStances.defaultStance);
@@ -927,26 +930,6 @@ namespace CnfBattleSys
         }
 
         /// <summary>
-        /// Applies transformations to battler state based on specified FXPackage.
-        /// </summary>
-        public void ApplyFXPackage (BattleAction.Subaction.EffectPackage fxPackage)
-        {
-            switch (fxPackage.effectType)
-            {
-                case SubactionEffectType.KnockTargetBackward:
-                    Debug.Log("If unit movement existed, we would be pushed backward now");
-                    break;
-                case SubactionEffectType.Buff_DamageOutputUp:
-                    ApplyStatus(StatusType.TestBuff, StatusPacket_CancelationCondition.CancelWhenDurationZero, 0, fxPackage.length_Byte, new Resistances_Raw(1), 0, DamageTypeFlags.None,
-                        MiscStatusEffectFlags.None, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, fxPackage.strength_Float, 1, 1, 1, 1, 1, 1, 1, 1);
-                    break;
-                default:
-                    Util.Crash(new System.Exception("Unregognized FXtype: " + fxPackage.effectType));
-                    break;
-            }
-        }
-
-        /// <summary>
         /// Creates a status packet based on the given parameters. If there's already a status packet in the dictionary of this type, collides the new one with it;
         /// otherwise, adds it to the dict. Returns true if we collided with an existing packet, false otherwise.
         /// </summary>
@@ -979,13 +962,13 @@ namespace CnfBattleSys
         public void BreakStance (int spPenalty = -1)
         {
             const float statPenaltiesMin = 0.25f; // at worst, forced stat changes leave you with one quarter of your previous def/mdef/spe
-            if (spPenalty < 0) ApplyStatus(StatusType.StanceBroken_Voluntary, StatusPacket_CancelationCondition.None, 0, 0, new Resistances_Raw(1), 0, DamageTypeFlags.None, MiscStatusEffectFlags.None,
+            if (spPenalty < 0) ApplyStatus(StatusType.StanceBroken_Voluntary, StatusPacket_CancelationCondition.None, 0, 0, new Resistances_Raw(1), 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0.85f, 1, 0.85f, 1, 0.85f, 1, 1, 1);
             else
             {
                 float penalty = 0.75f - ((spPenalty / 2.0f) * 0.01f);
                 if (penalty < statPenaltiesMin) penalty = statPenaltiesMin;
-                ApplyStatus(StatusType.StanceBroken_Forced, StatusPacket_CancelationCondition.None, 0, 0, new Resistances_Raw(1), 0, DamageTypeFlags.None, MiscStatusEffectFlags.None,
+                ApplyStatus(StatusType.StanceBroken_Forced, StatusPacket_CancelationCondition.None, 0, 0, new Resistances_Raw(1), 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, penalty, 1, penalty, 1, penalty, 1, 1, 1);
             }
             if (puppet == null) return;

@@ -1,13 +1,70 @@
-<BattleAction info="">
+<BattleAction info="Heals a unit">
   <baseAOERadius>0</baseAOERadius>
-  <baseDelay>0</baseDelay>
-  <baseFollowthroughStanceChangeDelay>0</baseFollowthroughStanceChangeDelay>
+  <baseDelay>5</baseDelay>
+  <baseFollowthroughStanceChangeDelay>5</baseFollowthroughStanceChangeDelay>
   <baseMinimumTargetingDistance>0</baseMinimumTargetingDistance>
-  <baseTargetingRange>0</baseTargetingRange>
-  <baseSPCost>0</baseSPCost>
-  <alternateTargetSideFlags>None</alternateTargetSideFlags>
-  <targetSideFlags>None</targetSideFlags>
+  <baseTargetingRange>30</baseTargetingRange>
+  <baseSPCost>25</baseSPCost>
+  <alternateTargetSideFlags>0</alternateTargetSideFlags>
+  <targetSideFlags>MySide</targetSideFlags>
   <alternateTargetType>None</alternateTargetType>
-  <targetType>None</targetType>
-  <categoryFlags>None</categoryFlags>
+  <targetType>SingleTarget</targetType>
+  <categoryFlags>Heal</categoryFlags>
+  <Subaction info="">
+    <eventBlock>
+      <animEvent info="">
+        <animEventType>TestAnim_OnUse</animEventType>
+        <fallbackType>None</fallbackType>
+        <targetType>PrimaryTargets</targetType>
+        <flags>WaitForMe</flags>
+        <priority>1</priority>
+      </animEvent>
+      <animEvent info="">
+        <animEventType>Heal</animEventType>
+        <fallbackType>None</fallbackType>
+        <targetType>SecondaryTargets</targetType>
+        <flags>WaitForMe</flags>
+        <priority>0</priority>
+      </animEvent>
+      <fxEvent info="">
+        <fxEventType>TestStageFX</fxEventType>
+        <targetType>16</targetType>
+        <flags>WaitForMe</flags>
+        <priority>0</priority>
+      </fxEvent>
+      <battleCameraScript>None</battleCameraScript>
+    </eventBlock>
+    <subactionName>heal0</subactionName>
+    <baseDamage>-50</baseDamage>
+    <baseAccuracy>1</baseAccuracy>
+    <useAlternateTargetSet>False</useAlternateTargetSet>
+    <atkStat>None</atkStat>
+    <defStat>None</defStat>
+    <hitStat>None</hitStat>
+    <evadeStat>None</evadeStat>
+    <damageTypes>0</damageTypes>
+    <categoryFlags>Heal</categoryFlags>
+    <damageDeterminantName>
+    </damageDeterminantName>
+    <successDeterminantName>
+    </successDeterminantName>
+  </Subaction>
+  <animSkip>
+    <animEvent info="">
+      <animEventType>Heal</animEventType>
+      <fallbackType>None</fallbackType>
+      <targetType>SecondaryTargets</targetType>
+      <flags>WaitForMe</flags>
+      <priority>0</priority>
+    </animEvent>
+    <animEvent info="">
+      <animEventType>TestAnim_OnUse</animEventType>
+      <fallbackType>None</fallbackType>
+      <targetType>PrimaryTargets</targetType>
+      <flags>WaitForMe</flags>
+      <priority>0</priority>
+    </animEvent>
+    <battleCameraScript>None</battleCameraScript>
+  </animSkip>
+  <subactionOrder>heal0</subactionOrder>
 </BattleAction>

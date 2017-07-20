@@ -26,7 +26,7 @@ namespace BattleActionTool
             public AnimEvent.Flags flags;
             public int priority;
             public string info;
-            const string name = "AnimEvent";
+            const string name = "animEvent";
             private readonly XmlDocument doc;
 
             /// <summary>
@@ -63,8 +63,8 @@ namespace BattleActionTool
             {
                 CodeFieldReferenceExpression animEventTypeDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(AnimEventType)), animEventType.ToString());
                 CodeFieldReferenceExpression fallbackTypeDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(AnimEventType)), fallbackType.ToString());
-                CodeFieldReferenceExpression targetTypeDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(BattleEventTargetType)), targetType.ToString().Replace(", ", " | "));
-                CodeFieldReferenceExpression flagsDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(AnimEvent.Flags)), flags.ToString().Replace(", ", " | "));
+                CodeExpression targetTypeDeclaration = new CodeCastExpression(typeof(BattleEventTargetType), new CodePrimitiveExpression((int)targetType));
+                CodeExpression flagsDeclaration = new CodeCastExpression(typeof(AnimEvent.Flags), new CodePrimitiveExpression((int)flags));
                 CodePrimitiveExpression priorityDeclaration = new CodePrimitiveExpression(priority);
                 return new CodeObjectCreateExpression(typeof(AnimEvent), new CodeExpression[] { animEventTypeDeclaration, fallbackTypeDeclaration, targetTypeDeclaration, flagsDeclaration, priorityDeclaration });
             }
@@ -101,7 +101,7 @@ namespace BattleActionTool
             public AudioEvent.Flags flags;
             public int priority;
             public string info;
-            const string name = "AudioEvent";
+            const string name = "audioEvent";
             private readonly XmlDocument doc;
 
 
@@ -141,10 +141,10 @@ namespace BattleActionTool
                 CodeFieldReferenceExpression audioEventTypeDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(AudioEventType)), audioEventType.ToString());
                 CodeFieldReferenceExpression fallbackTypeDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(AudioEventType)), fallbackType.ToString());
                 CodeFieldReferenceExpression clipTypeDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(AudioSourceType)), clipType.ToString());
-                CodeFieldReferenceExpression targetTypeDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(BattleEventTargetType)), targetType.ToString().Replace(", ", " | "));
-                CodeFieldReferenceExpression flagsDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(AudioEvent.Flags)), flags.ToString().Replace(", ", " | "));
+                CodeExpression targetTypeDeclaration = new CodeCastExpression(typeof(BattleEventTargetType), new CodePrimitiveExpression((int)targetType));
+                CodeExpression flagsDeclaration = new CodeCastExpression(typeof(AudioEvent.Flags), new CodePrimitiveExpression((int)flags));
                 CodePrimitiveExpression priorityDeclaration = new CodePrimitiveExpression(priority);
-                return new CodeObjectCreateExpression(typeof(AnimEvent), new CodeExpression[] { audioEventTypeDeclaration, fallbackTypeDeclaration, clipTypeDeclaration, targetTypeDeclaration, flagsDeclaration, priorityDeclaration });
+                return new CodeObjectCreateExpression(typeof(AudioEvent), new CodeExpression[] { audioEventTypeDeclaration, fallbackTypeDeclaration, clipTypeDeclaration, targetTypeDeclaration, flagsDeclaration, priorityDeclaration });
             }
 
             /// <summary>
@@ -178,7 +178,7 @@ namespace BattleActionTool
             public FXEvent.Flags flags;
             public int priority;
             public string info;
-            const string name = "FXEvent";
+            const string name = "fxEvent";
             private readonly XmlDocument doc;
 
 
@@ -214,8 +214,8 @@ namespace BattleActionTool
             public CodeObjectCreateExpression DumpToCSDeclaration()
             {
                 CodeFieldReferenceExpression fxEventTypeDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(FXEventType)), fxEventType.ToString());
-                CodeFieldReferenceExpression targetTypeDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(BattleEventTargetType)), targetType.ToString().Replace(", ", " | "));
-                CodeFieldReferenceExpression flagsDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(FXEvent.Flags)), flags.ToString().Replace(", ", " | "));
+                CodeExpression targetTypeDeclaration = new CodeCastExpression(typeof(BattleEventTargetType), new CodePrimitiveExpression((int)targetType));
+                CodeExpression flagsDeclaration = new CodeCastExpression(typeof(FXEvent.Flags), new CodePrimitiveExpression((int)flags));
                 CodePrimitiveExpression priorityDeclaration = new CodePrimitiveExpression(priority);
                 return new CodeObjectCreateExpression(typeof(FXEvent), new CodeExpression[] { fxEventTypeDeclaration, targetTypeDeclaration, flagsDeclaration, priorityDeclaration });
             }
@@ -265,11 +265,11 @@ namespace BattleActionTool
             doc = _node.OwnerDocument;
             name = _node.Name;
             XmlNodeList nodeList = _node.SelectNodes("animEvent");
-            for (int i = 0; i < nodeList.Count; i++) animEventModels[i] = new AnimEventModel(this, nodeList[i]);
+            for (int i = 0; i < nodeList.Count; i++) animEventModels.Add(new AnimEventModel(this, nodeList[i]));
             nodeList = _node.SelectNodes("audioEvent");
-            for (int i = 0; i < nodeList.Count; i++) audioEventModels[i] = new AudioEventModel(this, nodeList[i]);
+            for (int i = 0; i < nodeList.Count; i++) audioEventModels.Add(new AudioEventModel(this, nodeList[i]));
             nodeList = _node.SelectNodes("fxEvent");
-            for (int i = 0; i < nodeList.Count; i++) fxEventModels[i] = new FXEventModel(this, nodeList[i]);
+            for (int i = 0; i < nodeList.Count; i++) fxEventModels.Add(new FXEventModel(this, nodeList[i]));
             BattleActionTool.ActOnNode(_node, "battleCameraScript", (node) => battleCameraScriptType = DBTools.ParseBattleCameraScriptType(node.InnerText));
         }
 
@@ -279,13 +279,13 @@ namespace BattleActionTool
         public CodeObjectCreateExpression DumpToCSDeclaration()
         {
             List<CodeObjectCreateExpression> objectCreateExpressions = new List<CodeObjectCreateExpression>(animEventModels.Count);
-            for (int i = 0; i < animEventModels.Count; i++) objectCreateExpressions[i] = animEventModels[i].DumpToCSDeclaration();
+            for (int i = 0; i < animEventModels.Count; i++) objectCreateExpressions.Add(animEventModels[i].DumpToCSDeclaration());
             CodeArrayCreateExpression animEventsArrayDeclaration = new CodeArrayCreateExpression(typeof(AnimEvent), objectCreateExpressions.ToArray());
             objectCreateExpressions.Clear();
-            for (int i = 0; i < audioEventModels.Count; i++) objectCreateExpressions[i] = audioEventModels[i].DumpToCSDeclaration();
+            for (int i = 0; i < audioEventModels.Count; i++) objectCreateExpressions.Add(audioEventModels[i].DumpToCSDeclaration());
             CodeArrayCreateExpression audioEventsArrayDeclaration = new CodeArrayCreateExpression(typeof(AudioEvent), objectCreateExpressions.ToArray());
             objectCreateExpressions.Clear();
-            for (int i = 0; i < fxEventModels.Count; i++) objectCreateExpressions[i] = fxEventModels[i].DumpToCSDeclaration();
+            for (int i = 0; i < fxEventModels.Count; i++) objectCreateExpressions.Add(fxEventModels[i].DumpToCSDeclaration());
             CodeArrayCreateExpression fxEventsArrayDeclaration = new CodeArrayCreateExpression(typeof(FXEvent), objectCreateExpressions.ToArray());
             CodeFieldReferenceExpression battleActionScriptTypeDeclaration = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(BattleCameraScriptType)), battleCameraScriptType.ToString());
             return new CodeObjectCreateExpression(typeof(EventBlock), new CodeExpression[] { animEventsArrayDeclaration, audioEventsArrayDeclaration, fxEventsArrayDeclaration, battleActionScriptTypeDeclaration });

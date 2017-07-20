@@ -23,7 +23,7 @@ public class BattleActionEditor : EditorWindow
     List<SubactionModel> subactionModelsToRemove;
     List<string> subactionNamesToRemove = new List<string>();
     Vector2 scrollPos = Vector2.zero;
-    bool displaySubactionOrder = true;
+    bool displaySubactionOrder = false;
 
     /// <summary>
     /// EditorWindow.Init ()
@@ -42,13 +42,13 @@ public class BattleActionEditor : EditorWindow
     {
         if (battleActionModel == null) ChangeSelectedAction(selectedAction);
         style.richText = true;
-        scrollPos = EditorGUILayout.BeginScrollView(scrollPos, new GUILayoutOption[] { GUILayout.ExpandHeight(true), GUILayout.ExpandWidth(true) });
         EditorGUILayout.LabelField("<b>Edit Action: " + selectedAction + "</b>", style);
         EditorGUILayout.BeginHorizontal();
         ActionType a = (ActionType)EditorGUILayout.EnumPopup(selectedAction);
         if (a != selectedAction) ChangeSelectedAction(a);
         if (battleActionModel != null && GUILayout.Button("Build and save")) battleActionModel.SaveToFile();
         EditorGUILayout.EndHorizontal();
+        scrollPos = EditorGUILayout.BeginScrollView(scrollPos, new GUILayoutOption[] { GUILayout.ExpandHeight(true), GUILayout.ExpandWidth(true) });
         if (battleActionModel != null)
         {
             battleActionModel.info = EditorGUILayout.TextArea(battleActionModel.info, new GUILayoutOption[] { GUILayout.MaxHeight(32) });
@@ -114,9 +114,9 @@ public class BattleActionEditor : EditorWindow
     void EffectPackagePanel (string label, EffectPackageModel effectPackageModel, Action removeCallback)
     {
         EditorGUILayout.BeginHorizontal();
-        GUILayout.Space(16);
+        GUILayout.Space(10);
         EditorGUILayout.BeginVertical();
-        if (!effectPackageModelOpenStatuses.ContainsKey(effectPackageModel)) effectPackageModelOpenStatuses.Add(effectPackageModel, true);
+        if (!effectPackageModelOpenStatuses.ContainsKey(effectPackageModel)) effectPackageModelOpenStatuses.Add(effectPackageModel, false);
         if (!effectPackageModelStrengthLengthRepresentations.ContainsKey(effectPackageModel))
         {
             effectPackageModelStrengthLengthRepresentations.Add(effectPackageModel, new bool[2]);
@@ -127,7 +127,7 @@ public class BattleActionEditor : EditorWindow
         if (effectPackageModelOpenStatuses[effectPackageModel])
         {
             effectPackageModel.info = EditorGUILayout.TextArea(effectPackageModel.info, new GUILayoutOption[] { GUILayout.MaxHeight(32) });
-            effectPackageModel.subactionEffectType = (SubactionEffectType)EditorGUILayout.EnumPopup("Effect Type", effectPackageModel.subactionEffectType);
+            effectPackageModel.subactionEffectType = (EffectPackageType)EditorGUILayout.EnumPopup("Effect Type", effectPackageModel.subactionEffectType);
             effectPackageModel.hitStat = (LogicalStatType)EditorGUILayout.EnumPopup("Logical Hit Stat", effectPackageModel.hitStat);
             effectPackageModel.evadeStat = (LogicalStatType)EditorGUILayout.EnumPopup("Logical Evade Stat", effectPackageModel.evadeStat);
             Field("Success Determinant Index", ref effectPackageModel.tieSuccessToEffectIndex);
@@ -192,7 +192,7 @@ public class BattleActionEditor : EditorWindow
         {
             GUILayout.Space(10);
             EditorGUILayout.BeginVertical();
-            if (!eventBlockModelOpenStatuses.ContainsKey(eventBlockModel)) eventBlockModelOpenStatuses.Add(eventBlockModel, true);      
+            if (!eventBlockModelOpenStatuses.ContainsKey(eventBlockModel)) eventBlockModelOpenStatuses.Add(eventBlockModel, false);      
             eventBlockModelOpenStatuses[eventBlockModel] = EditorGUILayout.BeginToggleGroup(label, eventBlockModelOpenStatuses[eventBlockModel]);
             if (eventBlockModelOpenStatuses[eventBlockModel])
             {
@@ -223,7 +223,7 @@ public class BattleActionEditor : EditorWindow
                 audioEventModelsToRemove.Clear();
                 for (int i = 0; i < eventBlockModel.audioEventModels.Count; i++)
                 {
-                    EditorGUILayout.LabelField("<b>AudioEvent " + i + "</b>");
+                    EditorGUILayout.LabelField("AudioEvent " + i, style);
                     eventBlockModel.audioEventModels[i].info = EditorGUILayout.TextArea(eventBlockModel.audioEventModels[i].info, new GUILayoutOption[] { GUILayout.MaxHeight(32) });
                     eventBlockModel.audioEventModels[i].audioEventType = (AudioEventType)EditorGUILayout.EnumPopup("AudioEvent Type", eventBlockModel.audioEventModels[i].audioEventType);
                     eventBlockModel.audioEventModels[i].fallbackType = (AudioEventType)EditorGUILayout.EnumPopup("Fallback Type", eventBlockModel.audioEventModels[i].fallbackType);
@@ -241,7 +241,7 @@ public class BattleActionEditor : EditorWindow
                 fxEventModelsToRemove.Clear();
                 for (int i = 0; i < eventBlockModel.fxEventModels.Count; i++)
                 {
-                    EditorGUILayout.LabelField("<b>FXEvent " + i + "</b>");
+                    EditorGUILayout.LabelField("FXEvent " + i, style);
                     eventBlockModel.fxEventModels[i].info = EditorGUILayout.TextArea(eventBlockModel.fxEventModels[i].info, new GUILayoutOption[] { GUILayout.MaxHeight(32) });
                     eventBlockModel.fxEventModels[i].fxEventType = (FXEventType)EditorGUILayout.EnumPopup("FXEvent Type", eventBlockModel.fxEventModels[i].fxEventType);
                     eventBlockModel.fxEventModels[i].targetType = (BattleEventTargetType)EditorGUILayout.EnumMaskField("Target Type", eventBlockModel.fxEventModels[i].targetType);
@@ -344,9 +344,9 @@ public class BattleActionEditor : EditorWindow
     void SubactionPanel (string label, SubactionModel subactionModel, Action removeCallback)
     {
         EditorGUILayout.BeginHorizontal();
-        GUILayout.Space(16);
+        GUILayout.Space(10);
         EditorGUILayout.BeginVertical();
-        if (!subactionModelOpenStatuses.ContainsKey(subactionModel)) subactionModelOpenStatuses.Add(subactionModel, true);
+        if (!subactionModelOpenStatuses.ContainsKey(subactionModel)) subactionModelOpenStatuses.Add(subactionModel, false);
         subactionModelOpenStatuses[subactionModel] = EditorGUILayout.BeginToggleGroup(label + ": " + subactionModel.subactionName, subactionModelOpenStatuses[subactionModel]);
         if (subactionModelOpenStatuses[subactionModel])
         {
@@ -358,6 +358,7 @@ public class BattleActionEditor : EditorWindow
             Field("Base Accuracy", ref subactionModel.baseAccuracy);
             Field("Use Alternate Targeting Info", ref subactionModel.useAlternateTargetSet);
             subactionModel.damageTypes = (DamageTypeFlags)EditorGUILayout.EnumMaskPopup("Damage Types", subactionModel.damageTypes);
+            //Debug.Log(subactionModel.damageTypes);
             subactionModel.categoryFlags = (BattleActionCategoryFlags)EditorGUILayout.EnumMaskPopup("Category Flags", subactionModel.categoryFlags);
             subactionModel.atkStat = (LogicalStatType)EditorGUILayout.EnumPopup("Logical Attack Stat", subactionModel.atkStat);
             subactionModel.defStat = (LogicalStatType)EditorGUILayout.EnumPopup("Logical Defense Stat", subactionModel.defStat);
@@ -385,6 +386,9 @@ public class BattleActionEditor : EditorWindow
     /// </summary>
     void SubactionOrderArea ()
     {
+        EditorGUILayout.BeginHorizontal();
+        GUILayout.Space(10);
+        EditorGUILayout.BeginVertical();
         subactionNamesToRemove.Clear();
         displaySubactionOrder = EditorGUILayout.BeginToggleGroup("Subaction order", displaySubactionOrder);
         if (displaySubactionOrder)
@@ -393,13 +397,15 @@ public class BattleActionEditor : EditorWindow
             {
                 EditorGUILayout.BeginHorizontal();
                 battleActionModel.subactionOrder[i] = EditorGUILayout.TextField("Subaction " + i + ": ", battleActionModel.subactionOrder[i]);
-                if (GUILayout.Button("-")) subactionNamesToRemove.Add(battleActionModel.subactionOrder[i]);
+                if (GUILayout.Button("Remove")) subactionNamesToRemove.Add(battleActionModel.subactionOrder[i]);
                 EditorGUILayout.EndHorizontal();
             }
             for (int i = 0; i < subactionNamesToRemove.Count; i++) battleActionModel.subactionOrder.Remove(subactionNamesToRemove[i]);
             if (GUILayout.Button("Add entry")) battleActionModel.subactionOrder.Add(string.Empty);
         }
         EditorGUILayout.EndToggleGroup();
+        EditorGUILayout.EndVertical();
+        EditorGUILayout.EndHorizontal();
     }
 }
 #endif

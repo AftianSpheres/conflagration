@@ -29,12 +29,12 @@ namespace CnfBattleSys
             /// <summary>
             /// Invalid formation data.
             /// </summary>
-            public static readonly BattleFormation defaultFormation = new BattleFormation(FormationType.InvalidFormation, VenueType.None, BGMTrackType.None, BattleFormationFlags.None, Vector2.zero, new BattleFormation.FormationMember[0]);
+            public static readonly BattleFormation defaultFormation = new BattleFormation(FormationType.InvalidFormation, VenueType.None, BGMTrackType.None, 0, Vector2.zero, new BattleFormation.FormationMember[0]);
 
             /// <summary>
             /// "No formation." Not included in count, because it plugs into the table.
             /// </summary>
-            public static readonly BattleFormation noneFormation = new BattleFormation(FormationType.None, VenueType.None, BGMTrackType.None, BattleFormationFlags.None, Vector2.zero, new BattleFormation.FormationMember[0]);
+            public static readonly BattleFormation noneFormation = new BattleFormation(FormationType.None, VenueType.None, BGMTrackType.None, 0, Vector2.zero, new BattleFormation.FormationMember[0]);
         }
 
         static FormationDatabase ()

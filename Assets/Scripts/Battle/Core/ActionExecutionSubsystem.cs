@@ -228,7 +228,7 @@ namespace CnfBattleSys
             {
                 Func<Result> hitConfirmed = () =>
                 {
-                    subactionHandle.targets[targetIndex].ApplyFXPackage(effectPackage);
+                    subactionHandle.targets[targetIndex].ApplyEffect(effectPackage);
                     return Result.Success;
                 };
                 if (!effectPackage.applyEvenIfSubactionMisses && subactionHandle.resultsByTarget[targetIndex] == SubactionHandle.TargetResult.Miss) return Result.Failure;

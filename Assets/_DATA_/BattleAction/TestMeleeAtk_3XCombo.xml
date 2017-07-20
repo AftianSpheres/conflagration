@@ -1,30 +1,64 @@
 <BattleAction info="Test attack - 3x combo">
   <Subaction info="">
     <subactionName>atk0</subactionName>
-    <baseDamage>0</baseDamage>
-    <baseAccuracy>0</baseAccuracy>
+    <baseDamage>20</baseDamage>
+    <baseAccuracy>1</baseAccuracy>
     <useAlternateTargetSet>False</useAlternateTargetSet>
-    <atkStat>None</atkStat>
-    <defStat>None</defStat>
-    <hitStat>None</hitStat>
-    <evadeStat>None</evadeStat>
-    <damageTypes>None</damageTypes>
-    <categoryFlags>None</categoryFlags>
+    <atkStat>Stat_ATK</atkStat>
+    <defStat>Stat_DEF</defStat>
+    <hitStat>Stat_HIT</hitStat>
+    <evadeStat>Stat_EVA</evadeStat>
+    <damageTypes>Strike</damageTypes>
+    <categoryFlags>Attack</categoryFlags>
     <damageDeterminantName>
     </damageDeterminantName>
     <successDeterminantName>
     </successDeterminantName>
+    <eventBlock>
+      <battleCameraScript>None</battleCameraScript>
+      <animEvent info="hit">
+        <animEventType>Hit</animEventType>
+        <fallbackType>None</fallbackType>
+        <targetType>SecondaryTargets</targetType>
+        <flags>WaitForMe</flags>
+        <priority>0</priority>
+      </animEvent>
+      <animEvent info="use">
+        <animEventType>TestAnim_OnUse</animEventType>
+        <fallbackType>None</fallbackType>
+        <targetType>PrimaryTargets</targetType>
+        <flags>WaitForMe</flags>
+        <priority>0</priority>
+      </animEvent>
+    </eventBlock>
   </Subaction>
   <baseAOERadius>0</baseAOERadius>
-  <baseDelay>0</baseDelay>
-  <baseFollowthroughStanceChangeDelay>0</baseFollowthroughStanceChangeDelay>
+  <baseDelay>3</baseDelay>
+  <baseFollowthroughStanceChangeDelay>3</baseFollowthroughStanceChangeDelay>
   <baseMinimumTargetingDistance>0</baseMinimumTargetingDistance>
-  <baseTargetingRange>0</baseTargetingRange>
-  <baseSPCost>0</baseSPCost>
-  <alternateTargetSideFlags>None</alternateTargetSideFlags>
-  <targetSideFlags>None</targetSideFlags>
+  <baseTargetingRange>1</baseTargetingRange>
+  <baseSPCost>25</baseSPCost>
+  <alternateTargetSideFlags>0</alternateTargetSideFlags>
+  <targetSideFlags>Neutral</targetSideFlags>
   <alternateTargetType>None</alternateTargetType>
-  <targetType>None</targetType>
-  <categoryFlags>None</categoryFlags>
-  <subactionOrder>atk0</subactionOrder>
+  <targetType>SingleTarget</targetType>
+  <categoryFlags>Attack</categoryFlags>
+  <subactionOrder>atk0,atk0,atk0</subactionOrder>
+  <animSkip>
+    <battleCameraScript>None</battleCameraScript>
+    <animEvent info="hit">
+      <animEventType>Hit</animEventType>
+      <fallbackType>None</fallbackType>
+      <targetType>SecondaryTargets</targetType>
+      <flags>WaitForMe</flags>
+      <priority>0</priority>
+    </animEvent>
+    <animEvent info="use">
+      <animEventType>TestAnim_OnUse</animEventType>
+      <fallbackType>None</fallbackType>
+      <targetType>PrimaryTargets</targetType>
+      <flags>WaitForMe</flags>
+      <priority>0</priority>
+    </animEvent>
+  </animSkip>
 </BattleAction>

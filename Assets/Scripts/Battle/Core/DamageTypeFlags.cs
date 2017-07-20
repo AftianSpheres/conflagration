@@ -6,7 +6,7 @@
     [System.Flags]
     public enum DamageTypeFlags
     {
-        None = 0,
+        //None = 0,
         Magic = 1,
         Strike = 1 << 1,
         Slash = 1 << 2,

@@ -54,7 +54,7 @@ public class TestMenu_FormationList : MonoBehaviour
                     flagsList += ((BattleFormationFlags)f).ToString();
                 }
             }
-            if (flagsList.Length == 0) flagsList = BattleFormationFlags.None.ToString();
+            if (flagsList.Length == 0) flagsList = "None";
             string line1 = localBank.GetPage("bgmLabel").text.Replace(bgmPlaceholder, formation.bgmTrack.ToString()) + ", " +
                            localBank.GetPage("venueLabel").text.Replace(venuePlaceholder, formation.venue.ToString()) + ", " +
                            localBank.GetPage("flagsLabel").text.Replace(flagsPlaceholder, flagsList);

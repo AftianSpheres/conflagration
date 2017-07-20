@@ -27,22 +27,22 @@ namespace CnfBattleSys
             /// <summary>
             /// The default battle action entry, used to populate invalid entries on the table or when we need a placeholder action entry somewhere else in the battle system.
             /// </summary>
-            public static readonly BattleAction defaultBattleAction = new BattleAction(emptyEventBlock, emptyEventBlock, emptyEventBlock, ActionType.InvalidAction, 0, 0, 0, 0, 0, 0, TargetSideFlags.None, TargetSideFlags.None, 
-                                                                                       ActionTargetType.None, ActionTargetType.None, BattleActionCategoryFlags.None, new BattleAction.Subaction[0]);
+            public static readonly BattleAction defaultBattleAction = new BattleAction(emptyEventBlock, emptyEventBlock, emptyEventBlock, ActionType.InvalidAction, 0, 0, 0, 0, 0, 0, 0, 0, 
+                                                                                       ActionTargetType.None, ActionTargetType.None, 0, new BattleAction.Subaction[0]);
 
             /// <summary>
             /// Another empty placeholder battle action - all we care about with any of these placeholder actions is _identity_. They don't do anything.
             /// This actually gets plugged into the table, so don't count it as part of the special actions count above. None is index 0, not a negative index.
             /// </summary>
-            public static readonly BattleAction noneBattleAction = new BattleAction(emptyEventBlock, emptyEventBlock, emptyEventBlock, ActionType.None, 0, 0, 0, 0, 0, 0, TargetSideFlags.None, TargetSideFlags.None, 
-                                                                                    ActionTargetType.None, ActionTargetType.None, BattleActionCategoryFlags.None, new BattleAction.Subaction[0]);
+            public static readonly BattleAction noneBattleAction = new BattleAction(emptyEventBlock, emptyEventBlock, emptyEventBlock, ActionType.None, 0, 0, 0, 0, 0, 0, 0, 0, 
+                                                                                    ActionTargetType.None, ActionTargetType.None, 0, new BattleAction.Subaction[0]);
 
             /// <summary>
             /// The entry for the "break own stance" entry, which is a placeholder just like the other two. We don't "execute" this action in the normal sense - 
             /// if you go into action execution with this action, you go through some hardcoded special-case behavior instead of executing an action def.
             /// </summary>
-            public static readonly BattleAction selfStanceBreakAction = new BattleAction(emptyEventBlock, emptyEventBlock, emptyEventBlock, ActionType.INTERNAL_BreakOwnStance, 0, 0, 0, 0, 0, 0, TargetSideFlags.None, TargetSideFlags.None, 
-                                                                                         ActionTargetType.None, ActionTargetType.None, BattleActionCategoryFlags.None, new BattleAction.Subaction[0]);
+            public static readonly BattleAction selfStanceBreakAction = new BattleAction(emptyEventBlock, emptyEventBlock, emptyEventBlock, ActionType.INTERNAL_BreakOwnStance, 0, 0, 0, 0, 0, 0, 0, 0, 
+                                                                                         ActionTargetType.None, ActionTargetType.None, 0, new BattleAction.Subaction[0]);
         }
 
         /// <summary>

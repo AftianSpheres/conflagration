@@ -347,8 +347,7 @@ namespace MovementEffects
 
         void FixedUpdate()
         {
-            if (OnPreExecute != null)
-                OnPreExecute();
+            OnPreExecute?.Invoke();
 
             if (_nextFixedUpdateProcessSlot > 0)
             {
