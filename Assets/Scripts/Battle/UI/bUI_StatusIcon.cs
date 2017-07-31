@@ -1,9 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using CnfBattleSys;
-using TMPro;
+
 
 /// <summary>
 /// One of the status icons managed by the StatusBar.
@@ -11,7 +9,7 @@ using TMPro;
 public class bUI_StatusIcon : MonoBehaviour
 {
     private Image bgImage;
-    private TextMeshProUGUI count;
+    private Text count;
     private string statusIconsResourcePath = "Battle/2D/UI/StatusIcon/";
 
     /// <summary>
@@ -20,7 +18,7 @@ public class bUI_StatusIcon : MonoBehaviour
     void Awake()
     {
         bgImage = GetComponent<Image>();
-        count = GetComponentInChildren<TextMeshProUGUI>();
+        count = GetComponentInChildren<Text>();
     }
 
     /// <summary>

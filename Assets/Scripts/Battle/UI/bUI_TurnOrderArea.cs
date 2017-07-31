@@ -2,7 +2,7 @@
 using UnityEngine.UI;
 using System;
 using CnfBattleSys;
-using TMPro;
+
 
 /// <summary>
 /// The turn order display for the battle UI.

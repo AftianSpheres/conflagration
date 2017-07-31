@@ -5,7 +5,7 @@
   <aiFlags>0</aiFlags>
   <level>12</level>
   <size>1</size>
-  <baseMoveDist>1.0</baseMoveDist>
+  <baseMoveDist>8.0</baseMoveDist>
   <baseMoveDelay>1.0</baseMoveDelay>
   <stepTime>0.25</stepTime>
   <yOffset>2.4</yOffset>

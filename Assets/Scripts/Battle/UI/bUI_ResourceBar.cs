@@ -2,7 +2,6 @@
 using UnityEngine.UI;
 using System;
 using System.Collections.Generic;
-using TMPro;
 using MovementEffects;
 
 /// <summary>
@@ -22,7 +21,7 @@ public class bUI_ResourceBar : MonoBehaviour
     public Image barFill;
     public Image barPreview;
     public BattlerPuppet puppet;
-    public TextMeshProUGUI uguiText;
+    private Text uguiText;
     public Color depletedResourceColor;
     public Color fullResourceColor;
     public Color previewColor;
@@ -52,6 +51,7 @@ public class bUI_ResourceBar : MonoBehaviour
     {
         originalScale = barFill.rectTransform.sizeDelta;
         originalPreviewScale = barPreview.rectTransform.sizeDelta;
+        uguiText = GetComponentInChildren<Text>();
         SetPreviewSize(Vector2.zero);
     }
 
@@ -236,13 +236,13 @@ public class bUI_ResourceBar : MonoBehaviour
         if (forPreview)
         {
             int diff = (value - previewValue);
-            if (displayCurrentValueOverMaxValue) uguiText.SetText(value.ToString() + " " + diff + " / " + max);
-            else uguiText.SetText(value.ToString() + " " + diff);
+            if (displayCurrentValueOverMaxValue) uguiText.text = value.ToString() + " " + diff + " / " + max;
+            else uguiText.text = value.ToString() + " " + diff;
         }
         else
         {
-            if (displayCurrentValueOverMaxValue) uguiText.SetText(value.ToString() + " / " + max);
-            else uguiText.SetText(value.ToString());
+            if (displayCurrentValueOverMaxValue) uguiText.text = value.ToString() + " / " + max;
+            else uguiText.text = value.ToString();
         }
 
     }

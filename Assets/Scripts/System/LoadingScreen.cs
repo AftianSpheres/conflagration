@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
-using TMPro;
+
 using MovementEffects;
 using ExtendedSceneManagement;
 
@@ -22,7 +22,7 @@ public class LoadingScreen : MonoBehaviour
     }
     public static LoadingScreen instance { get; private set; }
     public Image loadingShade;
-    public TextMeshProUGUI loadingText;
+    private Text loadingText;
     public Animator[] unconditionalAnimators;
     public State state { get; private set; }
     public float progress { get; private set; }
@@ -36,6 +36,7 @@ public class LoadingScreen : MonoBehaviour
     void Awake()
     {
         instance = this;
+        loadingText = GetComponentInChildren<Text>();
         Close();
     }
 

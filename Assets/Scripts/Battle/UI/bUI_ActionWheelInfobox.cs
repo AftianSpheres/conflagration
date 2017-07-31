@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using CnfBattleSys;
-using TMPro;
 
 /// <summary>
 /// UI element that displays info on an action.
@@ -8,7 +8,7 @@ using TMPro;
 public class bUI_ActionWheelInfobox : MonoBehaviour
 {
     private bUI_ActionWheel wheel;
-    private TextMeshProUGUI infoboxContents;
+    private Text infoboxContents;
     private static TextBank actionDescsBank;
     private static TextBank commandDescsBank;
     private static TextBank stanceDescsBank;
@@ -18,7 +18,7 @@ public class bUI_ActionWheelInfobox : MonoBehaviour
     /// </summary>
     void Awake ()
     {
-        if (infoboxContents == null) infoboxContents = GetComponentInChildren<TextMeshProUGUI>();
+        if (infoboxContents == null) infoboxContents = GetComponentInChildren<Text>();
     }
 
     /// <summary>
@@ -56,7 +56,7 @@ public class bUI_ActionWheelInfobox : MonoBehaviour
     /// </summary>
     public void PairWithWheel (bUI_ActionWheel _wheel)
     {
-        if (infoboxContents == null) infoboxContents = GetComponentInChildren<TextMeshProUGUI>();
+        if (infoboxContents == null) infoboxContents = GetComponentInChildren<Text>();
         wheel = _wheel;
         Clear();
     }

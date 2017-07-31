@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 using System;
 using CnfBattleSys;
 
@@ -13,9 +12,9 @@ public class bUI_BattlerInfobox : MonoBehaviour
     public BattlerPuppet puppet { get; private set; }
     public Image bgImage;
     public Image mugshot;
-    public TextMeshProUGUI guiText_BattlerName;
-    public TextMeshProUGUI guiText_BattlerLevel;
-    public TextMeshProUGUI guiText_StanceName;
+    public Text guiText_BattlerName;
+    public Text guiText_BattlerLevel;
+    public Text guiText_StanceName;
     public bool lockPosition;
     private bUI_ResourceBar hpBar;
     private bUI_ResourceBar staminaBar;
@@ -77,7 +76,7 @@ public class bUI_BattlerInfobox : MonoBehaviour
     public void DisplayBattlerLevel()
     {
         if (battlerInfoboxBank == null) battlerInfoboxBank = TextBankManager.Instance.GetTextBank("Battle/EnemyInfobox");
-        guiText_BattlerLevel.SetText(battlerInfoboxBank.GetPage("level_abbr").text + puppet.battler.level.ToString());
+        guiText_BattlerLevel.text = battlerInfoboxBank.GetPage("level_abbr").text + puppet.battler.level.ToString();
     }
 
     /// <summary>
@@ -86,7 +85,7 @@ public class bUI_BattlerInfobox : MonoBehaviour
     public void DisplayBattlerName ()
     {
         if (battlerNamesBank == null) battlerNamesBank = TextBankManager.Instance.GetCommonTextBank(typeof(BattlerType));
-        guiText_BattlerName.SetText(battlerNamesBank.GetPage(puppet.battler.battlerType).text);
+        guiText_BattlerName.text = battlerNamesBank.GetPage(puppet.battler.battlerType).text;
     }
 
     /// <summary>
@@ -112,7 +111,7 @@ public class bUI_BattlerInfobox : MonoBehaviour
         if (guiText_StanceName != null)
         {
             if (stanceNamesBank == null) stanceNamesBank = TextBankManager.Instance.GetCommonTextBank(typeof(StanceType));
-            guiText_StanceName.SetText(stanceNamesBank.GetPage(puppet.battler.currentStance.stanceID).text);
+            guiText_StanceName.text = stanceNamesBank.GetPage(puppet.battler.currentStance.stanceID).text;
         }
     }
 

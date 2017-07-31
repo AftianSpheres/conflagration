@@ -557,7 +557,7 @@ PlayerSettings:
   webGLUseWasm: 0
   webGLCompressionFormat: 1
   scriptingDefineSymbols:
-    1: TMP_PRESENT
+    1: 
   platformArchitecture:
     iOS: 2
   scriptingBackend:
@@ -662,7 +662,7 @@ PlayerSettings:
     UNet: 1
     Unity_Ads: 0
   facebookSdkVersion: 7.9.1
-  apiCompatibilityLevel: 2
+  apiCompatibilityLevel: 3
   cloudProjectId: 26ff8c85-d293-4c0e-8b47-2ffc602d65cf
   projectName: conflagration
   organizationId: afti

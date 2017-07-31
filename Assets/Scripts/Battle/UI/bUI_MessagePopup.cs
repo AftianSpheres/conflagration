@@ -1,8 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 using CnfBattleSys;
 
 /// <summary>
@@ -12,7 +9,7 @@ public class bUI_MessagePopup : MonoBehaviour
 {
     public bool isOpen { get { return gameObject.activeSelf; } }
     private Image bgImage;
-    private TextMeshProUGUI contents;
+    private Text contents;
     private static TextBank actionNamesBank;
 
     /// <summary>
@@ -21,7 +18,7 @@ public class bUI_MessagePopup : MonoBehaviour
     void Awake ()
     {
         bgImage = GetComponent<Image>();
-        contents = GetComponentInChildren<TextMeshProUGUI>();
+        contents = GetComponentInChildren<Text>();
         Close();
     }
 

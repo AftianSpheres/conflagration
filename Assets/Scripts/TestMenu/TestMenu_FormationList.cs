@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 using CnfBattleSys;
-using TMPro;
+
 
 /// <summary>
 /// TestMenu MonoBehaviour that populates the formation select list
@@ -43,7 +43,7 @@ public class TestMenu_FormationList : MonoBehaviour
             BattleFormation formation = formations[i];
             Button newButton = Instantiate(buttonsPrefab, buttonsParent);
             newButton.GetComponent<RectTransform>().anchoredPosition = baseSize * Vector2.down * i;
-            TextMeshProUGUI label = newButton.GetComponentInChildren<TextMeshProUGUI>();
+            Text label = newButton.GetComponentInChildren<Text>();
             string line0 = i + ": " + formation.formationID.ToString();
             string flagsList = string.Empty;
             for (int f = 1, b = 0; b < 32; b++, f = f << 1)

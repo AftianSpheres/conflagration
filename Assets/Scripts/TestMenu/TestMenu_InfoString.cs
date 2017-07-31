@@ -1,12 +1,12 @@
 ﻿using UnityEngine;
-using TMPro;
+using UnityEngine.UI;
 
 /// <summary>
 /// Displays infostring in the test menu.
 /// </summary>
 public class TestMenu_InfoString : MonoBehaviour
 {
-    private TextMeshProUGUI guiText_InfoString;
+    private Text guiText_InfoString;
     private TextBank testMenuBank;
 
     /// <summary>
@@ -14,7 +14,7 @@ public class TestMenu_InfoString : MonoBehaviour
     /// </summary>
     void Awake ()
     {
-        guiText_InfoString = GetComponentInChildren<TextMeshProUGUI>();
+        guiText_InfoString = GetComponentInChildren<Text>();
         TextBankManager.DoOnceOnline(UpdateInfoString);
     }
 

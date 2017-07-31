@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using CnfBattleSys;
 using CnfBattleSys.AI;
-using TMPro;
 
 /// <summary>
 /// Controller for one of the buttons attached to the action wheel.
@@ -26,7 +23,7 @@ public class bUI_ActionWheelButton : MonoBehaviour, IPointerClickHandler
     public Animator animator;
     public Image buttonBG;
     public Image commandIcon;
-    public TextMeshProUGUI guiText_Label;
+    public Text guiText_Label;
     public bool disabled { get; private set; }
     public bool locked { get; private set; }
     public bool selected { get; private set; }

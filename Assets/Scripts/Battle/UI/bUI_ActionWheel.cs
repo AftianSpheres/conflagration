@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 using CnfBattleSys;
 using MovementEffects;
-using TMPro;
 
 public class bUI_ActionWheel : MonoBehaviour
 {
@@ -137,7 +135,7 @@ public class bUI_ActionWheel : MonoBehaviour
     public GameObject buttonsPrefab;
     public GameObject contents;
     public Image centerIcon;
-    public TextMeshProUGUI centerText;
+    public Text centerText;
     public Transform buttonsParent;
     public DecisionType decisionType { get { return currentDecision.decisionType; } }
     public bool allowInput { get { return _allowInput && state == State.Ready; } }
