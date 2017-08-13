@@ -168,32 +168,29 @@ public class BattleVenueFloorOverlay : MonoBehaviour
         for (int i = 0; i < obstructionZones.Length; i++) obstructionZones[i] = GetObstructedBy(moveRadiusCells, mover, enemies[i], obstructorFootprints, minX, maxX, minY, maxY);
         Texture2D tex = new Texture2D(resolution, resolution);
         Color32[] colors = new Color32[resolution * resolution];
-        int y = resolution - 1;
-        int x = 0;
-        for (int c = 0; c < colors.Length; c++)
+        int c = 0;
+        for (int y = resolution - 1; y > -1; y--)
         {
-            if (x >= minX && x <= maxX && y >= minY && y <= maxY)
+            for (int x = 0; x < resolution; x++)
             {
-                Cell cell = new Cell(x, y);
-                bool obstructed = false;
-                for (int o = 0; o < obstructionZones.Length; o++)
+                if (x >= minX && x <= maxX && y >= minY && y <= maxY)
                 {
-                    if (obstructionZones[o].Contains(cell))
+                    Cell cell = new Cell(x, y);
+                    bool obstructed = false;
+                    for (int o = 0; o < obstructionZones.Length; o++)
                     {
-                        obstructed = true;
-                        break;
+                        if (obstructionZones[o].Contains(cell))
+                        {
+                            //obstructed = true;
+                            break;
+                        }
                     }
+                    if (moveRadiusCells.Contains(cell) && !obstructed) colors[c] = allowedColor;
+                    else colors[c] = forbiddenColor;
                 }
-                if (moveRadiusCells.Contains(cell) && !obstructed) colors[c] = allowedColor;
                 else colors[c] = forbiddenColor;
+                c++;
             }
-            else colors[c] = forbiddenColor;
-            if (x >= resolution)
-            {
-                x = 0;
-                y--;
-            }
-            else x++;
         }
         tex.SetPixels32(colors);
         tex.Apply(false, true);
@@ -206,14 +203,12 @@ public class BattleVenueFloorOverlay : MonoBehaviour
     /// </summary>
     private LinkedList<Cell> GetCellsInCircle (Cell center, float realSpaceRadius, out int[] boundsArray)
     {
-        // This is broken!
         int unitsRadius = Mathf.RoundToInt(realSpaceRadius * realSizeOfCell);
         int r2 = unitsRadius * unitsRadius;
-        int xMin = center.x - (unitsRadius / 2);
-        int xMax = center.x + (unitsRadius / 2);
-        int yMin = center.y - (unitsRadius / 2);
-        int yMax = center.y + (unitsRadius / 2);
-        Debug.Log("min " + yMin + " max " + yMax + " ur " + unitsRadius);
+        int xMin = center.x - unitsRadius;
+        int xMax = center.x + unitsRadius;
+        int yMin = center.y - unitsRadius;
+        int yMax = center.y + unitsRadius;
         if (xMin < 0) xMin = 0;
         if (xMax >= resolution) xMax = resolution;
         if (yMin < 0) yMin = 0;
@@ -222,15 +217,11 @@ public class BattleVenueFloorOverlay : MonoBehaviour
         LinkedList<Cell> cells = new LinkedList<Cell>();
         for (int y = yMin; y <= yMax; y++)
         {
-            int dy = center.y - y;
+            int dy = y - center.y;
             for (int x = xMin; x <= xMax; x++)
             {
-                int dx = center.x - x;
-                if ((dx * dx) + (dy * dy) <= r2)
-                {
-                    cells.AddLast(new Cell(x, y));
-                    Debug.Log(x + ", " + y);
-                }
+                int dx = x - center.x;
+                if ((dx * dx) + (dy * dy) <= r2) cells.AddLast(new Cell(x, y));
             }
         }
         boundsArray = new int[] { xMin, xMax, yMin, yMax };
@@ -264,10 +255,15 @@ public class BattleVenueFloorOverlay : MonoBehaviour
         int[] bounds;
         LinkedList<Cell> moverFootprint = GetCellsInCircle(moverCell, mover.footprintRadius, out bounds);
         LinkedList<Cell> obstructorFootprint = GetCellsInCircle(obstructingCell, obstruction.footprintRadius, out bounds);
-        if (obstruction.logicalPosition.x < mover.logicalPosition.x && bounds[1] < xMax) xMax = bounds[1];
-        else if (obstruction.logicalPosition.x > mover.logicalPosition.x && bounds[0] > xMin) xMin = bounds[0];
-        if (obstruction.logicalPosition.y < mover.logicalPosition.y && bounds[3] < yMax) yMax = bounds[3];
-        else if (obstruction.logicalPosition.y > mover.logicalPosition.y && bounds[2] > yMin) yMin = bounds[2];
+        // Constrain xMax: Use the smaller of the two maximum values if the obstruction is left of the mover.
+        //if (bounds[1] > xMax)
+        // Constrain xMin
+        // Constrain yMax
+        // Constrain yMin
+        //if (obstruction.logicalPosition.x < mover.logicalPosition.x && bounds[1] < xMax) xMax = bounds[1];
+        //else if (obstruction.logicalPosition.x > mover.logicalPosition.x && bounds[0] > xMin) xMin = bounds[0];
+        //if (obstruction.logicalPosition.y < mover.logicalPosition.y && bounds[3] < yMax) yMax = bounds[3];
+        //else if (obstruction.logicalPosition.y > mover.logicalPosition.y && bounds[2] > yMin) yMin = bounds[2];
         for (int y = yMin; y <= yMax; y++)
         {
             for (int x = xMin; x <= xMax; x++)
@@ -284,18 +280,20 @@ public class BattleVenueFloorOverlay : MonoBehaviour
     /// Tries to get a path from moverPos to dest within realDist using a* search.
     /// This is slower than is ideal. Be sure to constrain the number of cells you try
     /// to pathfind for as much as possible.
+    /// This will crash if moverPos isn't within the space defined by xMin/xMax and yMin/yMax.
     /// </summary>
     private bool SlowPathfinding (int xMin, int xMax, int yMin, int yMax, float distLimit, Cell moverPos, Cell dest, LinkedList<Cell> moveArea, LinkedList<Cell>[] obstructorFootprints)
     {
+        if (moverPos.x < xMin || moverPos.x > xMax && moverPos.y < yMin || moverPos.y > yMax) throw new Exception();
         Vector2 destVector = new Vector2(dest.x, dest.y);
-        PFNode start = null;
         PFNode[,] pathfindingArea = new PFNode[xMax - xMin, yMax - yMin];
+        PFNode start = pathfindingArea[moverPos.x - xMin, moverPos.y - yMin] = new PFNode(moverPos, pathfindingArea, moverPos.x - xMin, moverPos.y - yMin);
         for (int y = 0; y < pathfindingArea.GetLength(1); y++)
         {
             for (int x = 0; x < pathfindingArea.GetLength(0); x++)
             {
-                Cell cell = new Cell(x, y);         
-                if (moveArea.Contains(cell))
+                Cell cell = new Cell(x, y);
+                if (moveArea.Contains(cell) && cell != moverPos)
                 {
                     bool inObstructorFootprint = false;
                     for (int i = 0; i < obstructorFootprints.Length; i++)
@@ -306,19 +304,18 @@ public class BattleVenueFloorOverlay : MonoBehaviour
                             break;
                         }
                     }
-                    if (!inObstructorFootprint | cell == moverPos) pathfindingArea[x, y] = new PFNode(cell, pathfindingArea, x, y);
-                    if (cell == moverPos) start = pathfindingArea[x, y];
+                    if (!inObstructorFootprint) pathfindingArea[x, y] = new PFNode(cell, pathfindingArea, x, y);
                 }
             }
         }
         LinkedList<PFNode> closed = new LinkedList<PFNode>();
-        start.StartNode();
+        start.StartNode(); // nullref
         LinkedList<PFNode> open = new LinkedList<PFNode>();
         open.AddFirst(start);
+        PFNode currentNode = start;
         while (open.Count > 0)
         {
             // Get the node with the lowest fScore
-            PFNode currentNode = null;
             int lowestFScore = int.MaxValue;
             LinkedListNode<PFNode> chk = open.First;
             if (currentNode.cell == dest) return ValidatePathLength(currentNode, distLimit);
