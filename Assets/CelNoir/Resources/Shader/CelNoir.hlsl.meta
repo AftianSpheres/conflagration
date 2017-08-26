@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: ec39cddbd5d4412468f3c058ffec6395
+labels:
+- cel
+- celshader
+- deferred
+- forward
+- pbr
+- pbs
+- shader
+- toon
+timeCreated: 1502677903
+licenseType: Free
+ShaderImporter:
+  defaultTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

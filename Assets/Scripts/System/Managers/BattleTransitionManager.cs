@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using UnityEngine;
 using Universe;
 using CnfBattleSys;
-using MovementEffects;
 using ExtendedSceneManagement;
 
 /// <summary>
@@ -12,6 +10,57 @@ using ExtendedSceneManagement;
 /// </summary>
 public class BattleTransitionManager : Manager<BattleTransitionManager>
 {
+    /// <summary>
+    /// Models a transition to/from the battle scene.
+    /// </summary>
+    private class BattleTransition
+    {
+        private readonly Action callback;
+
+        public BattleTransition (Action _callback)
+        {
+            callback = _callback;
+        }
+
+        /// <summary>
+        /// Resource load requests that need to finish before we can
+        /// leave the loading screen are done.
+        /// </summary>
+        private bool resourcesReady;
+        /// <summary>
+        /// Scene load requests that need to finish before we can
+        /// leave the loading screen are done.
+        /// </summary>
+        private bool scenesReady;
+
+        /// <summary>
+        /// We're no longer waiting on any resource or scene loads.
+        /// Fire the callback.
+        /// </summary>
+        private void CompleteTransition ()
+        {
+            callback?.Invoke();
+        }
+
+        /// <summary>
+        /// Indicate that we no longer need to wait on resource loading.
+        /// </summary>
+        public void ResourceLoadsFinished ()
+        {
+            resourcesReady = true;
+            if (scenesReady) CompleteTransition();
+        }
+
+        /// <summary>
+        /// Indicate that we no longer need to wait on scene loading.
+        /// </summary>
+        public void SceneLoadsFinished ()
+        {
+            scenesReady = true;
+            if (resourcesReady) CompleteTransition();
+        }
+    }
+
     public enum State
     {
         None,
@@ -25,8 +74,8 @@ public class BattleTransitionManager : Manager<BattleTransitionManager>
     private ExtendedScene battleScene;
     private ExtendedScene prebattleScene;
     private ExtendedScene testMenuScene;
-    private ExtendedScene venueScene;  
-    private Timing myTiming;
+    private ExtendedScene venueScene;
+    private BattleTransition current;
 
     /// <summary>
     /// MonoBehaviour.Awake ()
@@ -34,7 +83,6 @@ public class BattleTransitionManager : Manager<BattleTransitionManager>
     void Awake ()
     {
         state = State.OutOfBattle;
-        myTiming = gameObject.AddComponent<Timing>();   
     }
 
     /// <summary>
@@ -43,11 +91,12 @@ public class BattleTransitionManager : Manager<BattleTransitionManager>
     /// </summary>
     public void EnterBattleScene (BattleFormation formation)
     {
-        Action onCompletion = () =>
+        Action transitionCallback = () =>
         {
-            battleScene.SetAsActiveScene();
-            BattleOverseer.StartBattle(formation);
+            venueScene.SetAsActiveScene();
             state = State.InBattle;
+            BattleOverseer.StartBattle();
+            current = null;
         };
         if (battleScene == null) GetSceneRefs();
         if (state != State.OutOfBattle) Util.Crash(new Exception("Can't enter battle scene: scenechangemanager state is " + state.ToString()));
@@ -57,9 +106,16 @@ public class BattleTransitionManager : Manager<BattleTransitionManager>
         battleScene.StageForLoading();
         venueScene.StageForLoading();
         state = State.TransitioningToBattle;
-        ToLoadingScreen(onCompletion);
+        BattleOverseer.PrepareBattle(formation);
+        BattleStage.LoadResources(null);
+        current = new BattleTransition(transitionCallback);
+        if (ExtendedSceneManager.Instance.loading) ExtendedSceneManager.Instance.onBatchedSceneLoadsComplete += current.SceneLoadsFinished;
+        else current.SceneLoadsFinished();
+        if (ResourceLoadManager.Instance.loading) ResourceLoadManager.Instance.onBatchedResourceLoadsComplete += current.ResourceLoadsFinished;
+        else current.ResourceLoadsFinished();
+        LoadingScreen.DisplayWithShade();
     }
-    
+
     /// <summary>
     /// Unsuspends out-of-battle scene and exits battle scene.
     /// </summary>
@@ -73,14 +129,15 @@ public class BattleTransitionManager : Manager<BattleTransitionManager>
     /// </summary>
     public void EnterBattleTestMenu ()
     {
-        Action onCompletion = () =>
+        Action transitionCallback = () =>
         {
             testMenuScene.SetAsActiveScene();
         };
         if (testMenuScene == null) GetSceneRefs();
         state = State.OutOfBattle;
         testMenuScene.StageForLoading();
-        ToLoadingScreen(onCompletion);
+        ExtendedSceneManager.Instance.onBatchedSceneLoadsComplete += transitionCallback;
+        LoadingScreen.DisplayWithShade();
     }
 
     /// <summary>
@@ -104,28 +161,5 @@ public class BattleTransitionManager : Manager<BattleTransitionManager>
     {
         battleScene = ExtendedSceneManager.Instance.GetExtendedScene(SceneDatatable.BattleSystemScene.buildIndex);
         testMenuScene = ExtendedSceneManager.Instance.GetExtendedScene(SceneDatatable.TestMenuScene.buildIndex);
-    }
-
-    /// <summary>
-    /// Pulls up loading screen and runs the given action once the ExtendedSceneManager has finished loading.
-    /// </summary>
-    private void ToLoadingScreen(Action onCompletion)
-    {
-        Action loadingScreenReady = () =>
-        {
-            LoadingScreen.instance.DisplayWithShade();
-            myTiming.RunCoroutineOnInstance(ExtendedSceneManager.Instance._WaitUntilLoadComplete(onCompletion));
-        };
-        if (LoadingScreen.instance != null) loadingScreenReady();
-        else myTiming.RunCoroutineOnInstance(_WaitForLoadingScreenToComeUp(loadingScreenReady));
-    }
-
-    /// <summary>
-    /// Coroutine: Wait for loading screen to become available, then call onCompletion.
-    /// </summary>
-    private IEnumerator<float> _WaitForLoadingScreenToComeUp (Action onCompletion)
-    {
-        while (LoadingScreen.instance == null) yield return 0;
-        onCompletion();
     }
 }

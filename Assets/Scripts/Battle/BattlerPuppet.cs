@@ -12,16 +12,6 @@ using CnfBattleSys;
 public class BattlerPuppet : MonoBehaviour
 {
     /// <summary>
-    /// States the puppet can be in,
-    /// indicating which phase of the load process this is.
-    /// </summary>
-    public enum LoadingState
-    {
-        NoLoadStarted,
-        Loading,
-        LoadCompleted
-    }
-    /// <summary>
     /// Event that fires off when the attached animator
     /// changes animator states.
     /// </summary>
@@ -38,10 +28,9 @@ public class BattlerPuppet : MonoBehaviour
     public bUI_InfoboxShell infoboxShell { get; private set; }
     public ManagedAudioSource managedAudioSource { get; private set; }
     public Transform fxControllersParent { get; private set; }
-    public CapsuleCollider capsuleCollider;
-    public Animator animator;
-    public SkinnedMeshRenderer skinnedMeshRenderer;
-    public LoadingState loadingState { get; private set; }
+    public CapsuleCollider capsuleCollider { get; private set; }
+    public Animator animator { get; private set; }
+    public SkinnedMeshRenderer skinnedMeshRenderer { get; private set; }
     private AnimatorMetadataContainer animatorMetadataContainer;
     private Vector3 logicalPositionOffset;
     private Vector3 originalScale;
@@ -59,27 +48,15 @@ public class BattlerPuppet : MonoBehaviour
     /// </summary>
     void Awake ()
     {
-        thisTag = GetInstanceID().ToString();
+        animatorMetadataContainer = GetComponent<AnimatorMetadataContainer>();
+        capsuleCollider = GetComponent<CapsuleCollider>();
+        animator = GetComponent<Animator>();
+        skinnedMeshRenderer = GetComponent<SkinnedMeshRenderer>();
         managedAudioSource = GetComponent<ManagedAudioSource>();
+        thisTag = GetInstanceID().ToString();
         fxControllersParent = Util.CreateEmptyChild(transform).transform;
         fxControllersParent.gameObject.name = "FX Controllers";
         originalScale = transform.localScale;
-    }
-
-    /// <summary>
-    /// MonoBehaviour.Start ()
-    /// </summary>
-    void Start ()
-    {
-        animatorMetadataContainer = GetComponent<AnimatorMetadataContainer>();
-        if (animatorMetadataContainer == null) animatorMetadataContainer = gameObject.AddComponent<AnimatorMetadataContainer>();
-        Action whenSMEAvailable = () =>
-        {
-            animatorMetadataContainer.stateMachineExtender.onStateChanged += onAnimatorStateChanged;
-            Timing.RunCoroutine(_Load(), thisTag);
-        };
-        if (animatorMetadataContainer.stateMachineExtender != null) whenSMEAvailable();
-        else animatorMetadataContainer.onceFilled += whenSMEAvailable;        
     }
 
     /// <summary>
@@ -102,7 +79,7 @@ public class BattlerPuppet : MonoBehaviour
     /// <summary>
     /// Attaches this puppet to the specified Battler.
     /// </summary>
-    public void AttachBattler (Battler _battler)
+    public void AttachBattler(Battler _battler, Action callback)
     {
         battler = _battler;
         battlerData = BattlerDatabase.Get(battler.battlerType);
@@ -110,6 +87,15 @@ public class BattlerPuppet : MonoBehaviour
         BattleStage.instance.TiePuppetToBattler(_battler, this);
         SyncPosition();
         gameObject.name = "BattlerPuppet " + _battler.battlerType.ToString() + ": " + _battler.index;
+        Action whenSMEAvailable = () =>
+        {
+            animatorMetadataContainer.stateMachineExtender.onStateChanged += onAnimatorStateChanged;
+            Load();
+        };
+        if (animator.runtimeAnimatorController == null) Util.Crash("Prefab for battler type of " + battler.battlerType + " doesn't have an animator controller!");
+        if (animatorMetadataContainer.stateMachineExtender != null) whenSMEAvailable();
+        else animatorMetadataContainer.onceFilled += whenSMEAvailable;
+        callback?.Invoke();
     }
 
     /// <summary>
@@ -253,27 +239,27 @@ public class BattlerPuppet : MonoBehaviour
     }
 
     /// <summary>
-    /// Coroutine: Loads all resources this battler will require.
+    /// Loads all resources this battler will require.
     /// </summary>
-    public IEnumerator<float> _Load()
+    public void Load ()
     {
-        loadingState = LoadingState.Loading;
-        bool operationCompleted = false;
-        Action whenLoaderAvailable = () => 
+        Action whenLoaderAvailable = () =>
         {
             BattleEventResolverTablesLoader.instance.RequestAudioEventResolverTableLoad(battlerData.audioEventResolverTableType, () =>
             {
-                operationCompleted = true;
                 managedAudioSource.AcquireAudioEventResolverTable(battlerData.audioEventResolverTableType);
             });
         };
         Action<EventBlock> loadForEventBlock = (eventBlock) =>
         {
-            for (int l = 0; l < eventBlock.layers.Length; l++)
+            if (eventBlock != null)
             {
-                for (int f = 0; f < eventBlock.layers[l].fxEvents.Length; f++)
+                for (int l = 0; l < eventBlock.layers.Length; l++)
                 {
-                    BattleEventResolverTablesLoader.instance.RequestFXLoad(eventBlock.layers[l].fxEvents[f], null);
+                    for (int f = 0; f < eventBlock.layers[l].fxEvents.Length; f++)
+                    {
+                        BattleEventResolverTablesLoader.instance.RequestFXLoad(eventBlock.layers[l].fxEvents[f], null);
+                    }
                 }
             }
         };
@@ -288,8 +274,8 @@ public class BattlerPuppet : MonoBehaviour
                 loadForEventBlock(action.subactions[s].eventBlock);
             }
         };
-        Timing.RunCoroutine(BattleEventResolverTablesLoader._OnceAvailable(whenLoaderAvailable));
-        while (!operationCompleted) yield return 0;
+        if (BattleEventResolverTablesLoader.instance != null) whenLoaderAvailable();
+        else BattleEventResolverTablesLoader.onAvailable += whenLoaderAvailable;
         for (int s = 0; s < battler.stances.Length; s++)
         {
             for (int a = 0; a < battler.stances[s].actionSet.Length; a++)
@@ -301,6 +287,5 @@ public class BattlerPuppet : MonoBehaviour
         {
             loadForBattleAction(battler.metaStance.actionSet[a]);
         }
-        loadingState = LoadingState.LoadCompleted;
     }
 }

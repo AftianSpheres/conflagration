@@ -82,7 +82,7 @@ namespace CnfBattleSys
         /// <summary>
         /// Initializes the BattleOverseer and loads in the various datasets the battle system uses.
         /// </summary>
-        public BattleData(BattleFormation formation, out Action callback)
+        public BattleData(BattleFormation formation)
         {
             activeFormation = formation;
             state = State.Offline;
@@ -112,7 +112,7 @@ namespace CnfBattleSys
             RandomizeBattlerTiebreakerStack();
             for (int b = 0; b < allBattlers.Length; b++) allBattlers[b].ApplyDelay(1.0f); // Applying the starting delay of 1.0 gives each battler something to apply its speed factor to, and lets us build starting turn order
             actionExecutionSubsystem = new ActionExecutionSubsystem(this);
-            turnManagementSubsystem = new TurnManagementSubsystem(this, out callback);
+            turnManagementSubsystem = new TurnManagementSubsystem(this);
         }
 
         /// <summary>

@@ -25,6 +25,20 @@ public static class Util
         if (_buildNumber == 0) Crash(new Exception("Build number of 0 should never happen - check the incrementer"));
     }
 
+#if UNITY_EDITOR
+
+    /// <summary>
+    /// HACK: CodeDOM can't declare static classes so this runs over the output and makes the declaration for className
+    /// into a static class declaration.
+    /// It's really slow and inefficient and inelegant and all-around terrible.
+    /// </summary>
+    public static string MakeClassDeclarationStatic (string input, string className)
+    {
+        return input.Replace("class " + className, "static class " + className);
+    }
+
+#endif
+
     /// <summary>
     /// Determines if a character is a vowel.
     /// Currently kinda dumb.

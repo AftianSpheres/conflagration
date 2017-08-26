@@ -30,7 +30,7 @@ public class bUI_CameraHarness : MonoBehaviour
     /// </summary>
     void Start ()
     {
-        bUI_BattleUIController.instance.RegisterCameraHarness(this);
+        if (bUI_BattleUIController.instance != null) bUI_BattleUIController.instance.RegisterCameraHarness(this);
     }
 
     /// <summary>

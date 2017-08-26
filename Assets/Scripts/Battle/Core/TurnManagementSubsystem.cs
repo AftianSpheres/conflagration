@@ -33,12 +33,11 @@ namespace CnfBattleSys
         /// <summary>
         /// First-run setup for turn management subsystem.
         /// </summary>
-        public TurnManagementSubsystem (BattleData _battle, out Action callback)
+        public TurnManagementSubsystem (BattleData _battle)
         {
             battle = _battle;
             battlersReadyToTakeTurns = new LinkedList<Battler>();
             elapsedTurns = 0;
-            callback = battle.BetweenTurns;
         }
 
         /// <summary>
@@ -72,7 +71,6 @@ namespace CnfBattleSys
         /// </summary>
         public void RequestTurn(Battler b)
         {
-            Debug.Log(b.battlerType);
             battlersReadyToTakeTurns.AddLast(b);
         }
 
@@ -80,9 +78,7 @@ namespace CnfBattleSys
         /// Starts taking a turn.
         /// </summary>
         public void StartTurn ()
-        {
-            Debug.Log("Start of turn " + elapsedTurns);
-            
+        {            
             BattleStage.instance.StartOfTurn();
             currentTurnBattler = GetTakerOfNextTurn();
             BattleOverseer.currentBattle.ChangeState(BattleData.State.WaitingForInput);

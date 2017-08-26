@@ -37,6 +37,9 @@ namespace ExtendedAnimationManagement {
                                     new AnimatorMetadata.StateMetadata("Base Layer.active", "active")}}, new CnfBattleSys.AnimEventType[0], new int[0][]),
                 new AnimatorMetadata(new AnimatorMetadata.StateMetadata[][] {
                             new AnimatorMetadata.StateMetadata[] {
+                                    new AnimatorMetadata.StateMetadata("Base Layer.STATE", "STATE")}}, new CnfBattleSys.AnimEventType[0], new int[0][]),
+                new AnimatorMetadata(new AnimatorMetadata.StateMetadata[][] {
+                            new AnimatorMetadata.StateMetadata[] {
                                     new AnimatorMetadata.StateMetadata("Base Layer.spin_forever", "spin_forever")}}, new CnfBattleSys.AnimEventType[0], new int[0][]),
                 new AnimatorMetadata(new AnimatorMetadata.StateMetadata[][] {
                             new AnimatorMetadata.StateMetadata[] {
@@ -49,9 +52,6 @@ namespace ExtendedAnimationManagement {
                                     new AnimatorMetadata.StateMetadata("Base Layer.Wait", "Wait"),
                                     new AnimatorMetadata.StateMetadata("Base Layer.Dead", "Dead"),
                                     new AnimatorMetadata.StateMetadata("Base Layer.Damage", "Damage"),
-                                    new AnimatorMetadata.StateMetadata("Base Layer.Attack", "Attack")}}, new CnfBattleSys.AnimEventType[0], new int[0][]),
-                new AnimatorMetadata(new AnimatorMetadata.StateMetadata[][] {
-                            new AnimatorMetadata.StateMetadata[] {
-                                    new AnimatorMetadata.StateMetadata("Base Layer.knightIdle", "knightIdle")}}, new CnfBattleSys.AnimEventType[0], new int[0][])};
+                                    new AnimatorMetadata.StateMetadata("Base Layer.Attack", "Attack")}}, new CnfBattleSys.AnimEventType[0], new int[0][])};
     }
 }

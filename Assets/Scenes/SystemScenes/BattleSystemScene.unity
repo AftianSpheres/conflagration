@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 0.5
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.79060555, g: 0.008618931, b: 0.26224324, a: 0.5}
+  m_IndirectSpecularColor: {r: 0.12402103, g: 0.00013150903, b: 0.008979876, a: 0.5}
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
@@ -460,9 +460,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 78ef7944a7a51f24598bb7ebd007af1b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  capsuleCollider: {fileID: 0}
-  animator: {fileID: 321524755}
-  skinnedMeshRenderer: {fileID: 0}
 --- !u!1001 &411462645
 Prefab:
   m_ObjectHideFlags: 0

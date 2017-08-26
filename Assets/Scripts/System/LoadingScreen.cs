@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using System;
 using System.Collections.Generic;
-
 using MovementEffects;
 using ExtendedSceneManagement;
 
@@ -29,6 +29,37 @@ public class LoadingScreen : MonoBehaviour
     private TextBank globalUIBank;
     private readonly static int clipNameHash = Animator.StringToHash("Base Layer.loading");
     private const string thisTag = "_LoadingScreen_Display";
+    public static event Action onInstantiated;
+
+    /// <summary>
+    /// Displays with shade as soon as the loading screen is available.
+    /// </summary>
+    public static void DisplayWithShade ()
+    {
+        if (instance != null)
+        {
+            instance._DisplayWithShade();
+        }
+        else
+        {
+            onInstantiated += instance._DisplayWithShade;
+        }
+    }
+
+    /// <summary>
+    /// Displays without shade as soon as the loading screen is available.
+    /// </summary>
+    public static void DisplayWithoutShade()
+    {
+        if (instance != null)
+        {
+            instance._DisplayWithoutShade();
+        }
+        else
+        {
+            onInstantiated += instance._DisplayWithoutShade;
+        }
+    }
 
     /// <summary>
     /// MonoBehaviour.Awake?()
@@ -38,6 +69,8 @@ public class LoadingScreen : MonoBehaviour
         instance = this;
         loadingText = GetComponentInChildren<Text>();
         Close();
+        onInstantiated?.Invoke();
+        onInstantiated = null;
     }
 
     /// <summary>
@@ -55,7 +88,7 @@ public class LoadingScreen : MonoBehaviour
     /// Brings up the loading screen with the black shade we use to hide
     /// partially loaded/unloaded scenes.
     /// </summary>
-    public void DisplayWithShade ()
+    private void _DisplayWithShade ()
     {
         Timing.KillCoroutines(thisTag);
         Timing.RunCoroutine(_Display(true), thisTag);
@@ -66,7 +99,7 @@ public class LoadingScreen : MonoBehaviour
     /// away with leaving what's onscreen visible.
     /// (Usually, the game won't stop responding to player input either.)
     /// </summary>
-    public void DisplayWithoutShade ()
+    private void _DisplayWithoutShade ()
     {
         Timing.KillCoroutines(thisTag);
         Timing.RunCoroutine(_Display(false), thisTag);

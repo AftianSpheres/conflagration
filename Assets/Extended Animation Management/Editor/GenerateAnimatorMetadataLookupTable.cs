@@ -87,7 +87,7 @@ public class GenerateAnimatorMetadataLookupTable : IPreprocessBuild
             sw.Dispose();
             fs.Dispose();
             AssetDatabase.Refresh();
-            Debug.Log("Generated AnimatorMetadataLookupTable.cs");
+            //Debug.Log("Generated AnimatorMetadataLookupTable.cs");
         }
     }
 

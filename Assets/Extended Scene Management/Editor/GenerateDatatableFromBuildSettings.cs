@@ -128,11 +128,13 @@ public class GenerateDatatableFromBuildSettings : IPreprocessBuild
             FileStream fs = File.OpenWrite(Application.dataPath + path + outputName);
             StreamWriter sw = new StreamWriter(fs);
             fs.Position = 0;
-            sw.Write(writer.ToString().Replace("public class SceneDatatable", "public static class SceneDatatable")); // I did it, I found the Most Hacks
+            string s = Util.MakeClassDeclarationStatic(writer.ToString(), className);
+            sw.Write(s);
+            fs.SetLength(fs.Position);
             sw.Dispose();
             fs.Dispose();
             AssetDatabase.Refresh();
-            Debug.Log("Generated SceneDatatable.cs");
+            //Debug.Log("Generated SceneDatatable.cs");
         }
     }
 }

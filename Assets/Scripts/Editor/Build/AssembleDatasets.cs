@@ -156,11 +156,14 @@ public class AssembleDatasets : IPreprocessBuild
             FileStream fs = File.OpenWrite(Application.dataPath + path + outputName);
             StreamWriter sw = new StreamWriter(fs);
             fs.Position = 0;
-            sw.Write(writer.ToString().Replace("public class", "public static class")); // [PUKING INTENSIFIES]
+            string s = Util.MakeClassDeclarationStatic(writer.ToString(), datasetsClassName);
+            s = Util.MakeClassDeclarationStatic(s, factoriesClassName);
+            sw.Write(s); // [PUKING INTENSIFIES]
+            fs.SetLength(fs.Position);
             sw.Dispose();
             fs.Dispose();
             AssetDatabase.Refresh();
-            Debug.Log("Generated Datasets.cs");
+            //Debug.Log("Generated Datasets.cs");
         }
     }
 }

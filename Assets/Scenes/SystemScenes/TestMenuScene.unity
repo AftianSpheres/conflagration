@@ -743,7 +743,9 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: testmenu info string
+  m_Text: 'testmenu info strings
+
+'
 --- !u!222 &931039909
 CanvasRenderer:
   m_ObjectHideFlags: 0

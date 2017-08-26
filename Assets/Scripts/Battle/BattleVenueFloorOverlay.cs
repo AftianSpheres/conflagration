@@ -141,7 +141,7 @@ public class BattleVenueFloorOverlay : MonoBehaviour
 
     IEnumerator<float> cr ()
     {
-        while (BattleOverseer.currentBattle == null) yield return 0;
+        while (!BattleOverseer.online) yield return 0;
         tex = PreviewMoveArea(BattleOverseer.currentBattle.allBattlers[2]);
     }
 
@@ -203,6 +203,7 @@ public class BattleVenueFloorOverlay : MonoBehaviour
     /// </summary>
     private LinkedList<Cell> GetCellsInCircle (Cell center, float realSpaceRadius, out int[] boundsArray)
     {
+        throw new Exception();
         int unitsRadius = Mathf.RoundToInt(realSpaceRadius * realSizeOfCell);
         int r2 = unitsRadius * unitsRadius;
         int xMin = center.x - unitsRadius;

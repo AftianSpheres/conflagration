@@ -12,42 +12,49 @@ namespace ExtendedSceneManagement {
     
     /// <summary> Static class containing scene metadata definitions. Automatically generated. </summary>
     public static class SceneDatatable {
-        /// <summary> Scene 0: Universe in SceneRing.None </summary>
-        public static ExtendedSceneManagement.SceneMetadata Universe {
+        /// <summary> Scene 0: CelNoir_Example in SceneRing.None </summary>
+        public static ExtendedSceneManagement.SceneMetadata CelNoir_Example {
             get {
                 return metadata[0];
             }
         }
-        /// <summary> Scene 1: TestMenuScene in SceneRing.SystemScenes </summary>
-        public static ExtendedSceneManagement.SceneMetadata TestMenuScene {
+        /// <summary> Scene 1: Universe in SceneRing.None </summary>
+        public static ExtendedSceneManagement.SceneMetadata Universe {
             get {
                 return metadata[1];
             }
         }
-        /// <summary> Scene 2: BattleSystemScene in SceneRing.SystemScenes </summary>
-        public static ExtendedSceneManagement.SceneMetadata BattleSystemScene {
+        /// <summary> Scene 2: TestMenuScene in SceneRing.SystemScenes </summary>
+        public static ExtendedSceneManagement.SceneMetadata TestMenuScene {
             get {
                 return metadata[2];
             }
         }
-        /// <summary> Scene 3: LoadingScreenScene in SceneRing.GlobalScenes </summary>
-        public static ExtendedSceneManagement.SceneMetadata LoadingScreenScene {
+        /// <summary> Scene 3: BattleSystemScene in SceneRing.SystemScenes </summary>
+        public static ExtendedSceneManagement.SceneMetadata BattleSystemScene {
             get {
                 return metadata[3];
             }
         }
-        /// <summary> Scene 4: TestVenue in SceneRing.VenueScenes </summary>
-        public static ExtendedSceneManagement.SceneMetadata TestVenue {
+        /// <summary> Scene 4: LoadingScreenScene in SceneRing.GlobalScenes </summary>
+        public static ExtendedSceneManagement.SceneMetadata LoadingScreenScene {
             get {
                 return metadata[4];
             }
         }
+        /// <summary> Scene 5: TestVenue in SceneRing.VenueScenes </summary>
+        public static ExtendedSceneManagement.SceneMetadata TestVenue {
+            get {
+                return metadata[5];
+            }
+        }
         /// <summary> Scene metadata array. Scene names are aliases to this. </summary>
         public static ExtendedSceneManagement.SceneMetadata[] metadata = new ExtendedSceneManagement.SceneMetadata[] {
-                new ExtendedSceneManagement.SceneMetadata(0, "Universe", "Assets/Universe/Scene/Universe.unity", 0),
-                new ExtendedSceneManagement.SceneMetadata(1, "TestMenuScene", "Assets/Scenes/SystemScenes/TestMenuScene.unity", 2),
-                new ExtendedSceneManagement.SceneMetadata(2, "BattleSystemScene", "Assets/Scenes/SystemScenes/BattleSystemScene.unity", 2),
-                new ExtendedSceneManagement.SceneMetadata(3, "LoadingScreenScene", "Assets/Scenes/GlobalScenes/LoadingScreenScene.unity", 1),
-                new ExtendedSceneManagement.SceneMetadata(4, "TestVenue", "Assets/Scenes/VenueScenes/TestVenue.unity", 4)};
+                new ExtendedSceneManagement.SceneMetadata(0, "CelNoir_Example", "Assets/CelNoir/Example/CelNoir_Example.unity", 0),
+                new ExtendedSceneManagement.SceneMetadata(1, "Universe", "Assets/Universe/Scene/Universe.unity", 0),
+                new ExtendedSceneManagement.SceneMetadata(2, "TestMenuScene", "Assets/Scenes/SystemScenes/TestMenuScene.unity", 2),
+                new ExtendedSceneManagement.SceneMetadata(3, "BattleSystemScene", "Assets/Scenes/SystemScenes/BattleSystemScene.unity", 2),
+                new ExtendedSceneManagement.SceneMetadata(4, "LoadingScreenScene", "Assets/Scenes/GlobalScenes/LoadingScreenScene.unity", 1),
+                new ExtendedSceneManagement.SceneMetadata(5, "TestVenue", "Assets/Scenes/VenueScenes/TestVenue.unity", 4)};
     }
 }

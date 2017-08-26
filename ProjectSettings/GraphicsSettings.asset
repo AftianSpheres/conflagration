@@ -8,14 +8,14 @@ GraphicsSettings:
     m_Mode: 2
     m_Shader: {fileID: 4800000, guid: 8a4cc4f0722f743498506a160d7b3f79, type: 3}
   m_DeferredReflections:
-    m_Mode: 1
-    m_Shader: {fileID: 74, guid: 0000000000000000f000000000000000, type: 0}
+    m_Mode: 2
+    m_Shader: {fileID: 4800000, guid: 1469de45a3f254d4ca8c2a3e4d79c6ff, type: 3}
   m_ScreenSpaceShadows:
-    m_Mode: 1
-    m_Shader: {fileID: 64, guid: 0000000000000000f000000000000000, type: 0}
+    m_Mode: 2
+    m_Shader: {fileID: 4800000, guid: 802f3ee89cd5fa844b41e70cfd92a38d, type: 3}
   m_LegacyDeferred:
-    m_Mode: 1
-    m_Shader: {fileID: 63, guid: 0000000000000000f000000000000000, type: 0}
+    m_Mode: 0
+    m_Shader: {fileID: 0}
   m_DepthNormals:
     m_Mode: 1
     m_Shader: {fileID: 62, guid: 0000000000000000f000000000000000, type: 0}
@@ -87,7 +87,7 @@ GraphicsSettings:
       standardShaderQuality: 2
       renderingPath: 3
       hdrMode: 1
-      realtimeGICPUUsage: 50
+      realtimeGICPUUsage: 100
       useReflectionProbeBoxProjection: 1
       useReflectionProbeBlending: 1
       useHDR: 1

@@ -85,10 +85,11 @@ public class AssembleEffectTable : IPreprocessBuild
             StreamWriter sw = new StreamWriter(fs);
             fs.Position = 0;
             sw.Write(writer.ToString());
+            fs.SetLength(fs.Position);
             sw.Dispose();
             fs.Dispose();
             AssetDatabase.Refresh();
-            Debug.Log("Generated Battler/ApplyEffect.cs");
+            //Debug.Log("Generated Battler/ApplyEffect.cs");
         }
     }
 }

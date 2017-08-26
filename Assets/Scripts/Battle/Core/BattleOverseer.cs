@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using MovementEffects;
-
-namespace CnfBattleSys
+﻿namespace CnfBattleSys
 {
     /// <summary>
     /// Static class that forms the "brains" of the battle system.
@@ -14,17 +10,27 @@ namespace CnfBattleSys
         public const float battleTickLength = 1 / 60;
         public const float fieldRadius = 50;
         public static BattleData currentBattle { get; private set; }
+        public static bool online { get { return currentBattle != null && allPuppetsExist; } }
+        private static bool allPuppetsExist = false;
 
         /// <summary>
-        /// Sets up battle based on given formation and starts
-        /// executing Battle Shit.
+        /// Sets up battle data for the given formation.
+        /// This doesn't start battle execution!
+        /// Always call PrepareBattle, do whatever battle scene setup you need to do, and
+        /// _then_ call StartBattle.
         /// </summary>
-        public static void StartBattle (BattleFormation formation)
+        public static void PrepareBattle (BattleFormation formation)
         {
-            Action callbackFromConstructors;
-            currentBattle = new BattleData(formation, out callbackFromConstructors);
-            callbackFromConstructors();
-            Timing.RunCoroutine(_WaitForPuppets());
+            currentBattle = new BattleData(formation);
+        }
+
+        /// <summary>
+        /// Starts battle processing.
+        /// </summary>
+        public static void StartBattle ()
+        {
+            BattleStage.instance.StartOfBattle();
+            currentBattle.BetweenTurns();
         }
 
         /// <summary>
@@ -33,24 +39,6 @@ namespace CnfBattleSys
         public static void EndBattle ()
         {
             currentBattle = null;
-        }
-
-        /// <summary>
-        /// Coroutine: Wait for all battler puppets to exist before first communication with BattleStage.
-        /// </summary>
-        static IEnumerator<float> _WaitForPuppets ()
-        {
-            bool allPuppetsExist = false;
-            while (!allPuppetsExist)
-            {
-                allPuppetsExist = true;
-                for (int i = 0; i < currentBattle.allBattlers.Length; i++)
-                {
-                    if (currentBattle.allBattlers[i].puppet == null) allPuppetsExist = false;
-                }
-                yield return 0;
-            }
-            BattleStage.instance.StartOfBattle();
         }
     }
 }

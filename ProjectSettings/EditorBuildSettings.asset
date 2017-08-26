@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/CelNoir/Example/CelNoir_Example.unity
+    guid: a76bc677f06ed9b48a3f451c1624dcb2
+  - enabled: 1
     path: Assets/Universe/Scene/Universe.unity
     guid: 732c4c573b189d3479038d0bd7ce48b1
   - enabled: 1

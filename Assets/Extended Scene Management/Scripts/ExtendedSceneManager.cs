@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Universe;
-using CnfBattleSys;
 using MovementEffects;
 
 namespace ExtendedSceneManagement
@@ -76,6 +75,11 @@ namespace ExtendedSceneManagement
         /// you can set verbose = false here instead to avoid polluting the log.)
         /// </summary>
         private static bool verbose = false;
+        /// <summary>
+        /// This action is fired and unset as soon as
+        /// a scene finishes loading, leaving no remaining scenes to load.
+        /// </summary>
+        public event Action onBatchedSceneLoadsComplete;
         public bool loading { get { return loadPhase == LoadPhase.Loading || loadPhase == LoadPhase.Unloading; } }
         public LoadPhase loadPhase { get; private set; }
         private Dictionary<SceneRing, ExtendedScene> lastScenesActiveInRings;
@@ -372,6 +376,8 @@ namespace ExtendedSceneManagement
                 if (loadPhase != LoadPhase.NotLoading)
                 {
                     loadPhase = LoadPhase.NotLoading;
+                    onBatchedSceneLoadsComplete?.Invoke();
+                    onBatchedSceneLoadsComplete = null;
                     if (Debug.isDebugBuild && verbose) Debug.Log("Completed batch scene load/unload operations.");
                 }
             };

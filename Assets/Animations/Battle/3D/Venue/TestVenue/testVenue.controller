@@ -32,7 +32,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d003e260a58fd6b4699fe2081de35c63, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tableIndex_SetAutomatically: 3
+  tableIndex_SetAutomatically: 4
 --- !u!1102 &1102000013928620886
 AnimatorState:
   serializedVersion: 5

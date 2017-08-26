@@ -181,4 +181,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d003e260a58fd6b4699fe2081de35c63, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tableIndex_SetAutomatically: 6
+  tableIndex_SetAutomatically: 7

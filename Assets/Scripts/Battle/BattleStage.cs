@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using CnfBattleSys;
-using MovementEffects;
 
 /// <summary>
 /// Monobehaviour that handles animation events, waits for input where needed, and decides when to advance the battle state.
@@ -34,7 +33,7 @@ public class BattleStage : MonoBehaviour
     public Transform battlerPuppetsParent { get; private set; }
     public Transform fxControllersParent { get; private set; }
     public float fxScale = 30;
-    private string thisTag;
+    private static event Action onInstantiate;
 
     /// <summary>
     /// Ensures that onAllEventBlocksFinished is cleared after running
@@ -50,7 +49,8 @@ public class BattleStage : MonoBehaviour
 	void Awake ()
     {
         instance = this;
-        thisTag = GetInstanceID().ToString();
+        onInstantiate?.Invoke();
+        onInstantiate = null;
         battlerPuppetsParent = Util.CreateEmptyChild(transform).transform;
         fxControllersParent = Util.CreateEmptyChild(transform).transform;
         battlerPuppetsParent.gameObject.name = "Battlers";
@@ -63,7 +63,6 @@ public class BattleStage : MonoBehaviour
     /// </summary>
     void OnDestroy()
     {
-        Timing.KillCoroutines(thisTag);
         if (instance == this) instance = null;
     }
 
@@ -157,25 +156,19 @@ public class BattleStage : MonoBehaviour
     }
 
     /// <summary>
-    /// Coroutine: Load in all resources that battlers will require during this battle.
+    /// Load in all resources that battlers will require during this battle.
     /// </summary>
-    private IEnumerator<float> _LoadForBattlers (Battler[] battlers)
+    private void LoadForBattlers (Battler[] battlers, Action callback)
     {
         puppets = new BattlerPuppet[battlers.Length];
-        const string prefabsPath = "Battle/Prefabs/BattlePuppet/";
-        for (int b = 0; b < battlers.Length; b++)
+        int battlersToLoad = battlers.Length;
+        Action<int> battlerCallback = (b) =>
         {
-            ResourceRequest request = Resources.LoadAsync<BattlerPuppet>(prefabsPath + battlers[b].battlerType);
-            while (request.progress < 1.0f) yield return 0;
-            if (request.asset == null)
-            {
-                Util.Crash("No battler puppet prefab for battler id of " + battlers[b].battlerType);
-                yield break;
-            }
-            puppets[b] = Instantiate((BattlerPuppet)request.asset, battlerPuppetsParent);
-            yield return Timing.WaitUntilDone(Timing.RunCoroutine(puppets[b]._Load(), thisTag));
-            while (puppets[b].loadingState == BattlerPuppet.LoadingState.Loading) yield return 0;
-        }
+            puppets[b] = battlers[b].puppet;
+            battlersToLoad--;
+            if (battlersToLoad == 0) callback?.Invoke();
+        };
+        for (int b = 0; b < battlers.Length; b++) GetPuppetForBattler(battlers[b], () => battlerCallback(b));
     }
 
     /// <summary>
@@ -195,5 +188,32 @@ public class BattleStage : MonoBehaviour
     public void SetBattlersIdle ()
     {
         for (int i = 0; i < puppets.Length; i++) puppets[i].Idle();
+    }
+
+    /// <summary>
+    /// Loads prefab, instantiates it, and initializes the BattlerPuppet required by the given Battler.
+    /// </summary>
+    private void GetPuppetForBattler (Battler battler, Action callback)
+    {
+        string _PATH = "Battle/Prefabs/BattlerPuppet/";
+        ResourceRequest request = Resources.LoadAsync<GameObject>(_PATH + battler.battlerType.ToString());
+        if (request.asset == null) Util.Crash("No prefab for " + battler.battlerType.ToString());
+        Action rlmCallback = () =>
+        {
+            BattlerPuppet puppet = Instantiate((GameObject)request.asset).GetComponent<BattlerPuppet>();
+            puppet.transform.parent = battlerPuppetsParent;
+            puppet.AttachBattler(battler, null);
+            callback?.Invoke();
+        };
+        ResourceLoadManager.Instance.IssueResourceRequest(request, rlmCallback);
+    }
+
+    /// <summary>
+    /// Sets the BattleStage up to load necessary resources and instantiate puppet prefabs.
+    /// </summary>
+    public static void LoadResources (Action callback)
+    {
+        if (instance != null) instance.LoadForBattlers(BattleOverseer.currentBattle.allBattlers, callback);
+        else onInstantiate += () => instance.LoadForBattlers(BattleOverseer.currentBattle.allBattlers, callback);
     }
 }

@@ -22,12 +22,20 @@ namespace CnfBattleSys
         public bool isRunning { get; private set; }
 
         /// <summary>
+        /// Establishes the FXEvent that originates a prefab.
+        /// </summary>
+        public void SetOriginatingEvent (FXEvent _originatingEvent)
+        {
+            originatingEvent = _originatingEvent;
+        }
+
+        /// <summary>
         /// Starts the FX.
         /// </summary>
         public virtual FXEventHandle Commence(FXEvent fxEvent)
         {
             onCompletion = null; // The way we use BattleFXController makes it difficult to keep this tidy, so let's assume it's gross and crusty when commencing.
-            onStart();
+            onStart?.Invoke();
             isRunning = true;
             return new FXEventHandle(fxEvent, this);
         }
@@ -39,7 +47,7 @@ namespace CnfBattleSys
         /// </summary>
         public virtual void Finish()
         {
-            onCompletion();
+            onCompletion?.Invoke();
             isRunning = false;
         }
     }

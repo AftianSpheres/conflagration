@@ -186,6 +186,7 @@ GameObject:
   - component: {fileID: 907809460}
   - component: {fileID: 907809462}
   - component: {fileID: 907809461}
+  - component: {fileID: 907809463}
   m_Layer: 5
   m_Name: LoadingText
   m_TagString: Untagged
@@ -250,6 +251,23 @@ CanvasRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 907809459}
+--- !u!95 &907809463
+Animator:
+  serializedVersion: 3
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 907809459}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: cfb3ba1944fdc21408eb9acc51eff7f5, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
 --- !u!1 &1038833157
 GameObject:
   m_ObjectHideFlags: 0
@@ -299,7 +317,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   loadingShade: {fileID: 897548391}
   unconditionalAnimators:
-  - {fileID: 0}
+  - {fileID: 907809463}
 --- !u!1 &1498254337
 GameObject:
   m_ObjectHideFlags: 0
@@ -371,7 +389,7 @@ Canvas:
   m_OverrideSorting: 0
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
-  m_AdditionalShaderChannelsFlag: 27
+  m_AdditionalShaderChannelsFlag: 3
   m_SortingLayerID: 0
   m_SortingOrder: 32767
   m_TargetDisplay: 0

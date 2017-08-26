@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using UnityEngine;
-using CnfBattleSys;
 
 namespace ExtendedAnimationManagement
 {
@@ -13,6 +11,7 @@ namespace ExtendedAnimationManagement
     public class StateMachineExtender : StateMachineBehaviour
     {
         public event Action onStateChanged;
+        private bool tripped = false;
 
         /// <summary>
         /// Don't touch this! This is set automatically by the animator metadata table builder.
@@ -22,12 +21,30 @@ namespace ExtendedAnimationManagement
         /// <summary>
         /// StateMachineBehaviour.OnStateEnter ()
         /// </summary>
-        override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+        public override void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+        {
+            if (!tripped) Trip(animator);
+        }
+
+        /// <summary>
+        /// StateMachineBehaviour.OnStateMachineEnter ()
+        /// </summary>
+        public override void OnStateMachineEnter(Animator animator, int stateMachinePathHash)
+        {
+            if (!tripped) Trip(animator);
+        }
+
+        /// <summary>
+        /// Links to metadata container.
+        /// Should never run more than once per instance.
+        /// </summary>
+        private void Trip (Animator animator)
         {
             AnimatorMetadataContainer animatorMetadataContainer = animator.gameObject.GetComponent<AnimatorMetadataContainer>();
             if (animatorMetadataContainer == null) animatorMetadataContainer = animator.gameObject.AddComponent<AnimatorMetadataContainer>();
             if (animatorMetadataContainer.contents == null) animatorMetadataContainer.FillWith(AnimatorMetadataLookupTable.lookupTable[tableIndex_SetAutomatically], this);
             onStateChanged?.Invoke();
+            tripped = true;
         }
     }
 
